@@ -13,10 +13,19 @@ class DifferentialOperators:
         self.grid = grid
 
     def grad(self, f):
-        """Gradient: scalar -> vector, vector -> rank-2 tensor, etc.
+        r"""Gradient: inserts a new length-3 axis before the spatial axes.
 
-        Inserts a new length-3 axis before the spatial axes:
-        ``grad(f)[..., i, :, :, :] = df / dx_i``.
+        .. math::
+
+            \widehat{\nabla f}_{i} = i k_i \hat{f}
+
+        ========  ==================
+        Input     Output
+        ========  ==================
+        scalar    vector
+        vector    rank-2 tensor
+        rank-n    rank-(n + 1) tensor
+        ========  ==================
 
         Parameters
         ----------
@@ -32,8 +41,19 @@ class DifferentialOperators:
         )
 
     def div(self, f):
-        """Divergence over the last tensor index: vector -> scalar,
-        tensor -> vector, etc.
+        r"""Divergence over the last tensor index.
+
+        .. math::
+
+            \widehat{\nabla \cdot f} = i k_i \hat{f}_{i}
+
+        ========  ==================
+        Input     Output
+        ========  ==================
+        vector    scalar
+        tensor    vector
+        rank-n    rank-(n - 1) tensor
+        ========  ==================
 
         Parameters
         ----------
@@ -61,8 +81,18 @@ class DifferentialOperators:
         )
 
     def curl(self, f):
-        """Curl over the last tensor index: vector -> vector, tensor
-        -> tensor.
+        r"""Curl over the last tensor index.
+
+        .. math::
+
+            \widehat{\nabla \times f}_{i} = i \epsilon_{ijk} k_j \hat{f}_{k}
+
+        ========  ========
+        Input     Output
+        ========  ========
+        vector    vector
+        tensor    tensor
+        ========  ========
 
         Parameters
         ----------
@@ -100,7 +130,8 @@ class DifferentialOperators:
         )
 
     def laplacian(self, f):
-        """Laplacian of an arbitrary-rank field.
+        r"""Laplacian of an arbitrary-rank field: :math:`\widehat{\nabla^2 f}
+        = -k^2 \hat{f}`.
 
         Parameters
         ----------

@@ -16,9 +16,19 @@ crystallite = { path = ".", editable = true }
 [feature.gpu.dependencies]
 cupy = "*"
 
+[feature.docs.dependencies]
+sphinx = "*"
+numpydoc = "*"
+pydata-sphinx-theme = "*"
+
+[feature.docs.tasks]
+apidoc = "sphinx-apidoc --implicit-namespaces -o docs/source src/crystallite"
+docs = "sphinx-build -b html docs docs/_build/html"
+
 [environments]
 default = { solve-group = "default" }
 gpu = { features = ["gpu"], solve-group = "default" }
+docs = { features = ["docs"], solve-group = "default" }
 
 [tasks]
 test = "pytest"

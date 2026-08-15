@@ -4,20 +4,50 @@ from crystallite.backend import xp
 from crystallite.spectral.short_range import DifferentialOperators
 
 
-def _mandel_basis(dtype):
-    """Orthonormal (Mandel) basis, shape (6, 3, 3), for symmetric
-    3x3 tensors."""
-    basis = xp.zeros((6, 3, 3), dtype=dtype)
-    basis[0, 0, 0] = 1.0
-    basis[1, 1, 1] = 1.0
-    basis[2, 2, 2] = 1.0
+_VOIGT_PAIRS = ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))
+"""Index pairs (i, j) for Voigt components 1..6 (11, 22, 33, 23, 13, 12)."""
 
-    inv_sqrt2 = 1.0 / xp.sqrt(xp.asarray(2.0, dtype=dtype))
-    basis[3, 1, 2] = basis[3, 2, 1] = inv_sqrt2
-    basis[4, 0, 2] = basis[4, 2, 0] = inv_sqrt2
-    basis[5, 0, 1] = basis[5, 1, 0] = inv_sqrt2
 
-    return basis
+def _voigt_stiffness(medium):
+    r"""Rank-4 elastic tensor -> (6, 6) Voigt stiffness matrix.
+
+    Direct reindex, no scaling: with the standard engineering-shear
+    strain vector (shear components x2) and an unscaled stress vector,
+
+    .. math::
+
+        \sigma_{\mathrm{V}} = C_{\mathrm{V}} \, \varepsilon_{\mathrm{V}}
+
+    holds using `medium`'s raw :math:`C_{ijkl}` components at the
+    Voigt-paired indices.
+    """
+    i = xp.asarray([p[0] for p in _VOIGT_PAIRS])
+    j = xp.asarray([p[1] for p in _VOIGT_PAIRS])
+    return medium[i[:, None], j[:, None], i[None, :], j[None, :]]
+
+
+def _voigt_compliance_to_tensor(s_voigt):
+    r"""(6, 6) Voigt compliance matrix -> (3, 3, 3, 3) compliance tensor.
+
+    Voigt compliance carries factors of 2 (normal-shear entries) and 4
+    (shear-shear entries) relative to the raw tensor components
+    :math:`S_{ijkl}` in :math:`\varepsilon_{ij} = S_{ijkl}\sigma_{kl}`
+    -- dividing them back out is what makes plain matrix inversion of
+    `_voigt_stiffness`'s output equal the correct tensor compliance.
+    """
+    scale = xp.where(xp.arange(6) < 3, 1.0, 2.0).astype(s_voigt.dtype)
+    s_scaled = s_voigt / (scale[:, None] * scale[None, :])
+
+    result = xp.zeros((3, 3, 3, 3), dtype=s_voigt.dtype)
+    for row, (i, j) in enumerate(_VOIGT_PAIRS):
+        for col, (k, l) in enumerate(_VOIGT_PAIRS):
+            value = s_scaled[row, col]
+            result[i, j, k, l] = value
+            result[j, i, k, l] = value
+            result[i, j, l, k] = value
+            result[j, i, l, k] = value
+
+    return result
 
 
 def _add_uniform_at_dc(grid, field, value):
@@ -34,11 +64,11 @@ def _add_uniform_at_dc(grid, field, value):
 
 
 class CoulombOperator:
-    """Long-range 1/r interaction: solves the Poisson equation for a
+    r"""Long-range 1/r interaction: solves the Poisson equation for a
     potential from a Fourier-space source term.
 
-    Caller builds `source`, e.g. ``-rho`` for charge density or
-    ``div(m)`` for dipole density.
+    Caller builds `source`, e.g. :math:`-\rho` for charge density or
+    :math:`\nabla \cdot \mathbf{m}` for dipole density.
 
     Parameters
     ----------
@@ -50,7 +80,7 @@ class CoulombOperator:
         self.ops = DifferentialOperators(grid)
 
     def potential(self, source):
-        """``phi_hat = -source_hat / k^2``, zero at k=0.
+        r""":math:`\hat\phi = -\hat{f} / k^2`, zero at k=0.
 
         Parameters
         ----------
@@ -63,7 +93,7 @@ class CoulombOperator:
         return -source * self.grid.inv_k2
 
     def field(self, source, external=None):
-        """``-grad(potential)``.
+        r""":math:`-\nabla \phi`.
 
         Parameters
         ----------
@@ -84,16 +114,18 @@ class CoulombOperator:
 
 
 class GreenOperator:
-    """Long-range Green's operator for a homogeneous reference medium.
+    r"""Long-range Green's operator for a homogeneous reference medium.
 
-    Solves ``A(k) . output(k) = source(k)``, where `A(k)` contracts
-    the medium tensor with the wavevector twice:
+    Solves :math:`A(\mathbf{k}) \cdot \hat{u}(\mathbf{k}) =
+    \hat{f}(\mathbf{k})`, where :math:`A(\mathbf{k})` contracts the
+    medium tensor with the wavevector twice:
 
-    - Conduction: `medium` (3, 3) ``kappa_ij``; ``A(k) = kappa_ij
-      k_i k_j`` (scalar); source/output scalar.
-    - Elasticity: `medium` (3, 3, 3, 3) ``C_ijkl``; ``A_ik(k) =
-      C_ijkl k_j k_l`` (3, 3); source/output vectors, tensor axis
-      leading.
+    - Conduction: `medium` (3, 3) :math:`\kappa_{ij}`;
+      :math:`A(\mathbf{k}) = \kappa_{ij} k_i k_j` (scalar);
+      source/output scalar.
+    - Elasticity: `medium` (3, 3, 3, 3) :math:`C_{ijkl}`;
+      :math:`A_{ik}(\mathbf{k}) = C_{ijkl} k_j k_l` (3, 3);
+      source/output vectors, tensor axis leading.
 
     Typical source is an eigenstrain (see `apply_eigenstrain`), not a
     raw force. k=0 mode is always zero.
@@ -138,7 +170,7 @@ class GreenOperator:
         return xp.einsum("ijkl,j...,l...->ik...", self.medium, k, k)
 
     def tensor(self):
-        """Green's function ``G(k) = A(k)^-1``.
+        r"""Green's function :math:`G(\mathbf{k}) = A(\mathbf{k})^{-1}`.
 
         Returns
         -------
@@ -163,7 +195,7 @@ class GreenOperator:
         return xp.moveaxis(g, (-2, -1), (0, 1))
 
     def apply(self, source):
-        """``G(k) . source``.
+        r""":math:`G(\mathbf{k}) \cdot \hat{f}(\mathbf{k})`.
 
         Parameters
         ----------
@@ -184,10 +216,14 @@ class GreenOperator:
         return xp.einsum("ik...,k...->i...", g, source)
 
     def apply_eigenstrain(self, eigenstrain):
-        """Response to an eigenstrain source.
+        r"""Response to an eigenstrain source.
 
-        ``generalized_stress = medium . eigenstrain``, ``source =
-        -i k . generalized_stress``, then ``apply(source)``.
+        .. math::
+
+            \sigma^{*} = C : \varepsilon^{*}, \qquad
+            \hat{f} = -i\, \mathbf{k} \cdot \sigma^{*}
+
+        then :math:`\mathrm{apply}(\hat{f})`.
 
         Parameters
         ----------
@@ -213,7 +249,7 @@ class GreenOperator:
         return self.apply(source)
 
     def strain(self, displacement, external=None):
-        """``0.5 * (grad(u) + grad(u)^T)``.
+        r""":math:`\varepsilon = \tfrac{1}{2}(\nabla u + (\nabla u)^{\mathsf{T}})`.
 
         Parameters
         ----------
@@ -236,7 +272,7 @@ class GreenOperator:
         return strain
 
     def stress(self, strain, external=None):
-        """Hooke's law: ``C : strain``.
+        r"""Hooke's law: :math:`\sigma = C : \varepsilon`.
 
         Parameters
         ----------
@@ -266,11 +302,11 @@ class GreenOperator:
         return stress
 
     def compliance(self):
-        """Medium's functional inverse (once, not per k-point).
+        r"""Medium's functional inverse (once, not per k-point).
 
-        Resistivity ``kappa^-1`` (conduction), or compliance `S`
-        with ``S : C : epsilon = epsilon`` via a Mandel-basis 6x6
-        inverse (elasticity).
+        Resistivity :math:`\kappa^{-1}` (conduction), or compliance
+        :math:`S` with :math:`S : C : \varepsilon = \varepsilon` via a
+        Voigt-convention 6x6 inverse (elasticity).
 
         Returns
         -------
@@ -280,14 +316,13 @@ class GreenOperator:
         if self.medium.ndim == 2:
             return xp.linalg.inv(self.medium)
 
-        basis = _mandel_basis(self.medium.dtype)
-        c_mandel = xp.einsum("aij,ijkl,bkl->ab", basis, self.medium, basis)
-        s_mandel = xp.linalg.inv(c_mandel)
-        return xp.einsum("ab,aij,bkl->ijkl", s_mandel, basis, basis)
+        c_voigt = _voigt_stiffness(self.medium)
+        s_voigt = xp.linalg.inv(c_voigt)
+        return _voigt_compliance_to_tensor(s_voigt)
 
     def apply_compliance(self, flux):
-        """``compliance() : flux``: far-field strain/gradient
-        equivalent to a far-field stress/flux.
+        r""":math:`\mathrm{compliance}() : \mathrm{flux}`: far-field
+        strain/gradient equivalent to a far-field stress/flux.
 
         Parameters
         ----------
