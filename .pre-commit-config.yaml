@@ -1,0 +1,9 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+      - id: black
+        name: Black
+        language_version: python3
+        additional_dependencies: []
+        args: [--line-length=79]

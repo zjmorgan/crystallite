@@ -1,0 +1,24 @@
+[workspace]
+name = "crystallite"
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[dependencies]
+python = ">=3.11"
+numpy = "*"
+scipy = "*"
+pytest = "*"
+spglib = ">=2.7.0,<3"
+
+[pypi-dependencies]
+crystallite = { path = ".", editable = true }
+
+[feature.gpu.dependencies]
+cupy = "*"
+
+[environments]
+default = { solve-group = "default" }
+gpu = { features = ["gpu"], solve-group = "default" }
+
+[tasks]
+test = "pytest"
