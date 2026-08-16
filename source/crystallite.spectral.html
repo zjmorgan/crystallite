@@ -367,7 +367,7 @@
 <p>Long-range spectral operators (e.g. elastic Green’s functions).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.CoulombOperator">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CoulombOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L66-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CoulombOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L136-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Long-range 1/r interaction: solves the Poisson equation for a
 potential from a Fourier-space source term.</p>
@@ -383,7 +383,7 @@ potential from a Fourier-space source term.</p>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.CoulombOperator.field" title="crystallite.spectral.long_range.CoulombOperator.field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">field</span></code></a>(source[, external])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.CoulombOperator.field" title="crystallite.spectral.long_range.CoulombOperator.field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">field</span></code></a>(source[, uniform_field, ...])</p></td>
 <td><p><span class="math notranslate nohighlight">\(-\nabla \phi\)</span>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.CoulombOperator.potential" title="crystallite.spectral.long_range.CoulombOperator.potential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">potential</span></code></a>(source)</p></td>
@@ -394,13 +394,16 @@ potential from a Fourier-space source term.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.CoulombOperator.field">
-<span class="sig-name descname"><span class="pre">field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L95-L113"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator.field" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L165-L191"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator.field" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(-\nabla \phi\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>source</strong><span class="classifier">ndarray</span></dt><dd></dd>
-<dt><strong>external</strong><span class="classifier">array_like of shape (3,), optional</span></dt><dd><p>Uniform far field, added at the k=0 mode.</p>
+<dt><strong>uniform_field</strong><span class="classifier">array_like of shape (3,), optional</span></dt><dd><p>Uniform far field, added at the k=0 mode.</p>
+</dd>
+<dt><strong>uniform_field_gradient</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Constant far-field gradient (component, direction), added
+directly in reciprocal space – see <cite>_add_uniform_gradient</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -414,7 +417,7 @@ potential from a Fourier-space source term.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.CoulombOperator.potential">
-<span class="sig-name descname"><span class="pre">potential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L82-L93"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator.potential" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">potential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L152-L163"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.CoulombOperator.potential" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(\hat\phi = -\hat{f} / k^2\)</span>, zero at k=0.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -434,7 +437,7 @@ potential from a Fourier-space source term.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GreenOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L116-L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">GreenOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">medium</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L194-L440"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Long-range Green’s operator for a homogeneous reference medium.</p>
 <p>Solves <span class="math notranslate nohighlight">\(A(\mathbf{k}) \cdot \hat{u}(\mathbf{k}) =
@@ -474,10 +477,10 @@ raw force. k=0 mode is always zero.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.compliance" title="crystallite.spectral.long_range.GreenOperator.compliance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">compliance</span></code></a>()</p></td>
 <td><p>Medium's functional inverse (once, not per k-point).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.strain" title="crystallite.spectral.long_range.GreenOperator.strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">strain</span></code></a>(displacement[, external])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.strain" title="crystallite.spectral.long_range.GreenOperator.strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">strain</span></code></a>(displacement[, uniform_field, ...])</p></td>
 <td><p><span class="math notranslate nohighlight">\(\varepsilon = \tfrac{1}{2}(\nabla u + (\nabla u)^{\mathsf{T}})\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.stress" title="crystallite.spectral.long_range.GreenOperator.stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stress</span></code></a>(strain[, external])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.stress" title="crystallite.spectral.long_range.GreenOperator.stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">stress</span></code></a>(strain[, uniform_field, ...])</p></td>
 <td><p>Hooke's law: <span class="math notranslate nohighlight">\(\sigma = C : \varepsilon\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.spectral.long_range.GreenOperator.tensor" title="crystallite.spectral.long_range.GreenOperator.tensor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tensor</span></code></a>()</p></td>
@@ -496,7 +499,7 @@ raw force. k=0 mode is always zero.</p>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.apply">
-<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L197-L216"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L275-L294"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(G(\mathbf{k}) \cdot \hat{f}(\mathbf{k})\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -517,7 +520,7 @@ raw force. k=0 mode is always zero.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.apply_compliance">
-<span class="sig-name descname"><span class="pre">apply_compliance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L323-L342"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply_compliance" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_compliance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L421-L440"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply_compliance" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(\mathrm{compliance}() : \mathrm{flux}\)</span>: far-field
 strain/gradient equivalent to a far-field stress/flux.</p>
 <dl class="field-list simple">
@@ -537,7 +540,7 @@ strain/gradient equivalent to a far-field stress/flux.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.apply_eigenstrain">
-<span class="sig-name descname"><span class="pre">apply_eigenstrain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L218-L249"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply_eigenstrain" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">apply_eigenstrain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L296-L327"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.apply_eigenstrain" title="Link to this definition">#</a></dt>
 <dd><p>Response to an eigenstrain source.</p>
 <div class="math notranslate nohighlight">
 \[\sigma^{*} = C : \varepsilon^{*}, \qquad
@@ -561,7 +564,7 @@ eigen-gradient (conduction).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.compliance">
-<span class="sig-name descname"><span class="pre">compliance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L304-L321"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.compliance" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">compliance</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L402-L419"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.compliance" title="Link to this definition">#</a></dt>
 <dd><p>Medium’s functional inverse (once, not per k-point).</p>
 <p>Resistivity <span class="math notranslate nohighlight">\(\kappa^{-1}\)</span> (conduction), or compliance
 <span class="math notranslate nohighlight">\(S\)</span> with <span class="math notranslate nohighlight">\(S : C : \varepsilon = \varepsilon\)</span> via a
@@ -578,14 +581,17 @@ Voigt-convention 6x6 inverse (elasticity).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.strain">
-<span class="sig-name descname"><span class="pre">strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">displacement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L251-L272"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.strain" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">displacement</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L329-L360"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.strain" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(\varepsilon = \tfrac{1}{2}(\nabla u + (\nabla u)^{\mathsf{T}})\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>displacement</strong><span class="classifier">ndarray</span></dt><dd><p>Tensor axis immediately before the spatial axes.</p>
 </dd>
-<dt><strong>external</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Uniform far-field strain, added at the k=0 mode.</p>
+<dt><strong>uniform_field</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Uniform far-field strain, added at the k=0 mode.</p>
+</dd>
+<dt><strong>uniform_field_gradient</strong><span class="classifier">array_like of shape (3, 3, 3), optional</span></dt><dd><p>Constant far-field strain gradient (i, j, direction), added
+directly in reciprocal space – see <cite>_add_uniform_gradient</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -600,15 +606,18 @@ Voigt-convention 6x6 inverse (elasticity).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.stress">
-<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">external</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L274-L302"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uniform_field_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L362-L400"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.stress" title="Link to this definition">#</a></dt>
 <dd><p>Hooke’s law: <span class="math notranslate nohighlight">\(\sigma = C : \varepsilon\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>strain</strong><span class="classifier">ndarray</span></dt><dd><p>(3, 3), tensor axes leading.</p>
 </dd>
-<dt><strong>external</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Uniform far-field stress, added directly at the k=0 mode
+<dt><strong>uniform_field</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Uniform far-field stress, added directly at the k=0 mode
 (independent of the medium, unlike <cite>strain</cite>’s far field).</p>
+</dd>
+<dt><strong>uniform_field_gradient</strong><span class="classifier">array_like of shape (3, 3, 3), optional</span></dt><dd><p>Constant far-field stress gradient (i, j, direction), added
+directly in reciprocal space – see <cite>_add_uniform_gradient</cite>.</p>
 </dd>
 </dl>
 </dd>
@@ -628,7 +637,7 @@ Voigt-convention 6x6 inverse (elasticity).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.spectral.long_range.GreenOperator.tensor">
-<span class="sig-name descname"><span class="pre">tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L172-L195"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.tensor" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tensor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/long_range.py#L250-L273"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.long_range.GreenOperator.tensor" title="Link to this definition">#</a></dt>
 <dd><p>Green’s function <span class="math notranslate nohighlight">\(G(\mathbf{k}) = A(\mathbf{k})^{-1}\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -671,7 +680,7 @@ matrix axes leading.</p>
 <td><p>Gradient: inserts a new length-3 axis before the spatial axes.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#crystallite.spectral.short_range.DifferentialOperators.laplacian" title="crystallite.spectral.short_range.DifferentialOperators.laplacian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">laplacian</span></code></a>(f)</p></td>
-<td><p>Laplacian of an arbitrary-rank field: <span class="math notranslate nohighlight">\(\widehat{\nabla^2 f} = -k^2 \hat{f}\)</span>.</p></td>
+<td><p>Laplacian of an arbitrary-rank field: <span class="math notranslate nohighlight">\(\widehat{\nabla^2 f} = -k^2 \, \hat{f}\)</span>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -681,7 +690,7 @@ matrix axes leading.</p>
 <span class="sig-name descname"><span class="pre">curl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/short_range.py#L83-L130"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.short_range.DifferentialOperators.curl" title="Link to this definition">#</a></dt>
 <dd><p>Curl over the last tensor index.</p>
 <div class="math notranslate nohighlight">
-\[\widehat{\nabla \times f}_{i} = i \epsilon_{ijk} k_j \hat{f}_{k}\]</div>
+\[\widehat{\nabla \times f}_{i} = i \epsilon_{ijk} k_j \, \hat{f}_{k}\]</div>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Input</p></th>
@@ -724,7 +733,7 @@ matrix axes leading.</p>
 <span class="sig-name descname"><span class="pre">div</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/short_range.py#L43-L81"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.short_range.DifferentialOperators.div" title="Link to this definition">#</a></dt>
 <dd><p>Divergence over the last tensor index.</p>
 <div class="math notranslate nohighlight">
-\[\widehat{\nabla \cdot f} = i k_i \hat{f}_{i}\]</div>
+\[\widehat{\nabla \cdot f} = i k_i \, \hat{f}_{i}\]</div>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Input</p></th>
@@ -770,7 +779,7 @@ matrix axes leading.</p>
 <span class="sig-name descname"><span class="pre">grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/short_range.py#L15-L41"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.short_range.DifferentialOperators.grad" title="Link to this definition">#</a></dt>
 <dd><p>Gradient: inserts a new length-3 axis before the spatial axes.</p>
 <div class="math notranslate nohighlight">
-\[\widehat{\nabla f}_{i} = i k_i \hat{f}\]</div>
+\[\widehat{\nabla f}_{i} = i k_i \, \hat{f}\]</div>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Input</p></th>
@@ -808,7 +817,7 @@ matrix axes leading.</p>
 <dt class="sig sig-object py" id="crystallite.spectral.short_range.DifferentialOperators.laplacian">
 <span class="sig-name descname"><span class="pre">laplacian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/short_range.py#L132-L144"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.short_range.DifferentialOperators.laplacian" title="Link to this definition">#</a></dt>
 <dd><p>Laplacian of an arbitrary-rank field: <span class="math notranslate nohighlight">\(\widehat{\nabla^2 f}
-= -k^2 \hat{f}\)</span>.</p>
+= -k^2 \, \hat{f}\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
