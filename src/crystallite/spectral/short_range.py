@@ -17,7 +17,7 @@ class DifferentialOperators:
 
         .. math::
 
-            \widehat{\nabla f}_{i} = i k_i \hat{f}
+            \widehat{\nabla f}_{i} = i k_i \, \hat{f}
 
         ========  ==================
         Input     Output
@@ -45,7 +45,7 @@ class DifferentialOperators:
 
         .. math::
 
-            \widehat{\nabla \cdot f} = i k_i \hat{f}_{i}
+            \widehat{\nabla \cdot f} = i k_i \, \hat{f}_{i}
 
         ========  ==================
         Input     Output
@@ -85,7 +85,7 @@ class DifferentialOperators:
 
         .. math::
 
-            \widehat{\nabla \times f}_{i} = i \epsilon_{ijk} k_j \hat{f}_{k}
+            \widehat{\nabla \times f}_{i} = i \epsilon_{ijk} k_j \, \hat{f}_{k}
 
         ========  ========
         Input     Output
@@ -131,7 +131,7 @@ class DifferentialOperators:
 
     def laplacian(self, f):
         r"""Laplacian of an arbitrary-rank field: :math:`\widehat{\nabla^2 f}
-        = -k^2 \hat{f}`.
+        = -k^2 \, \hat{f}`.
 
         Parameters
         ----------

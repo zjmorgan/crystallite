@@ -63,6 +63,76 @@ def _add_uniform_at_dc(grid, field, value):
     return field
 
 
+def _add_uniform_gradient(grid, field, gradient):
+    r"""Add a spatially-linear term with a constant gradient, built
+    directly in reciprocal space -- no real-space ramp is ever formed.
+
+    Adds :math:`\sum_j \mathrm{gradient}[\ldots, j] \, x_j` to `field`.
+    A periodic ramp along one axis has Fourier content only on the
+    pencil of modes where the other two axes are at k=0 (by
+    separability); away from k=0 on that pencil,
+
+    .. math::
+
+        \mathcal{F}[x_j]_{k_j} = \frac{-L_j N_{\mathrm{other}}}
+        {1 - e^{-i k_j \Delta x_j}}
+
+    (:math:`N_{\mathrm{other}}` the product of the other two axes'
+    point counts, matching the unnormalized forward FFT), and the k=0
+    mode gets :math:`\langle x_j \rangle` -- `grid.x`'s actual mean,
+    since `grid.x` runs ``0, dx, ..., (n-1)*dx`` rather than a
+    centered range.
+
+    Parameters
+    ----------
+    grid : Grid
+    field : ndarray
+        Modified in place.
+    gradient : array_like
+        Shape ``field``'s tensor shape + ``(3,)``: `gradient[..., j]`
+        is the tensor to add times :math:`x_j`, for each of the 3
+        spatial directions j.
+
+    Returns
+    -------
+    ndarray
+    """
+    gradient = xp.asarray(gradient)
+    spatial_ndim = len(grid.k2.shape)
+    dc = (slice(None),) * (field.ndim - spatial_ndim) + (0,) * spatial_ndim
+
+    n_points = 1
+    for n in grid.fft_shape:
+        n_points *= n
+
+    dc_term = xp.zeros(gradient.shape[:-1], dtype=field.dtype)
+
+    for axis in range(3):
+        other = [a for a in range(3) if a != axis]
+        k_axis = xp.broadcast_to(grid.k[axis], grid.k2.shape)
+        k_other0 = xp.broadcast_to(grid.k[other[0]], grid.k2.shape)
+        k_other1 = xp.broadcast_to(grid.k[other[1]], grid.k2.shape)
+
+        is_dc_axis = k_axis == 0
+        on_pencil = (k_other0 == 0) & (k_other1 == 0) & ~is_dc_axis
+
+        length = grid.fft_shape[axis] * grid.spacing[axis]
+        n_other = grid.fft_shape[other[0]] * grid.fft_shape[other[1]]
+
+        denom = xp.where(is_dc_axis, 1.0, 1 - xp.exp(-1j * k_axis * grid.spacing[axis]))
+        ramp = xp.where(on_pencil, -length * n_other / denom, 0.0)
+        ramp = ramp.astype(field.dtype)
+
+        term = gradient[..., axis]
+        field += term.reshape(term.shape + (1,) * spatial_ndim) * ramp
+
+        x_mean = xp.asarray(grid.x[axis]).mean()
+        dc_term = dc_term + gradient[..., axis] * x_mean
+
+    field[dc] += dc_term * n_points
+    return field
+
+
 class CoulombOperator:
     r"""Long-range 1/r interaction: solves the Poisson equation for a
     potential from a Fourier-space source term.
@@ -92,14 +162,17 @@ class CoulombOperator:
         """
         return -source * self.grid.inv_k2
 
-    def field(self, source, external=None):
+    def field(self, source, uniform_field=None, uniform_field_gradient=None):
         r""":math:`-\nabla \phi`.
 
         Parameters
         ----------
         source : ndarray
-        external : array_like of shape (3,), optional
+        uniform_field : array_like of shape (3,), optional
             Uniform far field, added at the k=0 mode.
+        uniform_field_gradient : array_like of shape (3, 3), optional
+            Constant far-field gradient (component, direction), added
+            directly in reciprocal space -- see `_add_uniform_gradient`.
 
         Returns
         -------
@@ -107,8 +180,13 @@ class CoulombOperator:
         """
         field = -self.ops.grad(self.potential(source))
 
-        if external is not None:
-            field = _add_uniform_at_dc(self.grid, field, external)
+        if uniform_field is not None:
+            field = _add_uniform_at_dc(self.grid, field, uniform_field)
+
+        if uniform_field_gradient is not None:
+            field = _add_uniform_gradient(
+                self.grid, field, uniform_field_gradient
+            )
 
         return field
 
@@ -248,15 +326,20 @@ class GreenOperator:
 
         return self.apply(source)
 
-    def strain(self, displacement, external=None):
+    def strain(
+        self, displacement, uniform_field=None, uniform_field_gradient=None
+    ):
         r""":math:`\varepsilon = \tfrac{1}{2}(\nabla u + (\nabla u)^{\mathsf{T}})`.
 
         Parameters
         ----------
         displacement : ndarray
             Tensor axis immediately before the spatial axes.
-        external : array_like of shape (3, 3), optional
+        uniform_field : array_like of shape (3, 3), optional
             Uniform far-field strain, added at the k=0 mode.
+        uniform_field_gradient : array_like of shape (3, 3, 3), optional
+            Constant far-field strain gradient (i, j, direction), added
+            directly in reciprocal space -- see `_add_uniform_gradient`.
 
         Returns
         -------
@@ -266,21 +349,31 @@ class GreenOperator:
         grad_u = self.ops.grad(displacement)
         strain = 0.5 * (grad_u + xp.swapaxes(grad_u, 0, 1))
 
-        if external is not None:
-            strain = _add_uniform_at_dc(self.grid, strain, external)
+        if uniform_field is not None:
+            strain = _add_uniform_at_dc(self.grid, strain, uniform_field)
+
+        if uniform_field_gradient is not None:
+            strain = _add_uniform_gradient(
+                self.grid, strain, uniform_field_gradient
+            )
 
         return strain
 
-    def stress(self, strain, external=None):
+    def stress(
+        self, strain, uniform_field=None, uniform_field_gradient=None
+    ):
         r"""Hooke's law: :math:`\sigma = C : \varepsilon`.
 
         Parameters
         ----------
         strain : ndarray
             (3, 3), tensor axes leading.
-        external : array_like of shape (3, 3), optional
+        uniform_field : array_like of shape (3, 3), optional
             Uniform far-field stress, added directly at the k=0 mode
             (independent of the medium, unlike `strain`'s far field).
+        uniform_field_gradient : array_like of shape (3, 3, 3), optional
+            Constant far-field stress gradient (i, j, direction), added
+            directly in reciprocal space -- see `_add_uniform_gradient`.
 
         Returns
         -------
@@ -296,8 +389,13 @@ class GreenOperator:
 
         stress = xp.einsum("ijkl,kl...->ij...", self.medium, strain)
 
-        if external is not None:
-            stress = _add_uniform_at_dc(self.grid, stress, external)
+        if uniform_field is not None:
+            stress = _add_uniform_at_dc(self.grid, stress, uniform_field)
+
+        if uniform_field_gradient is not None:
+            stress = _add_uniform_gradient(
+                self.grid, stress, uniform_field_gradient
+            )
 
         return stress
 

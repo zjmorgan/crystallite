@@ -115,7 +115,7 @@ def test_external_field_recovers_uniform_value_in_real_space(
     source = xp.zeros(fourier_shape, dtype=grid.complex_dtype)
     external = [0.3, -1.2, 2.5]
 
-    field_hat = coulomb.field(source, external=external)
+    field_hat = coulomb.field(source, uniform_field=external)
     field_real = grid.ifft(field_hat)
 
     for axis, value in enumerate(external):
@@ -137,7 +137,7 @@ def test_external_field_superposes_on_source_field(
         n_points *= n
 
     plain = np.asarray(coulomb.field(source))
-    with_external = np.asarray(coulomb.field(source, external=external))
+    with_external = np.asarray(coulomb.field(source, uniform_field=external))
 
     diff = with_external - plain
     expected_diff = np.zeros_like(diff)
@@ -151,8 +151,30 @@ def test_field_without_external_is_unchanged(coulomb, fourier_shape):
 
     np.testing.assert_array_equal(
         np.asarray(coulomb.field(source)),
-        np.asarray(coulomb.field(source, external=None)),
+        np.asarray(coulomb.field(source, uniform_field=None)),
     )
+
+
+def test_uniform_field_gradient_recovers_linear_field_in_real_space(
+    coulomb, grid, fourier_shape
+):
+    # A zero source, so the only contribution is the imposed gradient,
+    # built directly in reciprocal space (see _add_uniform_gradient).
+    source = xp.zeros(fourier_shape, dtype=grid.complex_dtype)
+    gradient = np.array(
+        [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6], [0.7, 0.8, 0.9]]
+    )
+
+    field_hat = coulomb.field(source, uniform_field_gradient=gradient)
+    field_real = np.asarray(grid.ifft(field_hat))
+
+    x0, x1, x2 = (np.asarray(x) for x in grid.x)
+    for i in range(3):
+        expected = np.broadcast_to(
+            gradient[i, 0] * x0 + gradient[i, 1] * x1 + gradient[i, 2] * x2,
+            grid.fft_shape,
+        )
+        np.testing.assert_allclose(field_real[i], expected, atol=1e-4)
 
 
 # -- callers build the source term; these reconstruct the two known
@@ -511,7 +533,7 @@ def test_strain_external_recovers_uniform_value_in_real_space(
     u = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
     external = [[0.1, 0.2, 0.0], [0.2, -0.3, 0.05], [0.0, 0.05, 0.15]]
 
-    eps_hat = elastic_green.strain(u, external=external)
+    eps_hat = elastic_green.strain(u, uniform_field=external)
     eps_real = grid.ifft(eps_hat)
 
     for i in range(3):
@@ -532,13 +554,36 @@ def test_strain_external_superposes(elastic_green, grid, fourier_shape):
         n_points *= n
 
     plain = np.asarray(elastic_green.strain(u))
-    with_external = np.asarray(elastic_green.strain(u, external=external))
+    with_external = np.asarray(elastic_green.strain(u, uniform_field=external))
 
     diff = with_external - plain
     expected_diff = np.zeros_like(diff)
     expected_diff[:, :, 0, 0, 0] = np.asarray(external) * n_points
 
     np.testing.assert_allclose(diff, expected_diff, atol=1e-6)
+
+
+def test_strain_uniform_field_gradient_recovers_linear_field(
+    elastic_green, grid, fourier_shape
+):
+    u = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
+    gradient = np.random.default_rng(28).normal(size=(3, 3, 3))
+
+    eps_hat = elastic_green.strain(u, uniform_field_gradient=gradient)
+    eps_real = np.asarray(grid.ifft(eps_hat))
+
+    x0, x1, x2 = (np.asarray(x) for x in grid.x)
+    for i in range(3):
+        for j in range(3):
+            expected = np.broadcast_to(
+                gradient[i, j, 0] * x0
+                + gradient[i, j, 1] * x1
+                + gradient[i, j, 2] * x2,
+                grid.fft_shape,
+            )
+            np.testing.assert_allclose(
+                eps_real[i, j], expected, atol=1e-3
+            )
 
 
 def test_stress_shape(elastic_green, isotropic_medium, fourier_shape):
@@ -577,7 +622,7 @@ def test_stress_external_recovers_uniform_value_in_real_space(
     eps = xp.zeros((3, 3) + fourier_shape, dtype=grid.complex_dtype)
     external = [[1.0, 0.5, 0.0], [0.5, -1.0, 0.0], [0.0, 0.0, 2.0]]
 
-    sigma_hat = elastic_green.stress(eps, external=external)
+    sigma_hat = elastic_green.stress(eps, uniform_field=external)
     sigma_real = grid.ifft(sigma_hat)
 
     for i in range(3):
@@ -600,13 +645,36 @@ def test_stress_external_superposes(elastic_green, grid, fourier_shape):
         n_points *= n
 
     plain = np.asarray(elastic_green.stress(eps))
-    with_external = np.asarray(elastic_green.stress(eps, external=external))
+    with_external = np.asarray(elastic_green.stress(eps, uniform_field=external))
 
     diff = with_external - plain
     expected_diff = np.zeros_like(diff)
     expected_diff[:, :, 0, 0, 0] = np.asarray(external) * n_points
 
     np.testing.assert_allclose(diff, expected_diff, atol=1e-6)
+
+
+def test_stress_uniform_field_gradient_recovers_linear_field(
+    elastic_green, grid, fourier_shape
+):
+    eps = xp.zeros((3, 3) + fourier_shape, dtype=grid.complex_dtype)
+    gradient = np.random.default_rng(29).normal(size=(3, 3, 3))
+
+    sigma_hat = elastic_green.stress(eps, uniform_field_gradient=gradient)
+    sigma_real = np.asarray(grid.ifft(sigma_hat))
+
+    x0, x1, x2 = (np.asarray(x) for x in grid.x)
+    for i in range(3):
+        for j in range(3):
+            expected = np.broadcast_to(
+                gradient[i, j, 0] * x0
+                + gradient[i, j, 1] * x1
+                + gradient[i, j, 2] * x2,
+                grid.fft_shape,
+            )
+            np.testing.assert_allclose(
+                sigma_real[i, j], expected, atol=1e-3
+            )
 
 
 # -- compliance() / apply_compliance(): the reference medium's
