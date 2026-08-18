@@ -1,0 +1,23 @@
+crystallite.material namespace
+==============================
+
+.. py:module:: crystallite.material
+
+Submodules
+----------
+
+crystallite.material.properties module
+--------------------------------------
+
+.. automodule:: crystallite.material.properties
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.material.symmetry module
+------------------------------------
+
+.. automodule:: crystallite.material.symmetry
+   :members:
+   :show-inheritance:
+   :undoc-members:
