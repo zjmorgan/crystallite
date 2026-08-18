@@ -297,7 +297,7 @@ def test_conduction_matches_manual_anisotropic_formula(grid, fourier_shape):
 
     source = _random_field(fourier_shape, np.random.default_rng(8))
     np.testing.assert_allclose(
-        np.asarray(green.apply(source)),
+        np.asarray(green.potential(source)),
         expected_g * np.asarray(source),
         atol=1e-6,
     )
@@ -306,7 +306,7 @@ def test_conduction_matches_manual_anisotropic_formula(grid, fourier_shape):
 def test_conduction_dc_mode_has_no_nan(grid, fourier_shape):
     green = GreenOperator(grid, xp.eye(3, dtype=grid.real_dtype))
     source = _random_field(fourier_shape, np.random.default_rng(9))
-    result = green.apply(source)
+    result = green.potential(source)
 
     assert not np.any(np.isnan(np.asarray(result)))
     assert np.asarray(result)[0, 0, 0] == 0
@@ -349,17 +349,17 @@ def test_elastic_tensor_is_inverse_of_acoustic_tensor(
     np.testing.assert_allclose(identity, expected, atol=1e-5)
 
 
-def test_elastic_apply_shape(elastic_green, fourier_shape):
+def test_elastic_potential_shape(elastic_green, fourier_shape):
     f = _random_field((3,) + fourier_shape, np.random.default_rng(10))
-    u = elastic_green.apply(f)
+    u = elastic_green.potential(f)
     assert u.shape == f.shape
 
 
-def test_elastic_apply_solves_acoustic_equation_away_from_dc(
+def test_elastic_potential_solves_acoustic_equation_away_from_dc(
     grid, isotropic_medium, elastic_green, fourier_shape
 ):
     f = _random_field((3,) + fourier_shape, np.random.default_rng(11))
-    u = np.asarray(elastic_green.apply(f))
+    u = np.asarray(elastic_green.potential(f))
 
     k = np.stack(
         [
@@ -378,9 +378,9 @@ def test_elastic_apply_solves_acoustic_equation_away_from_dc(
     np.testing.assert_allclose(recovered, f, atol=1e-4)
 
 
-def test_elastic_apply_has_no_nan_at_dc(elastic_green, fourier_shape):
+def test_elastic_potential_has_no_nan_at_dc(elastic_green, fourier_shape):
     f = _random_field((3,) + fourier_shape, np.random.default_rng(12))
-    u = elastic_green.apply(f)
+    u = elastic_green.potential(f)
 
     assert not np.any(np.isnan(np.asarray(u)))
     np.testing.assert_array_equal(np.asarray(u[:, 0, 0, 0]), 0.0)
@@ -391,115 +391,28 @@ def _random_symmetric_tensor_field(fourier_shape, rng):
     return 0.5 * (a + np.swapaxes(a, 0, 1))
 
 
-def test_elastic_apply_eigenstrain_shape(elastic_green, fourier_shape):
-    eigenstrain = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(13)
-    )
-    u = elastic_green.apply_eigenstrain(eigenstrain)
-    assert u.shape == (3,) + fourier_shape
+# -- field(): strain response to a body force, parallel to
+#    CoulombOperator.potential()/field(), including uniform
+#    far-field/gradient superposition --
 
 
-def test_elastic_apply_eigenstrain_matches_manual_force(
-    grid, isotropic_medium, elastic_green, fourier_shape
-):
-    eigenstrain = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(14)
-    )
-
-    k = np.stack(
-        [
-            np.broadcast_to(np.asarray(x), grid.k2.shape)
-            for x in grid.k
-        ],
-        axis=0,
-    )
-    stress = np.einsum("ijkl,kl...->ij...", isotropic_medium, eigenstrain)
-    force = -1j * np.einsum("j...,ij...->i...", k, stress)
-    expected = elastic_green.apply(force)
-
-    np.testing.assert_allclose(
-        np.asarray(elastic_green.apply_eigenstrain(eigenstrain)),
-        np.asarray(expected),
-        atol=1e-6,
-    )
-
-
-def test_elastic_apply_eigenstrain_has_no_nan_at_dc(
-    elastic_green, fourier_shape
-):
-    eigenstrain = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(15)
-    )
-    u = elastic_green.apply_eigenstrain(eigenstrain)
-
-    assert not np.any(np.isnan(np.asarray(u)))
-    np.testing.assert_array_equal(np.asarray(u[:, 0, 0, 0]), 0.0)
-
-
-def test_conduction_apply_eigenstrain_shape(grid, fourier_shape):
-    green = GreenOperator(grid, xp.eye(3, dtype=grid.real_dtype))
-    eigengrad = _random_field((3,) + fourier_shape, np.random.default_rng(16))
-
-    t = green.apply_eigenstrain(eigengrad)
-    assert t.shape == fourier_shape
-
-
-def test_conduction_apply_eigenstrain_matches_manual_force(
-    grid, fourier_shape
-):
-    kappa = xp.asarray([[2.0, 0, 0], [0, 1.0, 0], [0, 0, 1.0]])
-    green = GreenOperator(grid, kappa)
-    eigengrad = _random_field((3,) + fourier_shape, np.random.default_rng(17))
-
-    k = np.stack(
-        [
-            np.broadcast_to(np.asarray(x), grid.k2.shape)
-            for x in grid.k
-        ],
-        axis=0,
-    )
-    flux = np.einsum("ij,j...->i...", np.asarray(kappa), eigengrad)
-    source = -1j * np.einsum("i...,i...->...", k, flux)
-    expected = green.apply(source)
-
-    np.testing.assert_allclose(
-        np.asarray(green.apply_eigenstrain(eigengrad)),
-        np.asarray(expected),
-        atol=1e-6,
-    )
-
-
-def test_conduction_apply_eigenstrain_has_no_nan_at_dc(grid, fourier_shape):
-    green = GreenOperator(grid, xp.eye(3, dtype=grid.real_dtype))
-    eigengrad = _random_field((3,) + fourier_shape, np.random.default_rng(18))
-
-    t = green.apply_eigenstrain(eigengrad)
-
-    assert not np.any(np.isnan(np.asarray(t)))
-    assert np.asarray(t)[0, 0, 0] == 0
-
-
-# -- strain (from displacement) and stress (from strain via Hooke's
-#    law), including uniform far-field/applied superposition --
-
-
-def test_strain_shape(elastic_green, fourier_shape):
-    u = _random_field((3,) + fourier_shape, np.random.default_rng(19))
-    eps = elastic_green.strain(u)
+def test_elastic_field_shape(elastic_green, fourier_shape):
+    f = _random_field((3,) + fourier_shape, np.random.default_rng(19))
+    eps = elastic_green.field(f)
     assert eps.shape == (3, 3) + fourier_shape
 
 
-def test_strain_is_symmetric(elastic_green, fourier_shape):
-    u = _random_field((3,) + fourier_shape, np.random.default_rng(20))
-    eps = np.asarray(elastic_green.strain(u))
+def test_elastic_field_is_symmetric(elastic_green, fourier_shape):
+    f = _random_field((3,) + fourier_shape, np.random.default_rng(20))
+    eps = np.asarray(elastic_green.field(f))
 
     np.testing.assert_allclose(eps, np.swapaxes(eps, 0, 1), atol=1e-6)
 
 
-def test_strain_matches_manual_symmetrized_gradient(
+def test_elastic_field_matches_manual_symmetrized_gradient(
     elastic_green, grid, fourier_shape
 ):
-    u = _random_field((3,) + fourier_shape, np.random.default_rng(21))
+    f = _random_field((3,) + fourier_shape, np.random.default_rng(21))
 
     k = np.stack(
         [
@@ -508,68 +421,75 @@ def test_strain_matches_manual_symmetrized_gradient(
         ],
         axis=0,
     )
+    u = np.asarray(elastic_green.potential(f))
     # eps_kl = 0.5 * (i k_l u_k + i k_k u_l)
     grad_u = 1j * np.einsum("l...,k...->lk...", k, u)
     expected = 0.5 * (grad_u + np.swapaxes(grad_u, 0, 1))
 
     np.testing.assert_allclose(
-        np.asarray(elastic_green.strain(u)), expected, atol=1e-6
+        np.asarray(elastic_green.field(f)), expected, atol=1e-6
     )
 
 
-def test_strain_dc_mode_is_zero_without_external(
+def test_elastic_field_dc_mode_is_zero_without_uniform_field(
     elastic_green, fourier_shape
 ):
-    u = _random_field((3,) + fourier_shape, np.random.default_rng(22))
-    eps = elastic_green.strain(u)
+    f = _random_field((3,) + fourier_shape, np.random.default_rng(22))
+    eps = elastic_green.field(f)
 
     assert not np.any(np.isnan(np.asarray(eps)))
     np.testing.assert_array_equal(np.asarray(eps[:, :, 0, 0, 0]), 0.0)
 
 
-def test_strain_external_recovers_uniform_value_in_real_space(
+def test_elastic_field_uniform_field_recovers_uniform_value_in_real_space(
     elastic_green, grid, fourier_shape
 ):
-    u = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
-    external = [[0.1, 0.2, 0.0], [0.2, -0.3, 0.05], [0.0, 0.05, 0.15]]
+    f = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
+    uniform_field = [
+        [0.1, 0.2, 0.0], [0.2, -0.3, 0.05], [0.0, 0.05, 0.15]
+    ]
 
-    eps_hat = elastic_green.strain(u, uniform_field=external)
+    eps_hat = elastic_green.field(f, uniform_field=uniform_field)
     eps_real = grid.ifft(eps_hat)
 
     for i in range(3):
         for j in range(3):
             np.testing.assert_allclose(
                 np.asarray(eps_real[i, j]),
-                np.full(grid.fft_shape, external[i][j]),
+                np.full(grid.fft_shape, uniform_field[i][j]),
                 atol=1e-4,
             )
 
 
-def test_strain_external_superposes(elastic_green, grid, fourier_shape):
-    u = _random_field((3,) + fourier_shape, np.random.default_rng(23))
-    external = [[0.1, 0.0, 0.0], [0.0, -0.1, 0.0], [0.0, 0.0, 0.0]]
+def test_elastic_field_uniform_field_superposes(
+    elastic_green, grid, fourier_shape
+):
+    f = _random_field((3,) + fourier_shape, np.random.default_rng(23))
+    uniform_field = [[0.1, 0.0, 0.0], [0.0, -0.1, 0.0], [0.0, 0.0, 0.0]]
 
     n_points = 1
     for n in grid.fft_shape:
         n_points *= n
 
-    plain = np.asarray(elastic_green.strain(u))
-    with_external = np.asarray(elastic_green.strain(u, uniform_field=external))
+    plain = np.asarray(elastic_green.field(f))
+    with_uniform = np.asarray(
+        elastic_green.field(f, uniform_field=uniform_field)
+    )
 
-    diff = with_external - plain
+    diff = with_uniform - plain
     expected_diff = np.zeros_like(diff)
-    expected_diff[:, :, 0, 0, 0] = np.asarray(external) * n_points
+    expected_diff[:, :, 0, 0, 0] = np.asarray(uniform_field) * n_points
 
     np.testing.assert_allclose(diff, expected_diff, atol=1e-6)
 
 
-def test_strain_uniform_field_gradient_recovers_linear_field(
+def test_elastic_field_uniform_field_gradient_recovers_linear_field(
     elastic_green, grid, fourier_shape
 ):
-    u = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
+    f = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
     gradient = np.random.default_rng(28).normal(size=(3, 3, 3))
 
-    eps_hat = elastic_green.strain(u, uniform_field_gradient=gradient)
+    eps_hat = elastic_green.field(f, uniform_field_gradient=gradient)
     eps_real = np.asarray(grid.ifft(eps_hat))
 
     x0, x1, x2 = (np.asarray(x) for x in grid.x)
@@ -586,94 +506,33 @@ def test_strain_uniform_field_gradient_recovers_linear_field(
             )
 
 
-def test_stress_shape(elastic_green, isotropic_medium, fourier_shape):
-    eps = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(24)
-    )
-    sigma = elastic_green.stress(eps)
-    assert sigma.shape == (3, 3) + fourier_shape
-
-
-def test_stress_matches_hookes_law(
-    elastic_green, isotropic_medium, fourier_shape
+def test_elastic_field_uniform_field_from_stress_via_compliance(
+    elastic_green, isotropic_medium, grid, fourier_shape
 ):
-    eps = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(25)
+    # Stress-controlled far field: convert an applied macroscopic
+    # stress to the equivalent strain via apply_compliance, then feed
+    # it to field() as uniform_field. Checked by recovering the
+    # applied stress via a manual C:strain (Hooke's law) contraction.
+    f = xp.zeros((3,) + fourier_shape, dtype=grid.complex_dtype)
+    sigma_appl = np.asarray(
+        [[1.0, 0.2, 0.0], [0.2, -0.5, 0.0], [0.0, 0.0, 0.3]]
     )
-    expected = np.einsum("ijkl,kl...->ij...", isotropic_medium, eps)
 
-    np.testing.assert_allclose(
-        np.asarray(elastic_green.stress(eps)), expected, atol=1e-6
+    eps_bar = elastic_green.apply_compliance(sigma_appl)
+    eps_hat = elastic_green.field(f, uniform_field=eps_bar)
+    eps_real = np.asarray(grid.ifft(eps_hat))
+
+    recovered_stress_real = np.asarray(
+        grid.ifft(
+            np.einsum("ijkl,kl...->ij...", isotropic_medium, eps_hat)
+        )
     )
-
-
-def test_stress_raises_for_conduction_medium(grid, fourier_shape):
-    green = GreenOperator(grid, xp.eye(3, dtype=grid.real_dtype))
-    eps = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(26)
-    )
-    with pytest.raises(ValueError):
-        green.stress(eps)
-
-
-def test_stress_external_recovers_uniform_value_in_real_space(
-    elastic_green, grid, fourier_shape
-):
-    eps = xp.zeros((3, 3) + fourier_shape, dtype=grid.complex_dtype)
-    external = [[1.0, 0.5, 0.0], [0.5, -1.0, 0.0], [0.0, 0.0, 2.0]]
-
-    sigma_hat = elastic_green.stress(eps, uniform_field=external)
-    sigma_real = grid.ifft(sigma_hat)
-
     for i in range(3):
         for j in range(3):
             np.testing.assert_allclose(
-                np.asarray(sigma_real[i, j]),
-                np.full(grid.fft_shape, external[i][j]),
+                recovered_stress_real[i, j],
+                np.full(grid.fft_shape, sigma_appl[i, j]),
                 atol=1e-4,
-            )
-
-
-def test_stress_external_superposes(elastic_green, grid, fourier_shape):
-    eps = _random_symmetric_tensor_field(
-        fourier_shape, np.random.default_rng(27)
-    )
-    external = [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
-
-    n_points = 1
-    for n in grid.fft_shape:
-        n_points *= n
-
-    plain = np.asarray(elastic_green.stress(eps))
-    with_external = np.asarray(elastic_green.stress(eps, uniform_field=external))
-
-    diff = with_external - plain
-    expected_diff = np.zeros_like(diff)
-    expected_diff[:, :, 0, 0, 0] = np.asarray(external) * n_points
-
-    np.testing.assert_allclose(diff, expected_diff, atol=1e-6)
-
-
-def test_stress_uniform_field_gradient_recovers_linear_field(
-    elastic_green, grid, fourier_shape
-):
-    eps = xp.zeros((3, 3) + fourier_shape, dtype=grid.complex_dtype)
-    gradient = np.random.default_rng(29).normal(size=(3, 3, 3))
-
-    sigma_hat = elastic_green.stress(eps, uniform_field_gradient=gradient)
-    sigma_real = np.asarray(grid.ifft(sigma_hat))
-
-    x0, x1, x2 = (np.asarray(x) for x in grid.x)
-    for i in range(3):
-        for j in range(3):
-            expected = np.broadcast_to(
-                gradient[i, j, 0] * x0
-                + gradient[i, j, 1] * x1
-                + gradient[i, j, 2] * x2,
-                grid.fft_shape,
-            )
-            np.testing.assert_allclose(
-                sigma_real[i, j], expected, atol=1e-3
             )
 
 
@@ -774,17 +633,15 @@ def test_elastic_apply_compliance_matches_manual(
 
 
 def test_elastic_apply_compliance_round_trips_through_stress(
-    elastic_green,
+    elastic_green, isotropic_medium
 ):
     stress = np.asarray(
         [[1.0, 0.2, 0.0], [0.2, -0.5, 0.1], [0.0, 0.1, 0.3]]
     )
     strain = elastic_green.apply_compliance(stress)
-    recovered = elastic_green.stress(strain)
+    recovered = np.einsum("ijkl,kl->ij", isotropic_medium, np.asarray(strain))
 
-    np.testing.assert_allclose(
-        np.asarray(recovered), stress, atol=1e-6
-    )
+    np.testing.assert_allclose(recovered, stress, atol=1e-6)
 
 
 def test_conduction_apply_compliance_round_trips_through_kappa(grid):
@@ -796,3 +653,23 @@ def test_conduction_apply_compliance_round_trips_through_kappa(grid):
     recovered = np.asarray(kappa) @ np.asarray(gradient)
 
     np.testing.assert_allclose(recovered, flux, atol=1e-6)
+
+
+def test_elastic_apply_compliance_broadcasts_over_gradient_direction(
+    elastic_green, isotropic_medium
+):
+    # A far-field *gradient* of stress has the same (i, j) tensor
+    # shape as a uniform one, plus a trailing spatial-direction axis --
+    # apply_compliance should apply compliance independently to each
+    # direction slice, matching apply_compliance called per slice.
+    s = _isotropic_compliance_manual(lam=1.5, mu=0.7)
+    stress_gradient = np.random.default_rng(30).normal(size=(3, 3, 3))
+
+    result = np.asarray(elastic_green.apply_compliance(stress_gradient))
+    for d in range(3):
+        expected_d = np.einsum("ijkl,kl->ij", s, stress_gradient[..., d])
+        np.testing.assert_allclose(
+            result[..., d], expected_d, atol=1e-6
+        )
+
+
