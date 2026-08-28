@@ -379,11 +379,14 @@ group. Not major-symmetric: the two legs are physically distinct
 (polar vs. axial), not interchangeable."""
 
 _TRANSPORT = PropertyTensor(_VECTOR, TensorBlock("vector"), major_symmetric=True)
-"""Electric/thermal conductivity, diffusivity, electric susceptibility,
-thermal expansion: polar, T-even, and symmetric -- by Onsager
-reciprocity for the transport properties (absent an applied magnetic
-field), and intrinsically (strain is symmetric by definition) for
-thermal expansion."""
+r"""Electric/thermal conductivity, diffusivity, electric susceptibility,
+thermal expansion, misfit strain: polar, T-even, and symmetric -- by
+Onsager reciprocity for the transport properties (absent an applied
+magnetic field), and intrinsically (strain is symmetric by definition)
+for thermal expansion and misfit strain. Misfit strain is the
+composition-driven eigenstrain :math:`\varepsilon^0_{ij} =
+\alpha_{ij}(c-c_0)` (Cahn-Hilliard elasticity) -- identical shape to
+thermal expansion, just driven by composition instead of temperature."""
 
 _MAGNETIC_TRANSPORT = PropertyTensor(_AXIAL_VECTOR, TensorBlock("vector", axial=True), major_symmetric=True)
 """Magnetic susceptibility: M and H are both axial, but `det(R)^2=1`
@@ -437,6 +440,7 @@ _PROPERTIES = {
     "electric_susceptibility": (_TRANSPORT, "chie", False),
     "magnetic_susceptibility": (_MAGNETIC_TRANSPORT, "chim", False),
     "thermal_expansion": (_TRANSPORT, "alpha", False),
+    "misfit_strain": (_TRANSPORT, "alpha", False),
     "seebeck_coefficient": (_CROSS, "s", False),
     "concentration_gradient_energy": (_TRANSPORT, "kappa", False),
     "polarization_gradient_energy": (_POLAR_GRADIENT, "g", False),
@@ -502,7 +506,10 @@ class Solid:
     `piezoelectricity`, `piezomagnetism`, `pyroelectricity`,
     `pyromagnetism`, `magnetoelectricity`, `electrical_conductivity`,
     `thermal_conductivity`, `diffusivity`, `electric_susceptibility`,
-    `magnetic_susceptibility`, `thermal_expansion`,
+    `magnetic_susceptibility`, `thermal_expansion`, `misfit_strain`
+    (the composition-driven eigenstrain :math:`\varepsilon^0_{ij} =
+    \alpha_{ij}(c-c_0)` of Cahn-Hilliard elasticity -- same shape as
+    `thermal_expansion`, driven by composition instead of temperature),
     `seebeck_coefficient`, `concentration_gradient_energy`,
     `polarization_gradient_energy`, `magnetization_gradient_energy`
     (the last three are Cahn-Hilliard/Landau-Ginzburg-type gradient
