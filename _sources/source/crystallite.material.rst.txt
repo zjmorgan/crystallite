@@ -6,6 +6,14 @@ crystallite.material namespace
 Submodules
 ----------
 
+crystallite.material.phase module
+---------------------------------
+
+.. automodule:: crystallite.material.phase
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 crystallite.material.properties module
 --------------------------------------
 

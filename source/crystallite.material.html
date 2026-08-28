@@ -340,6 +340,54 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
+<section id="module-crystallite.material.phase">
+<span id="crystallite-material-phase-module"></span><h2>crystallite.material.phase module<a class="headerlink" href="#module-crystallite.material.phase" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.material.phase.Transformation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L5-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A phase transformation between a parent and product <cite>Solid</cite>.</p>
+<p>Generates the crystallographically distinct variants of a
+transformation (Bain) strain by applying Neumann’s principle to the
+<em>strain itself</em>: since the parent phase has more symmetry than the
+product, a given transformation strain can sit in several
+symmetry-equivalent orientations relative to the parent lattice –
+these are the martensite variants. The count works out to
+<span class="math notranslate nohighlight">\(|G|/|\mathrm{Stab}_G(U)|\)</span> by orbit-stabilizer, where <cite>G</cite> is
+the parent’s point group and the stabilizer is generically (a
+conjugate of) the product’s point group, though this class only
+needs <cite>G</cite> – it doesn’t require the product’s point group to be
+known or embeddable in any particular way.</p>
+<p><cite>parent</cite>/<cite>product</cite> are kept as full <cite>Solid</cite> instances (not just
+their point groups) so later additions – elastic-energy-weighted
+variant selection, self-accommodation, misfit-driven nucleation –
+have direct access to their other properties (e.g. <cite>stiffness</cite>,
+<cite>misfit_strain</cite>).</p>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.material.phase.Transformation.variants" title="crystallite.material.phase.Transformation.variants"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variants</span></code></a>(strain[, tol])</p></td>
+<td><p>Distinct crystallographically-equivalent orientations of <cite>strain</cite> under the parent phase's point group.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.phase.Transformation.variants">
+<span class="sig-name descname"><span class="pre">variants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L31-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation.variants" title="Link to this definition">#</a></dt>
+<dd><p>Distinct crystallographically-equivalent orientations of
+<cite>strain</cite> under the parent phase’s point group.</p>
+<p><cite>strain</cite> is a symmetric (3, 3) transformation strain (e.g. a
+Bain strain, or <cite>product.get(“misfit_strain”)</cite>) at one point
+along a transformation path (an order parameter running from
+the parent to the product): the same rotation set applies at
+every point along such a path, so call this once per sample
+rather than re-deriving the rotation set each time.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-crystallite.material.properties">
 <span id="crystallite-material-properties-module"></span><h2>crystallite.material.properties module<a class="headerlink" href="#module-crystallite.material.properties" title="Link to this heading">#</a></h2>
 <dl class="py class">
@@ -452,7 +500,7 @@ full (possibly redundant) matrix, independent of
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Solid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uni_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L471-L638"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Solid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uni_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L475-L645"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Anisotropic medium: a general storage/transformation framework
 for crystal property tensors (Nye, <em>Physical Properties of
@@ -485,7 +533,10 @@ is what constrains them.</p>
 <cite>piezoelectricity</cite>, <cite>piezomagnetism</cite>, <cite>pyroelectricity</cite>,
 <cite>pyromagnetism</cite>, <cite>magnetoelectricity</cite>, <cite>electrical_conductivity</cite>,
 <cite>thermal_conductivity</cite>, <cite>diffusivity</cite>, <cite>electric_susceptibility</cite>,
-<cite>magnetic_susceptibility</cite>, <cite>thermal_expansion</cite>,
+<cite>magnetic_susceptibility</cite>, <cite>thermal_expansion</cite>, <cite>misfit_strain</cite>
+(the composition-driven eigenstrain <span class="math notranslate nohighlight">\(\varepsilon^0_{ij} =
+\alpha_{ij}(c-c_0)\)</span> of Cahn-Hilliard elasticity – same shape as
+<cite>thermal_expansion</cite>, driven by composition instead of temperature),
 <cite>seebeck_coefficient</cite>, <cite>concentration_gradient_energy</cite>,
 <cite>polarization_gradient_energy</cite>, <cite>magnetization_gradient_energy</cite>
 (the last three are Cahn-Hilliard/Landau-Ginzburg-type gradient
@@ -520,7 +571,7 @@ c)(\partial_j c)\)</span> for a scalar concentration field <cite>c</cite>).</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L551-L563"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L558-L570"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get" title="Link to this definition">#</a></dt>
 <dd><p>Return property <cite>name</cite>’s conventional Voigt-like matrix.</p>
 <p>Shape <cite>(dim,)</cite> for a lone vector, <cite>(dim0, dim1)</cite> for two blocks
 (e.g. <cite>(6, 6)</cite> Voigt for stiffness, <cite>(6, 3)</cite> for piezomagnetism,
@@ -530,21 +581,21 @@ c)(\partial_j c)\)</span> for a scalar concentration field <cite>c</cite>).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get_affine">
-<span class="sig-name descname"><span class="pre">get_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L632-L638"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_affine" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L639-L645"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_affine" title="Link to this definition">#</a></dt>
 <dd><p>Return affine property <cite>name</cite>’s Voigt-like matrix, i.e.
 <cite>get(primary) + offset * I</cite> – see <cite>_AFFINE_PROPERTIES</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get_inverse">
-<span class="sig-name descname"><span class="pre">get_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L603-L608"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_inverse" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L610-L615"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_inverse" title="Link to this definition">#</a></dt>
 <dd><p>Return inverse property <cite>name</cite>’s Voigt-like matrix, i.e.
 <cite>inv(get(primary))</cite> – see <cite>_INVERSE_PROPERTIES</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.rotate">
-<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L565-L579"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.rotate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L572-L586"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.rotate" title="Link to this definition">#</a></dt>
 <dd><p>Return property <cite>name</cite> transformed to a rotated frame.</p>
 <p><cite>rotation</cite> is any 3x3 proper or improper orthogonal matrix
 (crystal-frame axes expressed in the new frame), e.g. built
@@ -556,7 +607,7 @@ the conventional Voigt-like matrix, like <cite>get</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set">
-<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L533-L549"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L540-L556"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set" title="Link to this definition">#</a></dt>
 <dd><p>Set property <cite>name</cite> from its independent named constants.</p>
 <p>Constants required to vanish or repeat by symmetry may be left
 unset (<cite>None</cite>); given explicitly, they must be consistent with
@@ -567,7 +618,7 @@ magnetostriction) and each of its <cite>PropertyTensor.keys</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set_affine">
-<span class="sig-name descname"><span class="pre">set_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L610-L630"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_affine" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L617-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_affine" title="Link to this definition">#</a></dt>
 <dd><p>Set the primary property behind affine property <cite>name</cite>
 (e.g. <cite>“electric_permittivity”</cite> sets <cite>electric_susceptibility</cite>)
 from <cite>name</cite>’s own independent named constants – see
@@ -579,7 +630,7 @@ symmetry), and re-added by <cite>get_affine</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set_inverse">
-<span class="sig-name descname"><span class="pre">set_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L581-L601"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_inverse" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L588-L608"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_inverse" title="Link to this definition">#</a></dt>
 <dd><p>Set the primary property behind inverse property <cite>name</cite>
 (e.g. <cite>“compliance”</cite> sets <cite>stiffness</cite>, <cite>“electrical_resistivity”</cite>
 sets <cite>electrical_conductivity</cite>) from <cite>name</cite>’s own independent
@@ -769,6 +820,13 @@ flagged anti-time-reversal in <cite>time_reversals</cite> (spglib convention:
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.phase">crystallite.material.phase module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Transformation"><code class="docutils literal notranslate"><span class="pre">Transformation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Transformation.variants"><code class="docutils literal notranslate"><span class="pre">Transformation.variants()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.properties">crystallite.material.properties module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.properties.PropertyTensor"><code class="docutils literal notranslate"><span class="pre">PropertyTensor</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.properties.PropertyTensor.basis_tensor"><code class="docutils literal notranslate"><span class="pre">PropertyTensor.basis_tensor()</span></code></a></li>
