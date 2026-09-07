@@ -344,7 +344,7 @@
 <span id="crystallite-material-phase-module"></span><h2>crystallite.material.phase module<a class="headerlink" href="#module-crystallite.material.phase" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.material.phase.Transformation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L5-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Transformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">product</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L24-L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A phase transformation between a parent and product <cite>Solid</cite>.</p>
 <p>Generates the crystallographically distinct variants of a
@@ -374,7 +374,7 @@ have direct access to their other properties (e.g. <cite>stiffness</cite>,
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.phase.Transformation.variants">
-<span class="sig-name descname"><span class="pre">variants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L31-L49"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation.variants" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">variants</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L50-L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Transformation.variants" title="Link to this definition">#</a></dt>
 <dd><p>Distinct crystallographically-equivalent orientations of
 <cite>strain</cite> under the parent phase’s point group.</p>
 <p><cite>strain</cite> is a symmetric (3, 3) transformation strain (e.g. a
@@ -385,6 +385,25 @@ every point along such a path, so call this once per sample
 rather than re-deriving the rotation set each time.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.material.phase.Variant">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Variant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/phase.py#L5-L21"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.phase.Variant" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A symmetry-related crystallographic transformation variant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>transformation</strong><span class="classifier">Transformation</span></dt><dd><p>Transformation from which this variant is generated.</p>
+</dd>
+<dt><strong>rotation</strong><span class="classifier">ndarray</span></dt><dd><p>Parent-crystal symmetry rotation that generates the variant.</p>
+</dd>
+<dt><strong>eigenstrain</strong><span class="classifier">ndarray</span></dt><dd><p>Variant transformation strain in the parent crystal frame.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -825,6 +844,7 @@ flagged anti-time-reversal in <cite>time_reversals</cite> (spglib convention:
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Transformation.variants"><code class="docutils literal notranslate"><span class="pre">Transformation.variants()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Variant"><code class="docutils literal notranslate"><span class="pre">Variant</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.properties">crystallite.material.properties module</a><ul class="nav section-nav flex-column">
