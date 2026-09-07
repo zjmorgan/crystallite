@@ -2,6 +2,25 @@ from crystallite.backend import xp
 from crystallite.material.symmetry import point_group_operations
 
 
+class Variant:
+    """A symmetry-related crystallographic transformation variant.
+
+    Parameters
+    ----------
+    transformation : Transformation
+        Transformation from which this variant is generated.
+    rotation : ndarray
+        Parent-crystal symmetry rotation that generates the variant.
+    eigenstrain : ndarray
+        Variant transformation strain in the parent crystal frame.
+    """
+
+    def __init__(self, transformation, rotation, eigenstrain):
+        self.transformation = transformation
+        self.rotation = xp.asarray(rotation)
+        self.eigenstrain = xp.asarray(eigenstrain)
+
+
 class Transformation:
     r"""A phase transformation between a parent and product `Solid`.
 
@@ -44,6 +63,9 @@ class Transformation:
         variants = []
         for op in ops:
             candidate = op @ strain @ op.T
-            if not any(xp.allclose(candidate, v, atol=tol) for v in variants):
-                variants.append(candidate)
+            if not any(
+                xp.allclose(candidate, variant.eigenstrain, atol=tol)
+                for variant in variants
+            ):
+                variants.append(Variant(self, op, candidate))
         return variants

@@ -48,6 +48,9 @@ class Grid:
         assert all(n > 0 for n in shape), "shape: {}".format(shape)
         assert all(l > 0 for l in lengths), "lengths: {}".format(lengths)
 
+        self.shape = tuple(shape)
+        self.lengths = tuple(lengths)
+
         self.fft_axes = tuple(
             axis - 3 for axis, n in enumerate(shape) if n > 1
         )
