@@ -75,10 +75,16 @@ def linkcode_resolve(domain, info):
     url = baseurl.format(filename)
     mod = importlib.import_module(info["module"])
     objname, *attrname = info["fullname"].split(".")
-    obj = getattr(mod, objname)
+    try:
+        obj = getattr(mod, objname)
+    except AttributeError:
+        return url
     if attrname:
         for attr in attrname:
-            obj = getattr(obj, attr)
+            try:
+                obj = getattr(obj, attr)
+            except AttributeError:
+                return url
     try:
         lines = inspect.getsourcelines(obj)
         start, stop = lines[1], lines[1] + len(lines[0]) - 1
