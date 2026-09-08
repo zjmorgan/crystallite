@@ -10,6 +10,20 @@ Subpackages
    :maxdepth: 4
 
    crystallite.spectral
+   crystallite.verification
+
+.. toctree::
+   :maxdepth: 2
+
+   mass_diffusion
+
+crystallite.diffusion module
+----------------------------
+
+.. automodule:: crystallite.diffusion
+   :members:
+   :show-inheritance:
+   :undoc-members:
 
 Submodules
 ----------

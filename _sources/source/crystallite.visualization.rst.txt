@@ -1,0 +1,21 @@
+crystallite.visualization package
+=================================
+
+Submodules
+----------
+
+crystallite.visualization.style module
+--------------------------------------
+
+.. automodule:: crystallite.visualization.style
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Module contents
+---------------
+
+.. automodule:: crystallite.visualization
+   :members:
+   :show-inheritance:
+   :undoc-members:
