@@ -370,8 +370,98 @@ observables; numerical time integration belongs to the diffusion solver.</p>
 <span id="fick-examples"></span><h2>Fick examples<a class="headerlink" href="#module-crystallite.verification.fick" title="Link to this heading">#</a></h2>
 <p>Verification cases based on the Fick presentation examples.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">InterfaceCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.phase.Grid" title="crystallite.phase.Grid"><span class="pre">Grid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L9-L79"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>One-dimensional two-phase interface verification case.</p>
+<p>The equilibrium profile for the binary barrier model is a tanh transition
+layer between two stable phases. This case builds a discrete initial step
+across the interface and measures how closely a relaxed field approaches
+the tanh profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid, optional</span></dt><dd><p>One-dimensional periodic grid. The default uses a 256-point domain.</p>
+</dd>
+<dt><strong>center</strong><span class="classifier">float, default=0.5</span></dt><dd><p>Interface center in the domain coordinates.</p>
+</dd>
+<dt><strong>width</strong><span class="classifier">float, default=0.1</span></dt><dd><p>Interface width parameter in the tanh profile.</p>
+</dd>
+<dt><strong>left_state</strong><span class="classifier">float, default=-1.0</span></dt><dd><p>Stable phase on the left side of the interface.</p>
+</dd>
+<dt><strong>right_state</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Stable phase on the right side of the interface.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>grid</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.fick.InterfaceCase.initial_field" title="crystallite.verification.fick.InterfaceCase.initial_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">initial_field</span></code></a>()</p></td>
+<td><p>Return a discrete two-phase initial condition.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.fick.InterfaceCase.profile_error" title="crystallite.verification.fick.InterfaceCase.profile_error"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile_error</span></code></a>(field)</p></td>
+<td><p>Return the RMS difference from the tanh equilibrium profile.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.fick.InterfaceCase.tanh_profile" title="crystallite.verification.fick.InterfaceCase.tanh_profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh_profile</span></code></a>()</p></td>
+<td><p>Return the equilibrium tanh interface profile.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.phase.Grid" title="crystallite.phase.Grid"><span class="pre">Grid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.initial_field">
+<span class="sig-name descname"><span class="pre">initial_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L59-L67"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.initial_field" title="Link to this definition">#</a></dt>
+<dd><p>Return a discrete two-phase initial condition.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.left_state">
+<span class="sig-name descname"><span class="pre">left_state</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.left_state" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.profile_error">
+<span class="sig-name descname"><span class="pre">profile_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L69-L79"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.profile_error" title="Link to this definition">#</a></dt>
+<dd><p>Return the RMS difference from the tanh equilibrium profile.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.right_state">
+<span class="sig-name descname"><span class="pre">right_state</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.right_state" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.tanh_profile">
+<span class="sig-name descname"><span class="pre">tanh_profile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L50-L57"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.tanh_profile" title="Link to this definition">#</a></dt>
+<dd><p>Return the equilibrium tanh interface profile.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.fick.InterfaceCase.width">
+<span class="sig-name descname"><span class="pre">width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.1</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.InterfaceCase.width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="crystallite.verification.fick.SinusoidalCase">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SinusoidalCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.phase.Grid" title="crystallite.phase.Grid"><span class="pre">Grid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.125</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L9-L99"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SinusoidalCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.phase.Grid" title="crystallite.phase.Grid"><span class="pre">Grid</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.125</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L82-L172"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A periodic sinusoidal composition profile for diffusion tests.</p>
 <p>The default profile matches the historical Fick example,
@@ -421,7 +511,7 @@ time integration is provided by a diffusion solver.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.fick.SinusoidalCase.amplitude_of">
-<span class="sig-name descname"><span class="pre">amplitude_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L54-L80"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.amplitude_of" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">amplitude_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L127-L153"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.amplitude_of" title="Link to this definition">#</a></dt>
 <dd><p>Extract the selected sinusoidal amplitude from a field.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -442,14 +532,16 @@ case grid.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.fick.SinusoidalCase.expected_amplitude">
-<span class="sig-name descname"><span class="pre">expected_amplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_rate</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L82-L99"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.expected_amplitude" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">expected_amplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_rate</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L155-L172"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.expected_amplitude" title="Link to this definition">#</a></dt>
 <dd><p>Return the analytical exponential amplitude at <code class="docutils literal notranslate"><span class="pre">time</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>time</strong><span class="classifier">float or array_like</span></dt><dd><p>Nonnegative time value or values.</p>
 </dd>
-<dt><strong>decay_rate</strong><span class="classifier">float</span></dt><dd><p>Positive exponential decay rate.</p>
+<dt><strong>decay_rate</strong><span class="classifier">float</span></dt><dd><p>Exponential decay rate. May be negative for a mode
+linearized about an unstable (spinodal) composition, in
+which case the amplitude grows rather than decays.</p>
 </dd>
 </dl>
 </dd>
@@ -469,7 +561,7 @@ case grid.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.fick.SinusoidalCase.initial_field">
-<span class="sig-name descname"><span class="pre">initial_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L49-L52"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.initial_field" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">initial_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/fick.py#L122-L125"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.fick.SinusoidalCase.initial_field" title="Link to this definition">#</a></dt>
 <dd><p>Return the initial sinusoidal composition field.</p>
 </dd></dl>
 
@@ -537,6 +629,17 @@ case grid.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.verification.fick">Fick examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase"><code class="docutils literal notranslate"><span class="pre">InterfaceCase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.center"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.grid"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.initial_field"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.initial_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.left_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.left_state</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.profile_error"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.profile_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.right_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.right_state</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.tanh_profile"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.tanh_profile()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.InterfaceCase.width"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.width</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.SinusoidalCase"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.SinusoidalCase.amplitude"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.fick.SinusoidalCase.amplitude_of"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude_of()</span></code></a></li>

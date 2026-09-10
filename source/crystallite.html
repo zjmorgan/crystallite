@@ -397,6 +397,17 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="crystallite.verification.html">crystallite.verification namespace</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.fick">Fick examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase"><code class="docutils literal notranslate"><span class="pre">InterfaceCase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.center"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.center</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.grid"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.initial_field"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.initial_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.left_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.left_state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.profile_error"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.profile_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.right_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.right_state</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.tanh_profile"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.tanh_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.InterfaceCase.width"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.width</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.SinusoidalCase"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.SinusoidalCase.amplitude"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.fick.SinusoidalCase.amplitude_of"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude_of()</span></code></a></li>
@@ -421,10 +432,10 @@
 </section>
 <section id="module-crystallite.diffusion">
 <span id="crystallite-diffusion-module"></span><h2>crystallite.diffusion module<a class="headerlink" href="#module-crystallite.diffusion" title="Link to this heading">#</a></h2>
-<p>Linear spectral diffusion and Cahn-Hilliard time integration.</p>
+<p>Linear spectral diffusion and nonlinear mass-diffusion time integration.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.diffusion.LinearSpectralDiffusion">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LinearSpectralDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy_curvature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L18-L159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">LinearSpectralDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy_curvature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L104-L247"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Exact spectral stepping for a linear diffusion equation.</p>
 <p>The model evolves a scalar concentration according to</p>
@@ -447,7 +458,11 @@ Fourier modes decay as <code class="docutils literal notranslate"><span class="p
 </dd>
 <dt><strong>gradient_energy</strong><span class="classifier">float or array_like, default=0.0</span></dt><dd><p>Scalar or <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> concentration-gradient energy coefficient.</p>
 </dd>
-<dt><strong>free_energy_curvature</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Linearized local free-energy curvature <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+<dt><strong>free_energy_curvature</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Linearized local free-energy curvature <code class="docutils literal notranslate"><span class="pre">a</span></code>. May be negative for
+a mode linearized about an unstable (spinodal) composition; the
+mode is still correctly resolved as growing rather than decaying,
+since this stepper is the exact solution of the linear ODE for
+each Fourier mode.</p>
 </dd>
 </dl>
 </dd>
@@ -498,7 +513,7 @@ Fourier modes decay as <code class="docutils literal notranslate"><span class="p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.diffusion.LinearSpectralDiffusion.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L125-L159"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion.run" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L213-L247"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion.run" title="Link to this definition">#</a></dt>
 <dd><p>Return fields at a sequence of times from a common initial state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -521,7 +536,7 @@ first time must be zero.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.diffusion.LinearSpectralDiffusion.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L97-L123"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion.step" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L185-L211"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.LinearSpectralDiffusion.step" title="Link to this definition">#</a></dt>
 <dd><p>Advance a real-space field by one exact spectral time step.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -541,6 +556,198 @@ first time must be zero.</p>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MassDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy_derivative</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bulk_free_energy_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L250-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Nonlinear mass-diffusion step for a scalar composition field.</p>
+<p>The solver advances</p>
+<div class="math notranslate nohighlight">
+\[\partial_t c = -\nabla \cdot J,
+\qquad
+J_i = -M_{ij} \partial_j \mu,
+\qquad
+\mu = f'(c) - \partial_i (K_{ij} \partial_j c).\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd><p>Spatial grid used by the solver.</p>
+</dd>
+<dt><strong>mobility</strong><span class="classifier">float or array_like, default=1.0</span></dt><dd><p>Constant scalar mobility or a constant <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> mobility tensor.</p>
+</dd>
+<dt><strong>gradient_energy</strong><span class="classifier">float or array_like, default=0.0</span></dt><dd><p>Scalar or <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> concentration-gradient energy coefficient.</p>
+</dd>
+<dt><strong>free_energy_derivative</strong><span class="classifier">callable, optional</span></dt><dd><p>Function returning the derivative of the local free-energy density.
+If omitted, the PDF quartic two-well form is used,
+<code class="docutils literal notranslate"><span class="pre">f'(c)</span> <span class="pre">=</span> <span class="pre">2a</span> <span class="pre">(c</span> <span class="pre">-</span> <span class="pre">c_alpha)(c</span> <span class="pre">-</span> <span class="pre">c_beta)(2c</span> <span class="pre">-</span> <span class="pre">c_alpha</span> <span class="pre">-</span> <span class="pre">c_beta)</span></code>.</p>
+</dd>
+<dt><strong>operator</strong><span class="classifier">object, optional</span></dt><dd><p>Differential operators for gradient/divergence operations.</p>
+</dd>
+<dt><strong>bulk_free_energy_coefficient</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Coefficient <code class="docutils literal notranslate"><span class="pre">a</span></code> in the quartic barrier model.</p>
+</dd>
+<dt><strong>left_well</strong><span class="classifier">float, default=-1.0</span></dt><dd><p>Left equilibrium composition in the default barrier form.</p>
+</dd>
+<dt><strong>right_well</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Right equilibrium composition in the default barrier form.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>free_energy_derivative</strong></dt><dd></dd>
+<dt><strong>operator</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.diffusion.MassDiffusion.chemical_potential" title="crystallite.diffusion.MassDiffusion.chemical_potential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chemical_potential</span></code></a>(field)</p></td>
+<td><p>Return the real-space chemical potential <code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">=</span> <span class="pre">f'(c)</span> <span class="pre">-</span> <span class="pre">div(K</span> <span class="pre">grad</span> <span class="pre">c)</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.diffusion.MassDiffusion.energy" title="crystallite.diffusion.MassDiffusion.energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">energy</span></code></a>(field)</p></td>
+<td><p>Return a simple bulk-plus-gradient energy estimate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.diffusion.MassDiffusion.step" title="crystallite.diffusion.MassDiffusion.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a>(field, time_step)</p></td>
+<td><p>Advance the field by one explicit mass-diffusion step.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.bulk_free_energy_coefficient">
+<span class="sig-name descname"><span class="pre">bulk_free_energy_coefficient</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.bulk_free_energy_coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.chemical_potential">
+<span class="sig-name descname"><span class="pre">chemical_potential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L352-L366"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.chemical_potential" title="Link to this definition">#</a></dt>
+<dd><p>Return the real-space chemical potential <code class="docutils literal notranslate"><span class="pre">mu</span> <span class="pre">=</span> <span class="pre">f'(c)</span> <span class="pre">-</span> <span class="pre">div(K</span> <span class="pre">grad</span> <span class="pre">c)</span></code>.</p>
+<p>A spatially uniform (constant) result indicates <code class="docutils literal notranslate"><span class="pre">field</span></code> is a
+diffusive equilibrium for this solver’s free-energy and
+gradient-energy terms; this is useful for verifying analytic
+equilibrium profiles (e.g. the tanh interface) without timestepping.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.energy">
+<span class="sig-name descname"><span class="pre">energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L385-L391"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.energy" title="Link to this definition">#</a></dt>
+<dd><p>Return a simple bulk-plus-gradient energy estimate.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.free_energy_derivative">
+<span class="sig-name descname"><span class="pre">free_energy_derivative</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.free_energy_derivative" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.gradient_energy">
+<span class="sig-name descname"><span class="pre">gradient_energy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.gradient_energy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.left_well">
+<span class="sig-name descname"><span class="pre">left_well</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.left_well" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.mobility">
+<span class="sig-name descname"><span class="pre">mobility</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.mobility" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.operator">
+<span class="sig-name descname"><span class="pre">operator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.operator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.right_well">
+<span class="sig-name descname"><span class="pre">right_well</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.right_well" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.diffusion.MassDiffusion.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L368-L383"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.MassDiffusion.step" title="Link to this definition">#</a></dt>
+<dd><p>Advance the field by one explicit mass-diffusion step.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.diffusion.double_well_curvature">
+<span class="sig-name descname"><span class="pre">double_well_curvature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L45-L62"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.double_well_curvature" title="Link to this definition">#</a></dt>
+<dd><p>Return the second derivative of the quartic two-well free energy.</p>
+<div class="math notranslate nohighlight">
+\[f''(c) = 2a \left[(2c - c_\alpha - c_\beta)^2
++ 2(c - c_\alpha)(c - c_\beta)\right].\]</div>
+<p>At the midpoint <span class="math notranslate nohighlight">\(c = (c_\alpha + c_\beta)/2\)</span> this reduces to
+<span class="math notranslate nohighlight">\(f''=-a(c_\beta - c_\alpha)^2\)</span>, the (negative, spinodal) local
+curvature used to linearize <a class="reference internal" href="#crystallite.diffusion.LinearSpectralDiffusion" title="crystallite.diffusion.LinearSpectralDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearSpectralDiffusion</span></code></a> about
+the unstable composition halfway between the two wells.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.diffusion.double_well_derivative">
+<span class="sig-name descname"><span class="pre">double_well_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L19-L37"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.double_well_derivative" title="Link to this definition">#</a></dt>
+<dd><p>Return the derivative of the quartic two-well free energy.</p>
+<p>The general barrier form from the PDF is</p>
+<div class="math notranslate nohighlight">
+\[f(c) = a (c - c_\alpha)^2 (c - c_\beta)^2,
+\qquad
+f'(c) = 2a (c - c_\alpha)(c - c_\beta)
+(2c - c_\alpha - c_\beta).\]</div>
+<p>The symmetric special case is recovered by setting
+<code class="docutils literal notranslate"><span class="pre">c_alpha</span> <span class="pre">=</span> <span class="pre">-c0</span></code> and <code class="docutils literal notranslate"><span class="pre">c_beta</span> <span class="pre">=</span> <span class="pre">c0</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.diffusion.double_well_equilibrium_width">
+<span class="sig-name descname"><span class="pre">double_well_equilibrium_width</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L65-L101"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.double_well_equilibrium_width" title="Link to this definition">#</a></dt>
+<dd><p>Return the analytic equilibrium tanh interface width.</p>
+<p>For the quartic barrier <code class="docutils literal notranslate"><span class="pre">f(c)</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">(c</span> <span class="pre">-</span> <span class="pre">c_alpha)^2</span> <span class="pre">(c</span> <span class="pre">-</span> <span class="pre">c_beta)^2</span></code>
+with an isotropic gradient-energy coefficient <code class="docutils literal notranslate"><span class="pre">kappa</span></code>, the 1D
+Cahn-Hilliard equilibrium profile solving
+<code class="docutils literal notranslate"><span class="pre">kappa</span> <span class="pre">*</span> <span class="pre">c''</span> <span class="pre">=</span> <span class="pre">f'(c)</span></code> with <code class="docutils literal notranslate"><span class="pre">c</span> <span class="pre">-&gt;</span> <span class="pre">c_alpha,</span> <span class="pre">c_beta</span></code> and
+<code class="docutils literal notranslate"><span class="pre">c'</span> <span class="pre">-&gt;</span> <span class="pre">0</span></code> as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">-&gt;</span> <span class="pre">-inf,</span> <span class="pre">+inf</span></code> is the tanh profile produced by
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.verification.InterfaceCase.tanh_profile()</span></code>,</p>
+<div class="math notranslate nohighlight">
+\[c(x) = m + w \tanh\!\left(\frac{x - x_0}{\delta}\right),
+\qquad
+\delta = \sqrt{\frac{\kappa}{2 a w^2}},\]</div>
+<p>with midpoint <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">=</span> <span class="pre">(c_alpha</span> <span class="pre">+</span> <span class="pre">c_beta)</span> <span class="pre">/</span> <span class="pre">2</span></code> and half-span
+<code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">(c_beta</span> <span class="pre">-</span> <span class="pre">c_alpha)</span> <span class="pre">/</span> <span class="pre">2</span></code>. This first integral (and hence
+<code class="docutils literal notranslate"><span class="pre">delta</span></code>) follows from multiplying the ODE by <code class="docutils literal notranslate"><span class="pre">c'</span></code> and
+integrating once, using that <code class="docutils literal notranslate"><span class="pre">f(c_alpha)</span> <span class="pre">=</span> <span class="pre">f(c_beta)</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a</strong><span class="classifier">float</span></dt><dd><p>Quartic barrier coefficient.</p>
+</dd>
+<dt><strong>c_alpha, c_beta</strong><span class="classifier">float</span></dt><dd><p>The two stable equilibrium compositions.</p>
+</dd>
+<dt><strong>gradient_energy</strong><span class="classifier">float</span></dt><dd><p>Isotropic gradient-energy coefficient <code class="docutils literal notranslate"><span class="pre">kappa</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>float</dt><dd><p>The analytic tanh width <code class="docutils literal notranslate"><span class="pre">delta</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.diffusion.symmetric_double_well_derivative">
+<span class="sig-name descname"><span class="pre">symmetric_double_well_derivative</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/diffusion.py#L40-L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.diffusion.symmetric_double_well_derivative" title="Link to this definition">#</a></dt>
+<dd><p>Convenience wrapper for the symmetric quartic case.</p>
 </dd></dl>
 
 </section>
@@ -710,6 +917,24 @@ elsewhere), broadcastable against the grid shape.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.LinearSpectralDiffusion.step"><code class="docutils literal notranslate"><span class="pre">LinearSpectralDiffusion.step()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion"><code class="docutils literal notranslate"><span class="pre">MassDiffusion</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.bulk_free_energy_coefficient"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.bulk_free_energy_coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.chemical_potential"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.chemical_potential()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.energy"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.energy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.free_energy_derivative"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.free_energy_derivative</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.gradient_energy"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.gradient_energy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.grid"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.left_well"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.left_well</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.mobility"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.mobility</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.operator"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.operator</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.right_well"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.right_well</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.MassDiffusion.step"><code class="docutils literal notranslate"><span class="pre">MassDiffusion.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.double_well_curvature"><code class="docutils literal notranslate"><span class="pre">double_well_curvature()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.double_well_derivative"><code class="docutils literal notranslate"><span class="pre">double_well_derivative()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.double_well_equilibrium_width"><code class="docutils literal notranslate"><span class="pre">double_well_equilibrium_width()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.diffusion.symmetric_double_well_derivative"><code class="docutils literal notranslate"><span class="pre">symmetric_double_well_derivative()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
