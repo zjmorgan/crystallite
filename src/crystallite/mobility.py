@@ -12,7 +12,7 @@ def diffusivity(x, d_a, d_b, model="darken"):
     Parameters
     ----------
     x : array_like
-        Fraction of species A. The fraction of species B is ``1 - x``.
+        Fraction of species B. The fraction of species A is ``1 - x``.
     d_a, d_b : array_like
         Species A and B diffusivities. Scalars and square diffusivity
         tensors are supported.
@@ -53,7 +53,7 @@ def mobility(
     Parameters
     ----------
     x : array_like
-        Fraction of species A. The fraction of species B is ``1 - x``.
+        Fraction of species B. The fraction of species A is ``1 - x``.
     d_a, d_b : array_like
         Species A and B diffusivities. Scalars and square diffusivity
         tensors are supported.

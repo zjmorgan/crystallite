@@ -5,7 +5,9 @@ from crystallite.mobility import Mobility, diffusivity, mobility
 
 
 def test_darken_diffusivity_uses_species_fractions():
+    # PDF convention: x = X_B and X_A = 1 - x.
     assert diffusivity(0.25, 2.0, 10.0) == pytest.approx(4.0)
+    assert diffusivity(0.75, 2.0, 10.0) == pytest.approx(8.0)
 
 
 def test_collective_diffusivity_uses_harmonic_rule():

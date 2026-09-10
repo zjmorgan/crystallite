@@ -7,6 +7,79 @@ from crystallite.phase import Grid
 
 
 @dataclass(frozen=True)
+class InterfaceCase:
+    """One-dimensional two-phase interface verification case.
+
+    The equilibrium profile for the binary barrier model is a tanh transition
+    layer between two stable phases. This case builds a discrete initial step
+    across the interface and measures how closely a relaxed field approaches
+    the tanh profile.
+
+    Parameters
+    ----------
+    grid : Grid, optional
+        One-dimensional periodic grid. The default uses a 256-point domain.
+    center : float, default=0.5
+        Interface center in the domain coordinates.
+    width : float, default=0.1
+        Interface width parameter in the tanh profile.
+    left_state : float, default=-1.0
+        Stable phase on the left side of the interface.
+    right_state : float, default=1.0
+        Stable phase on the right side of the interface.
+    """
+
+    grid: Grid | None = None
+    center: float = 0.5
+    width: float = 0.1
+    left_state: float = -1.0
+    right_state: float = 1.0
+
+    def __post_init__(self):
+        if self.grid is None:
+            object.__setattr__(
+                self,
+                "grid",
+                Grid(shape=(256, 1, 1), lengths=(1.0, 1.0, 1.0)),
+            )
+        if self.width <= 0:
+            raise ValueError("width must be positive")
+        if len(self.grid.fft_axes) != 1:
+            raise ValueError("InterfaceCase requires a one-dimensional grid")
+
+    def tanh_profile(self):
+        """Return the equilibrium tanh interface profile."""
+        x = self.grid.x[0]
+        midpoint = 0.5 * (self.left_state + self.right_state)
+        half_width = 0.5 * (self.right_state - self.left_state)
+        return midpoint + half_width * xp.tanh(
+            (x - self.center * self.grid.lengths[0]) / self.width
+        )
+
+    def initial_field(self):
+        """Return a discrete two-phase initial condition."""
+        x = self.grid.x[0]
+        profile = xp.where(
+            x <= self.center * self.grid.lengths[0],
+            self.left_state,
+            self.right_state,
+        )
+        return xp.broadcast_to(profile, self.grid.shape)
+
+    def profile_error(self, field):
+        """Return the RMS difference from the tanh equilibrium profile."""
+        field = xp.asarray(field)
+        if field.shape != self.grid.shape:
+            raise ValueError(
+                "field shape must match grid shape: "
+                f"expected {self.grid.shape}, got {field.shape}"
+            )
+        target = self.tanh_profile()
+        residual = field - target
+        return xp.sqrt(xp.mean(residual**2))
+
+
+@dataclass(frozen=True)
 class SinusoidalCase:
     """A periodic sinusoidal composition profile for diffusion tests.
 

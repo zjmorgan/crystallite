@@ -1,150 +1,119 @@
-"""Template for a nonlinear mass-diffusion simulation.
+"""Simple 2D isotropic spinodal decomposition example.
 
-This is a design template, not a runnable example yet. The names marked
-``TODO`` identify the next APIs required for the production solver.
+This example uses the nonlinear ``MassDiffusion`` solver in a minimal
+spinodal decomposition setup. The composition field is initialized with a
+small random perturbation about the unstable midpoint and then evolves under
+an isotropic mobility and isotropic gradient-energy tensor.
 """
 
-from dataclasses import dataclass
+from __future__ import annotations
 
 import numpy as np
 
-from crystallite.field import Field, State
+from crystallite.diffusion import MassDiffusion
 from crystallite.phase import Grid
-from crystallite.material.properties import Solid
 
 
-@dataclass(frozen=True)
-class RunConfig:
-    """Numerical controls for a mass-diffusion run."""
-
-    time_step: float = 1.0e-5
-    steps_per_sweep: int = 100
-    sweeps: int = 100
-    report_every: int = 1
-    save_every: int = 0
+def initial_field(grid, amplitude=0.015):
+    """Return a small-amplitude noisy field around the unstable state."""
+    rng = np.random.default_rng(42)
+    noise = amplitude * rng.standard_normal(grid.shape)
+    return 0.5 + noise
 
 
-def define_phases():
-    """Define parent and product tensor properties.
+def run_example(
+    shape=(64, 64, 1),
+    lengths=(1.0, 1.0, 1.0),
+    time_step=1.0e-7,
+    steps=600,
+    snapshot_every=50,
+    save_path=None,
+    show_plot=False,
+):
+    """Advance a 2D isotropic spinodal decomposition run.
+
+    Parameters
+    ----------
+    shape : tuple of int, default=(128, 128, 1)
+        Real-space grid shape.
+    lengths : tuple of float, default=(1.0, 1.0, 1.0)
+        Domain length in each coordinate direction.
+    time_step : float, default=5.0e-6
+        Explicit integration time step.
+    steps : int, default=200
+        Number of time steps to take.
+    snapshot_every : int, default=20
+        Save a snapshot every so many steps.
+    save_path : str or None, default=None
+        Optional output file for a final PNG image.
+    show_plot : bool, default=False
+        If True, display the final field with Matplotlib.
 
     Returns
     -------
-    tuple of Solid
-        Parent and product material descriptions.
-
-    Notes
-    -----
-    The phase properties are tensors. Scalar isotropic values are only a
-    shorthand for a diagonal tensor and should be expanded by the property
-    system when the solver is assembled.
+    field : ndarray
+        Final composition field.
+    snapshots : list of ndarray
+        Stored composition snapshots for later plotting.
     """
-    parent = Solid(point_group="1")
-    parent.set(
-        "diffusivity",
-        d11=1.0e-5,
-        d22=1.0e-5,
-        d33=1.0e-5,
-    )
-    parent.set(
-        "concentration_gradient_energy",
-        kappa11=5.0e-4,
-        kappa22=5.0e-4,
-        kappa33=5.0e-4,
-    )
-
-    product = Solid(point_group="1")
-    product.set(
-        "diffusivity",
-        d11=2.0e-5,
-        d22=2.0e-5,
-        d33=2.0e-5,
-    )
-    product.set(
-        "concentration_gradient_energy",
-        kappa11=7.5e-4,
-        kappa22=7.5e-4,
-        kappa33=7.5e-4,
-    )
-    return parent, product
-
-
-def initial_state(grid):
-    """Create a composition field and phase-fraction field."""
-    composition = 0.5 + 0.125 * np.sin(4.0 * np.pi * grid.x[0])
-    composition = np.broadcast_to(composition, grid.shape).copy()
-    phase_fraction = np.zeros(grid.shape)
-
-    return State(
-        grid,
-        composition=Field(composition, grid, name="composition"),
-        phase_fraction=Field(phase_fraction, grid, name="phase_fraction"),
-    )
-
-
-def run():
-    """Set up and advance a mass-diffusion simulation."""
-    config = RunConfig()
-    grid = Grid(shape=(256, 256, 1), lengths=(1.0, 1.0, 1.0))
-    parent, product = define_phases()
-    state = initial_state(grid)
-
-    # TODO: construct effective M_ij(c, phi) and K_ij(c, phi) from phases.
-    # These should use the selected arithmetic or harmonic tensor mixture
-    # rule, rather than mixing tensor entries independently for harmonic
-    # behavior.
-    mobility = effective_mobility(parent, product, state)
-    gradient_energy = effective_gradient_energy(parent, product, state)
-
-    # TODO: replace with the nonlinear MassDiffusion solver.
+    grid = Grid(shape=shape, lengths=lengths)
+    field = initial_field(grid)
     solver = MassDiffusion(
         grid=grid,
-        mobility=mobility,
-        gradient_energy=gradient_energy,
-        free_energy=free_energy,
-        scheme="semi_implicit",
+        mobility=1.0,
+        gradient_energy=1.5e-4,
+        # Standard double-well bulk free energy: f(c) = 1/4(c^2 - 1)^2,
+        # so f'(c) = c^3 - c.
+        free_energy_derivative=lambda c: c**3 - c,
     )
 
-    energy_history = []
     snapshots = []
+    for step in range(steps):
+        field = solver.step(field, time_step)
+        if (step + 1) % snapshot_every == 0 or step == steps - 1:
+            snapshots.append(field.copy())
 
-    for sweep in range(config.sweeps):
-        for _ in range(config.steps_per_sweep):
-            state = solver.step(state, config.time_step)
-
-        if (sweep + 1) % config.report_every == 0:
-            energy = solver.energy(state)
-            energy_history.append((state.time, energy))
+    if save_path is not None or show_plot:
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError:  # pragma: no cover
             print(
-                f"sweep={sweep + 1} time={state.time:.6g} "
-                f"energy={energy:.6g}"
+                "Matplotlib is not installed; skipping plot output for this run."
             )
+            return field, snapshots
 
-        if config.save_every and (sweep + 1) % config.save_every == 0:
-            snapshots.append(state)
+        fig, ax = plt.subplots(figsize=(4.5, 4.5), constrained_layout=True)
+        image = ax.imshow(
+            field[:, :, 0],
+            origin="lower",
+            cmap="viridis",
+            interpolation="nearest",
+        )
+        ax.set_title("Spinodal decomposition")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        fig.colorbar(image, ax=ax, label="composition")
 
-    # TODO: write energy_history and snapshots to ignored output storage.
-    # TODO: call a plotting helper for the final composition field.
-    return state, energy_history, snapshots
+        if save_path is not None:
+            fig.savefig(save_path, dpi=200, bbox_inches="tight")
+            print(f"Saved plot to {save_path}")
+
+        if show_plot:
+            plt.show()
+
+        plt.close(fig)
+
+    return field, snapshots
 
 
-# TODO: These functions become real APIs as the nonlinear solver is built.
-def effective_mobility(parent, product, state):
-    """Return the mixed mobility tensor field for the current state."""
-    raise NotImplementedError
-
-
-def effective_gradient_energy(parent, product, state):
-    """Return the mixed gradient-energy tensor field for the current state."""
-    raise NotImplementedError
-
-
-def free_energy(composition):
-    """Return bulk free energy density for the current composition."""
-    raise NotImplementedError
-
-
-class MassDiffusion:
-    """Placeholder for the future nonlinear diffusion solver."""
-
-    def __init__(self, **kwargs):
-        raise NotImplementedError("MassDiffusion is not implemented yet")
+if __name__ == "__main__":
+    field, snapshots = run_example(
+        shape=(64, 64, 1),
+        time_step=1.0e-7,
+        steps=600,
+        snapshot_every=50,
+        save_path="spinodal_decomposition.png",
+        show_plot=False,
+    )
+    print(f"final mean composition = {np.mean(field):.6f}")
+    print(f"stored {len(snapshots)} snapshots")
