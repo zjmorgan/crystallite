@@ -42,6 +42,65 @@ def symmetric_double_well_derivative(c, a=1.0, c0=1.0):
     return double_well_derivative(c, a=a, c_alpha=-c0, c_beta=c0)
 
 
+def double_well_curvature(c, a=1.0, c_alpha=-1.0, c_beta=1.0):
+    r"""Return the second derivative of the quartic two-well free energy.
+
+    .. math::
+
+        f''(c) = 2a \left[(2c - c_\alpha - c_\beta)^2
+        + 2(c - c_\alpha)(c - c_\beta)\right].
+
+    At the midpoint :math:`c = (c_\alpha + c_\beta)/2` this reduces to
+    :math:`f''=-a(c_\beta - c_\alpha)^2`, the (negative, spinodal) local
+    curvature used to linearize :class:`LinearSpectralDiffusion` about
+    the unstable composition halfway between the two wells.
+    """
+    c = xp.asarray(c)
+    return 2.0 * a * (
+        (2.0 * c - c_alpha - c_beta) ** 2
+        + 2.0 * (c - c_alpha) * (c - c_beta)
+    )
+
+
+def double_well_equilibrium_width(a, c_alpha, c_beta, gradient_energy):
+    r"""Return the analytic equilibrium tanh interface width.
+
+    For the quartic barrier ``f(c) = a (c - c_alpha)^2 (c - c_beta)^2``
+    with an isotropic gradient-energy coefficient ``kappa``, the 1D
+    Cahn-Hilliard equilibrium profile solving
+    ``kappa * c'' = f'(c)`` with ``c -> c_alpha, c_beta`` and
+    ``c' -> 0`` as ``x -> -inf, +inf`` is the tanh profile produced by
+    :meth:`crystallite.verification.InterfaceCase.tanh_profile`,
+
+    .. math::
+
+        c(x) = m + w \tanh\!\left(\frac{x - x_0}{\delta}\right),
+        \qquad
+        \delta = \sqrt{\frac{\kappa}{2 a w^2}},
+
+    with midpoint ``m = (c_alpha + c_beta) / 2`` and half-span
+    ``w = (c_beta - c_alpha) / 2``. This first integral (and hence
+    ``delta``) follows from multiplying the ODE by ``c'`` and
+    integrating once, using that ``f(c_alpha) = f(c_beta) = 0``.
+
+    Parameters
+    ----------
+    a : float
+        Quartic barrier coefficient.
+    c_alpha, c_beta : float
+        The two stable equilibrium compositions.
+    gradient_energy : float
+        Isotropic gradient-energy coefficient ``kappa``.
+
+    Returns
+    -------
+    float
+        The analytic tanh width ``delta``.
+    """
+    half_span = 0.5 * (c_beta - c_alpha)
+    return xp.sqrt(gradient_energy / (2.0 * a * half_span**2))
+
+
 @dataclass(frozen=True)
 class LinearSpectralDiffusion:
     r"""Exact spectral stepping for a linear diffusion equation.
@@ -72,7 +131,11 @@ class LinearSpectralDiffusion:
     gradient_energy : float or array_like, default=0.0
         Scalar or ``(3, 3)`` concentration-gradient energy coefficient.
     free_energy_curvature : float, default=1.0
-        Linearized local free-energy curvature ``a``.
+        Linearized local free-energy curvature ``a``. May be negative for
+        a mode linearized about an unstable (spinodal) composition; the
+        mode is still correctly resolved as growing rather than decaying,
+        since this stepper is the exact solution of the linear ODE for
+        each Fourier mode.
     """
 
     grid: object
@@ -93,8 +156,6 @@ class LinearSpectralDiffusion:
             self.grid.k2,
             "gradient_energy",
         )
-        if self.free_energy_curvature < 0:
-            raise ValueError("free_energy_curvature must be nonnegative")
 
     @property
     def _wavevector(self):
@@ -287,6 +348,22 @@ class MassDiffusion:
         kappa = self._gradient_energy_tensor()
         k_grad = xp.tensordot(kappa, grad_c, axes=(1, 0))
         return self.grid.fft(derivative) - self.operator.div(k_grad)
+
+    def chemical_potential(self, field):
+        """Return the real-space chemical potential ``mu = f'(c) - div(K grad c)``.
+
+        A spatially uniform (constant) result indicates ``field`` is a
+        diffusive equilibrium for this solver's free-energy and
+        gradient-energy terms; this is useful for verifying analytic
+        equilibrium profiles (e.g. the tanh interface) without timestepping.
+        """
+        field = xp.asarray(field)
+        if field.shape != self.grid.shape:
+            raise ValueError(
+                "field shape must match grid shape: "
+                f"expected {self.grid.shape}, got {field.shape}"
+            )
+        return self.grid.ifft(self._chemical_potential(field))
 
     def step(self, field, time_step):
         """Advance the field by one explicit mass-diffusion step."""

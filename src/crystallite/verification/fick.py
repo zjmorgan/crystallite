@@ -160,13 +160,13 @@ class SinusoidalCase:
         time : float or array_like
             Nonnegative time value or values.
         decay_rate : float
-            Positive exponential decay rate.
+            Exponential decay rate. May be negative for a mode
+            linearized about an unstable (spinodal) composition, in
+            which case the amplitude grows rather than decays.
 
         Returns
         -------
         array_like
             ``amplitude * exp(-decay_rate * time)``.
         """
-        if decay_rate < 0:
-            raise ValueError("decay_rate must be nonnegative")
         return self.amplitude * xp.exp(-decay_rate * xp.asarray(time))
