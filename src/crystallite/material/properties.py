@@ -10,6 +10,35 @@ _VOIGT_PAIRS = ((0, 0), (1, 1), (2, 2), (1, 2), (0, 2), (0, 1))
 """Index pairs (i, j) for Voigt components 1..6 (11, 22, 33, 23, 13, 12)."""
 
 
+def as_tensor(value, dim=3):
+    """Normalize a scalar-or-tensor material property to a square tensor.
+
+    A scalar (isotropic) value becomes ``value * eye(dim)``; a value
+    already of shape ``(dim, dim)`` (anisotropic) is returned unchanged.
+
+    Parameters
+    ----------
+    value : float or array_like
+    dim : int, default=3
+
+    Returns
+    -------
+    ndarray
+        Shape ``(dim, dim)``.
+
+    Raises
+    ------
+    ValueError
+        If ``value`` is neither a scalar nor a ``(dim, dim)`` array.
+    """
+    value = xp.asarray(value)
+    if value.ndim == 0:
+        return value * xp.eye(dim)
+    if value.shape != (dim, dim):
+        raise ValueError(f"value must be a scalar or a {dim} by {dim} tensor")
+    return value
+
+
 def voigt_stiffness(medium):
     r"""Rank-4 elastic tensor -> (6, 6) Voigt stiffness matrix.
 

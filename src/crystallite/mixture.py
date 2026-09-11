@@ -10,18 +10,33 @@ def arithmetic(a, b, fraction):
     ----------
     a, b : array_like
         Properties of the two constituents. They may be scalars or arrays,
-        including anisotropic property tensors.
+        including anisotropic property tensors (e.g. ``(3, 3)``).
     fraction : array_like
         Fraction of constituent ``a``. The fraction of ``b`` is
-        ``1 - fraction``.
+        ``1 - fraction``. May itself be a scalar or a spatial field (e.g.
+        a composition field, unrelated in shape to a tensor-valued ``a``
+        or ``b``) -- broadcast against the tensor's leading axes rather
+        than numpy's default trailing-axis alignment, matching the
+        leading-tensor-axis convention used for property fields elsewhere
+        (e.g. :class:`crystallite.diffusion.MassDiffusion`).
 
     Returns
     -------
     array_like
         The elementwise arithmetic mixture.
     """
+    a = xp.asarray(a)
+    b = xp.asarray(b)
     fraction = xp.asarray(fraction)
-    return fraction * xp.asarray(a) + (1.0 - fraction) * xp.asarray(b)
+    tensor_ndim = max(a.ndim, b.ndim)
+    if tensor_ndim and fraction.ndim:
+        pad = (1,) * fraction.ndim
+        if a.ndim:
+            a = a.reshape(a.shape + pad)
+        if b.ndim:
+            b = b.reshape(b.shape + pad)
+        fraction = fraction.reshape((1,) * tensor_ndim + fraction.shape)
+    return fraction * a + (1.0 - fraction) * b
 
 
 def harmonic(a, b, fraction):

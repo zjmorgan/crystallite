@@ -1,4 +1,4 @@
-"""Verification cases based on the Fick presentation examples."""
+"""Verification cases for Fick's-law mass diffusion."""
 
 from dataclasses import dataclass
 

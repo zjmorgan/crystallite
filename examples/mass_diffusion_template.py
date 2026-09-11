@@ -1,17 +1,68 @@
-"""Simple 2D isotropic spinodal decomposition example.
+"""Simple 2D spinodal decomposition example with composition-dependent
+mobility and gradient energy.
 
 This example uses the nonlinear ``MassDiffusion`` solver in a minimal
 spinodal decomposition setup. The composition field is initialized with a
-small random perturbation about the unstable midpoint and then evolves under
-an isotropic mobility and isotropic gradient-energy tensor.
+small random perturbation about the unstable midpoint and then evolves
+under a composition-dependent (rather than constant) mobility and
+gradient-energy coefficient. Each is a small, reusable model object with a
+named method -- passed directly to ``MassDiffusion`` with no wrapper
+``lambda`` needed:
+
+- ``mobility`` is :class:`crystallite.mobility.BinaryMobility`, a binary
+  A-B interdiffusion model: each species' own diffusivity is first
+  interpolated between its value in the two pure end members, then
+  Darken-combined and converted to a mobility.
+- ``gradient_energy`` is :class:`crystallite.diffusion.GradientEnergy`,
+  which mixes a "parent" and "product" phase's (possibly anisotropic)
+  gradient-energy tensor by composition -- gradient energy is properly a
+  tensor, just like diffusivity, not a bare scalar.
+- ``free_energy_derivative`` is :class:`crystallite.diffusion.ChemicalFreeEnergy`,
+  the fourth-order Taylor approximation to the bulk free energy,
+  parametrized by the free-energy barrier height at the reference
+  composition rather than the raw quartic coefficient.
+
+The end-member diffusivity and gradient-energy tensors themselves come
+from :class:`crystallite.material.properties.Solid`, so only the
+independent tensor components allowed by the parent/product phases' point
+group need to be set -- the rest are filled in (or forced to vanish) by
+symmetry, rather than typed out by hand.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-from crystallite.diffusion import MassDiffusion
+from crystallite.diffusion import ChemicalFreeEnergy, GradientEnergy, MassDiffusion
+from crystallite.material.properties import Solid
+from crystallite.mobility import BinaryMobility
 from crystallite.phase import Grid
+
+
+def define_phases(point_group="432"):
+    """Return symmetry-resolved parent/product diffusivity and
+    gradient-energy tensors.
+
+    Parameters
+    ----------
+    point_group : str, default="432"
+        Crystallographic point group shared by both phases (here cubic,
+        so a single ``d11``/``kappa11`` constant is enough -- symmetry
+        forces ``d22 = d33 = d11`` and every off-diagonal entry to zero).
+
+    Returns
+    -------
+    parent, product : Solid
+    """
+    parent = Solid(point_group=point_group)
+    parent.set("diffusivity", d11=1.0e-5)
+    parent.set("concentration_gradient_energy", kappa11=5.0e-4)
+
+    product = Solid(point_group=point_group)
+    product.set("diffusivity", d11=2.0e-5)
+    product.set("concentration_gradient_energy", kappa11=7.5e-4)
+
+    return parent, product
 
 
 def initial_field(grid, amplitude=0.015):
@@ -58,13 +109,40 @@ def run_example(
     """
     grid = Grid(shape=shape, lengths=lengths)
     field = initial_field(grid)
+
+    parent, product = define_phases()
+
+    # Binary A-B interdiffusion mobility: each species' diffusivity is
+    # interpolated between its two pure end-member values, then
+    # Darken-combined into a mobility. The end members are the
+    # parent/product phases' own symmetry-resolved (3, 3) diffusivity
+    # tensors; both species are taken to share each end member's value
+    # here, for lack of a separate per-species tracer diffusivity.
+    mobility_model = BinaryMobility(
+        d_a_in_a=parent.get("diffusivity"),
+        d_a_in_b=product.get("diffusivity"),
+        d_b_in_a=parent.get("diffusivity"),
+        d_b_in_b=product.get("diffusivity"),
+        temperature=1.0,
+    )
+
+    # Gradient-energy tensor mixed between the parent and product phases'
+    # own symmetry-resolved values, weighted by composition.
+    gradient_energy_model = GradientEnergy(
+        parent=parent.get("concentration_gradient_energy"),
+        product=product.get("concentration_gradient_energy"),
+    )
+
+    # Standard double-well bulk free energy, f(c) = 1/4(c^2 - 1)^2 so
+    # f'(c) = c^3 - c, in the barrier-height parametrization
+    # (a = 16 * barrier_height / (c_beta - c_alpha)**4 = 0.25 here).
+    free_energy_model = ChemicalFreeEnergy(barrier_height=0.25, c_alpha=-1.0, c_beta=1.0)
+
     solver = MassDiffusion(
         grid=grid,
-        mobility=1.0,
-        gradient_energy=1.5e-4,
-        # Standard double-well bulk free energy: f(c) = 1/4(c^2 - 1)^2,
-        # so f'(c) = c^3 - c.
-        free_energy_derivative=lambda c: c**3 - c,
+        mobility=mobility_model.mobility,
+        gradient_energy=gradient_energy_model.gradient_energy,
+        free_energy_derivative=free_energy_model.derivative,
     )
 
     snapshots = []

@@ -32,3 +32,19 @@ def test_harmonic_mixes_anisotropic_properties_by_matrix_inverse():
 def test_harmonic_rejects_nonsquare_tensor_properties():
     with pytest.raises(ValueError, match="square matrices"):
         harmonic(np.ones((2, 3)), np.ones((2, 3)), 0.5)
+
+
+def test_arithmetic_broadcasts_a_field_fraction_against_tensor_properties():
+    # A composition field (unrelated in shape to the (3, 3) tensors) must
+    # broadcast against the tensors' leading axes, producing a
+    # (3, 3) + fraction.shape tensor field -- not numpy's default
+    # trailing-axis alignment, which would raise or silently misalign.
+    a = np.diag([2.0, 4.0, 8.0])
+    b = np.diag([10.0, 20.0, 40.0])
+    fraction = np.full((5, 5, 1), 0.25)
+
+    result = arithmetic(a, b, fraction)
+
+    assert result.shape == (3, 3) + fraction.shape
+    np.testing.assert_allclose(result[:, :, 0, 0, 0], np.diag([8.0, 16.0, 32.0]))
+    np.testing.assert_allclose(result[:, :, 2, 3, 0], np.diag([8.0, 16.0, 32.0]))
