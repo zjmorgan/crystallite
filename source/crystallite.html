@@ -396,30 +396,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="crystallite.verification.html">crystallite.verification namespace</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.mass_diffusion">Mass diffusion cases</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase"><code class="docutils literal notranslate"><span class="pre">InterfaceCase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.center"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.center</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.grid"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.grid</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.initial_field"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.initial_field()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.left_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.left_state</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.profile_error"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.profile_error()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.right_state"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.right_state</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.tanh_profile"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.tanh_profile()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.InterfaceCase.width"><code class="docutils literal notranslate"><span class="pre">InterfaceCase.width</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.amplitude"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.amplitude_of"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.amplitude_of()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.expected_amplitude"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.expected_amplitude()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.grid"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.grid</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.initial_field"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.initial_field()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.mode"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.mode</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.mass_diffusion.SinusoidalCase.wave_number"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.wave_number</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#mass-diffusion-cases">Mass diffusion cases</a></li>
 </ul>
 </li>
 </ul>
@@ -1054,109 +1031,8 @@ integrating once, using that <code class="docutils literal notranslate"><span cl
 <section id="module-crystallite.backend">
 <span id="crystallite-backend-module"></span><h2>crystallite.backend module<a class="headerlink" href="#module-crystallite.backend" title="Link to this heading">#</a></h2>
 </section>
-<section id="module-crystallite.phase">
-<span id="crystallite-phase-module"></span><h2>crystallite.phase module<a class="headerlink" href="#module-crystallite.phase" title="Link to this heading">#</a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="crystallite.phase.Grid">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(256,</span> <span class="pre">256,</span> <span class="pre">1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1.0,</span> <span class="pre">1.0,</span> <span class="pre">1.0)</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/phase.py#L4-L132"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.phase.Grid" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Uniform real-space grid with matching Fourier-space wavenumbers.</p>
-<p>Axes with a single grid point are treated as inactive and are not
-transformed. The last active axis uses the real-FFT convention.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>shape</strong><span class="classifier">tuple of int, optional</span></dt><dd><p>Grid points along each of the 3 axes.</p>
-</dd>
-<dt><strong>lengths</strong><span class="classifier">tuple of float, optional</span></dt><dd><p>Physical size along each axis.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Attributes<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt><strong>real_dtype, complex_dtype</strong><span class="classifier">dtype</span></dt><dd><p>Floating-point types used for real- and Fourier-space arrays.</p>
-</dd>
-<dt><strong>fft_axes</strong><span class="classifier">tuple of int</span></dt><dd><p>Negative-indexed axes with more than one grid point.</p>
-</dd>
-<dt><strong>fft_shape</strong><span class="classifier">tuple of int</span></dt><dd><p>Grid shape along <cite>fft_axes</cite>.</p>
-</dd>
-<dt><strong>spacing</strong><span class="classifier">tuple of float</span></dt><dd><p>Real-space spacing along each axis.</p>
-</dd>
-<dt><strong>x</strong><span class="classifier">tuple of ndarray</span></dt><dd><p>Real-space coordinates, broadcastable against the grid shape.</p>
-</dd>
-<dt><strong>k</strong><span class="classifier">tuple of ndarray</span></dt><dd><p>Angular wavenumbers (rfftfreq on the last active axis, fftfreq
-elsewhere), broadcastable against the grid shape.</p>
-</dd>
-<dt><strong>k2</strong><span class="classifier">ndarray</span></dt><dd><p>Squared wavenumber magnitude, <code class="docutils literal notranslate"><span class="pre">k[0]**2</span> <span class="pre">+</span> <span class="pre">k[1]**2</span> <span class="pre">+</span> <span class="pre">k[2]**2</span></code>.</p>
-</dd>
-<dt><strong>safe_k2</strong><span class="classifier">ndarray</span></dt><dd><p><cite>k2</cite> with the k=0 entry replaced by 1, to divide by safely.</p>
-</dd>
-<dt><strong>inv_k2</strong><span class="classifier">ndarray</span></dt><dd><p>Elementwise reciprocal of <cite>k2</cite>, with the k=0 entry set to 0.</p>
-</dd>
-<dt><strong>lanczos_filter</strong><span class="classifier">ndarray</span></dt><dd><p>Separable Lanczos sigma factor, <code class="docutils literal notranslate"><span class="pre">sinc(k[0]</span> <span class="pre">*</span> <span class="pre">spacing[0])</span> <span class="pre">*</span>
-<span class="pre">sinc(k[1]</span> <span class="pre">*</span> <span class="pre">spacing[1])</span> <span class="pre">*</span> <span class="pre">sinc(k[2]</span> <span class="pre">*</span> <span class="pre">spacing[2])</span></code> (unnormalized
-sinc, <code class="docutils literal notranslate"><span class="pre">sin(x)/x</span></code>): 1 at <code class="docutils literal notranslate"><span class="pre">k=0</span></code>, tapering smoothly to exactly 0
-at each axis’s Nyquist frequency. A standard dealiasing/anti-Gibbs
-multiplier for a field’s Fourier transform in pseudo-spectral
-solvers of nonlinear PDEs.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.phase.Grid.fft" title="crystallite.phase.Grid.fft"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fft</span></code></a>(x)</p></td>
-<td><p>Forward real FFT over the active axes.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.phase.Grid.ifft" title="crystallite.phase.Grid.ifft"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ifft</span></code></a>(x)</p></td>
-<td><p>Inverse real FFT over the active axes.</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="crystallite.phase.Grid.fft">
-<span class="sig-name descname"><span class="pre">fft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/phase.py#L104-L117"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.phase.Grid.fft" title="Link to this definition">#</a></dt>
-<dd><p>Forward real FFT over the active axes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">ndarray</span></dt><dd><p>Real-space field.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ndarray</dt><dd><p>Fourier coefficients over <cite>fft_axes</cite>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="crystallite.phase.Grid.ifft">
-<span class="sig-name descname"><span class="pre">ifft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/phase.py#L119-L132"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.phase.Grid.ifft" title="Link to this definition">#</a></dt>
-<dd><p>Inverse real FFT over the active axes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">ndarray</span></dt><dd><p>Fourier coefficients.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>ndarray</dt><dd><p>Real-space field of shape <cite>fft_shape</cite> over <cite>fft_axes</cite>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+<section id="crystallite-phase-module">
+<h2>crystallite.phase module<a class="headerlink" href="#crystallite-phase-module" title="Link to this heading">#</a></h2>
 </section>
 </section>
 
@@ -1268,14 +1144,7 @@ solvers of nonlinear PDEs.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.backend">crystallite.backend module</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.phase">crystallite.phase module</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.phase.Grid"><code class="docutils literal notranslate"><span class="pre">Grid</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.phase.Grid.fft"><code class="docutils literal notranslate"><span class="pre">Grid.fft()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.phase.Grid.ifft"><code class="docutils literal notranslate"><span class="pre">Grid.ifft()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite-phase-module">crystallite.phase module</a></li>
 </ul>
   </nav></div>
 
