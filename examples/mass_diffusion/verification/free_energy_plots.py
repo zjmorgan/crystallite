@@ -37,8 +37,8 @@ def plot_gibbs():
         r"$\beta$", (C_BETA, 0.0), textcoords="offset points",
         xytext=(4, 10), ha="left",
     )
-    ax.set_xlabel(r"mole fraction $X_k$")
-    ax.set_ylabel(r"free energy $f$")
+    ax.set_xlabel(r"$X_k$")
+    ax.set_ylabel(r"$f$")
     save_all(fig, "gibbs")
     plt.close(fig)
 
@@ -58,8 +58,8 @@ def plot_potential():
         )
         ax.plot(c, f, label=rf"$f_0(X_0) = {barrier_height:g}$")
     ax.axvline(x0, color="0.5", linestyle="--", linewidth=1)
-    ax.set_xlabel(r"mole fraction $X_k$")
-    ax.set_ylabel(r"free energy $f_0(X)$")
+    ax.set_xlabel(r"$X_k$")
+    ax.set_ylabel(r"$f_0(X)$")
     ax.legend()
     save_all(fig, "potential")
     plt.close(fig)

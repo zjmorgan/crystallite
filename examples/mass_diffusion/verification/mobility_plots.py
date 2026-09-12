@@ -32,13 +32,16 @@ def plot_mobility_vs_zeta():
     fig, ax = plt.subplots(figsize=(4.5, 3.5), constrained_layout=True)
     for m_j, m_k in [(1.0, 0.2), (1.0, 1.0), (1.0, 3.0), (1.0, 8.0)]:
         zeta = m_k / m_j
-        values = mobility(X, m_k, m_j, temperature=1.0, degeneracy=True)
+        # Mobility is already reported in units of m_j, so M/m_j is the
+        # dimensionless quantity plotted -- with m_j = 1 here the values are
+        # unchanged, but the axis label reflects the actual scale used.
+        values = mobility(X, m_k, m_j, temperature=1.0, degeneracy=True) / m_j
         (line,) = ax.plot(X, values, label=rf"$\zeta = {zeta:g}$")
         x_peak = peak_location(zeta)
-        y_peak = mobility(x_peak, m_k, m_j, temperature=1.0, degeneracy=True)
+        y_peak = mobility(x_peak, m_k, m_j, temperature=1.0, degeneracy=True) / m_j
         ax.plot(x_peak, y_peak, "o", color=line.get_color(), markersize=4)
-    ax.set_xlabel(r"mole fraction $X$")
-    ax.set_ylabel(r"mobility $M$")
+    ax.set_xlabel(r"$X$")
+    ax.set_ylabel(r"$M / M_j$")
     ax.legend()
     save_all(fig, "mobility")
     plt.close(fig)
@@ -51,20 +54,23 @@ def plot_interdiffusion_mechanisms():
     """
     d_a, d_b = 1.0, 8.0
 
+    # Nondimensionalize mobility by d_a, the smaller of the two end-member
+    # diffusivities, so the plotted curve is independent of the absolute
+    # diffusivity scale and only depends on the ratio d_b / d_a.
     fig, ax = plt.subplots(figsize=(4.5, 3.5), constrained_layout=True)
-    full = mobility(X, d_a, d_b, temperature=1.0, degeneracy=True)
+    full = mobility(X, d_a, d_b, temperature=1.0, degeneracy=True) / d_a
     ax.plot(X, full, color="C0", label="interdiffusion mobility")
 
     # Dilute-limit ("volume") asymptotes: M ~ (D/RT) X as X -> 0,
     # M ~ (D/RT) (1 - X) as X -> 1.
-    dilute_lo = X * d_a
-    dilute_hi = (1 - X) * d_b
+    dilute_lo = X
+    dilute_hi = (1 - X) * (d_b / d_a)
     ax.plot(X, dilute_lo, "--", color="0.5", label="volume limit, " + r"$X\to0$")
     ax.plot(X, dilute_hi, ":", color="0.5", label="volume limit, " + r"$X\to1$")
 
     ax.set_ylim(0, 1.05 * np.max(full))
-    ax.set_xlabel(r"mole fraction $X$")
-    ax.set_ylabel(r"mobility $M$")
+    ax.set_xlabel(r"$X$")
+    ax.set_ylabel(r"$M / D_a$")
     ax.legend()
     save_all(fig, "interdiffusion")
     plt.close(fig)

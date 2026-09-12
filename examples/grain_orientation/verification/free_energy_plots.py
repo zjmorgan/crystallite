@@ -26,18 +26,24 @@ def plot_homogeneous_energy():
         grid, barrier_coefficient=A, quartic_coefficient=B, cross_coefficient=GAMMA
     )
 
-    eta1 = np.linspace(-1.5, 1.5, 400)
+    eta0 = float(np.sqrt(A / B))
+    energy_scale = A * eta0**2
+    eta1 = np.linspace(-1.5, 1.5, 400) * eta0
 
+    # Nondimensionalize both axes by the model's own scales, eta0 (the
+    # single-grain saturation value) and A*eta0^2 (its natural energy
+    # scale), so the figure looks the same regardless of A, B.
     fig, ax = plt.subplots(figsize=(4.5, 3.5), constrained_layout=True)
-    for eta2 in (0.0, 0.5, 1.0):
+    for eta2_fraction in (0.0, 0.5, 1.0):
+        eta2 = eta2_fraction * eta0
         eta = np.zeros((2, len(eta1)))
         eta[0, :] = eta1
         eta[1, :] = eta2
         f = np.asarray(model.homogeneous_energy(eta))
-        ax.plot(eta1, f, label=rf"$\eta_2 = {eta2:g}$")
+        ax.plot(eta1 / eta0, f / energy_scale, label=rf"$\eta_2/\eta_0 = {eta2_fraction:g}$")
 
-    ax.set_xlabel(r"$\eta_1$")
-    ax.set_ylabel(r"free energy density $f$")
+    ax.set_xlabel(r"$\eta_1 / \eta_0$")
+    ax.set_ylabel(r"$f / (a\eta_0^2)$")
     ax.legend()
     save_all(fig, "grain_orientation.free_energy")
     plt.close(fig)

@@ -50,17 +50,24 @@ def plot_planar_interface():
     numerical = np.asarray(eta)[0].reshape(-1)
 
     width = analytic_case.width
+    eta0 = analytic_case.eta0
     center = analytic_case.center * grid.lengths[0]
     zoom = (x > center - 6 * width) & (x < center + 6 * width)
 
+    # Nondimensionalize position by the interface width and eta by its
+    # saturation value eta0, so the profile always spans roughly [-6, 6] and
+    # [-1, 1] regardless of the chosen barrier/quartic/gradient coefficients.
     fig, ax = plt.subplots(figsize=(4.5, 3.5), constrained_layout=True)
-    ax.plot(x[zoom], analytic[zoom], color="C0", label="analytical (periodic)")
     ax.plot(
-        x[zoom], numerical[zoom], "o", color="C1", markersize=3,
-        markevery=2, label="numerical (relaxed)",
+        (x[zoom] - center) / width, analytic[zoom] / eta0, color="C0",
+        label="analytical (periodic)",
     )
-    ax.set_xlabel(r"position $x$")
-    ax.set_ylabel(r"$\eta$")
+    ax.plot(
+        (x[zoom] - center) / width, numerical[zoom] / eta0, "o", color="C1",
+        markersize=3, markevery=2, label="numerical (relaxed)",
+    )
+    ax.set_xlabel(r"$(x - x_0) / \delta$")
+    ax.set_ylabel(r"$\eta / \eta_0$")
     ax.legend()
     save_all(fig, "grain_orientation.planar_interface")
     plt.close(fig)

@@ -70,14 +70,21 @@ def plot_planar_interface():
 
     zoom = (x > center - 6 * width) & (x < center + 6 * width)
 
+    # Nondimensionalize position by the interface width and composition by
+    # the half-span between the two wells, so the profile always spans
+    # roughly [-6, 6] and [-1, 1] regardless of LEFT/RIGHT/KAPPA.
+    half_span = 0.5 * (RIGHT - LEFT)
     fig, ax = plt.subplots(figsize=(4.5, 3.5), constrained_layout=True)
-    ax.plot(x[zoom], analytic[zoom], color="C0", label="analytical (periodic)")
     ax.plot(
-        x[zoom], numerical[zoom], "o", color="C1", markersize=3,
-        markevery=2, label="numerical (relaxed)",
+        (x[zoom] - center) / width, analytic[zoom] / half_span, color="C0",
+        label="analytical (periodic)",
     )
-    ax.set_xlabel(r"position $x$")
-    ax.set_ylabel(r"composition $c$")
+    ax.plot(
+        (x[zoom] - center) / width, numerical[zoom] / half_span, "o",
+        color="C1", markersize=3, markevery=2, label="numerical (relaxed)",
+    )
+    ax.set_xlabel(r"$(x - x_0) / \delta$")
+    ax.set_ylabel(r"$c / \tfrac{1}{2}(c_\beta - c_\alpha)$")
     ax.legend()
     save_all(fig, "planar.interface")
     plt.close(fig)
