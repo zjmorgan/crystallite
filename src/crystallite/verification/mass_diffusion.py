@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from crystallite.backend import xp
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 
 
 @dataclass(frozen=True)

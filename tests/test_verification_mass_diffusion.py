@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 from crystallite.verification import SinusoidalCase
 
 

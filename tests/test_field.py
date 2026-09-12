@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from crystallite.field import Field, State
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 
 
 def test_field_accepts_scalar_and_component_data():

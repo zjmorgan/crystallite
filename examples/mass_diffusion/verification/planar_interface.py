@@ -32,7 +32,7 @@ from crystallite.mass_diffusion import (
     double_well_curvature,
     double_well_equilibrium_width,
 )
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 
 A, KAPPA = 1.0, 2.0e-3
 LEFT, RIGHT = -1.0, 1.0

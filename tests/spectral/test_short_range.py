@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from crystallite.backend import xp
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 from crystallite.spectral.short_range import DifferentialOperators
 
 

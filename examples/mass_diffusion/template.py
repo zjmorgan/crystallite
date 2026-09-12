@@ -67,7 +67,7 @@ from crystallite.mass_diffusion import (
 )
 from crystallite.material.properties import Solid
 from crystallite.mobility import BinaryMobility
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 
 REFERENCE_COMPOSITION = 0.5
 BARRIER_HEIGHT = 0.25

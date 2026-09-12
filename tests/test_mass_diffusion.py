@@ -16,7 +16,7 @@ from crystallite.mass_diffusion import (
 )
 from crystallite.mobility import BinaryMobility
 from crystallite.mobility import mobility as composition_mobility
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 from crystallite.verification import InterfaceCase, SinusoidalCase
 
 

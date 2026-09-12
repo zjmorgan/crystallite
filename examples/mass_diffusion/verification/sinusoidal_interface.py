@@ -23,7 +23,7 @@ from crystallite.mass_diffusion import (
     double_well_curvature,
 )
 from crystallite.mobility import mobility as composition_mobility
-from crystallite.phase import Grid
+from crystallite.grid import Grid
 from crystallite.verification import SinusoidalCase
 
 KAPPA = 0.05
