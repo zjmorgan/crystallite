@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass
 
+import numpy as np
+from scipy.optimize import brentq
+from scipy.special import ellipj, ellipk
+
 from crystallite.backend import xp
 from crystallite.material.properties import as_tensor
 from crystallite.mixture import arithmetic, harmonic
@@ -100,7 +104,7 @@ def symmetric_double_well_derivative(c, a=1.0, c0=1.0):
     return double_well_derivative(c, a=a, c_alpha=-c0, c_beta=c0)
 
 
-def fick_free_energy(c, barrier_height, c_alpha, c_beta):
+def chemical_free_energy(c, barrier_height, c_alpha, c_beta):
     r"""Return the fourth-order (quartic) bulk free energy.
 
     A fourth-order Taylor approximation about a reference composition
@@ -127,8 +131,8 @@ def fick_free_energy(c, barrier_height, c_alpha, c_beta):
     )
 
 
-def fick_free_energy_derivative(c, barrier_height, c_alpha, c_beta):
-    """Return the derivative of :func:`fick_free_energy`.
+def chemical_free_energy_derivative(c, barrier_height, c_alpha, c_beta):
+    """Return the derivative of :func:`chemical_free_energy`.
 
     Equal to :func:`double_well_derivative` with
     ``a = 16 * barrier_height / (c_beta - c_alpha)**4``.
@@ -141,7 +145,7 @@ def fick_free_energy_derivative(c, barrier_height, c_alpha, c_beta):
 class ChemicalFreeEnergy:
     """A reusable fourth-order (quartic) bulk free-energy model.
 
-    Wraps :func:`fick_free_energy`/:func:`fick_free_energy_derivative` with
+    Wraps :func:`chemical_free_energy`/:func:`chemical_free_energy_derivative` with
     fixed parameters so ``derivative`` can be passed directly as
     :class:`MassDiffusion`'s ``free_energy_derivative``.
 
@@ -159,11 +163,11 @@ class ChemicalFreeEnergy:
 
     def value(self, c):
         """Evaluate the free energy at composition ``c``."""
-        return fick_free_energy(c, self.barrier_height, self.c_alpha, self.c_beta)
+        return chemical_free_energy(c, self.barrier_height, self.c_alpha, self.c_beta)
 
     def derivative(self, c):
         """Evaluate the free-energy derivative at composition ``c``."""
-        return fick_free_energy_derivative(
+        return chemical_free_energy_derivative(
             c, self.barrier_height, self.c_alpha, self.c_beta
         )
 
@@ -225,6 +229,106 @@ def double_well_equilibrium_width(a, c_alpha, c_beta, gradient_energy):
     """
     half_span = 0.5 * (c_beta - c_alpha)
     return xp.sqrt(gradient_energy / (2.0 * a * half_span**2))
+
+
+def cahn_hilliard_period_range(a, c_alpha, c_beta, gradient_energy):
+    r"""Return the minimum period admitting a periodic equilibrium profile.
+
+    :func:`cahn_hilliard_periodic_profile` needs a period at least this
+    large; smaller periods have no periodic double-well equilibrium (the
+    elliptic modulus would have to be negative). The minimum occurs at
+    modulus 0, the small-amplitude sinusoidal limit, where the period is
+    :math:`2\pi\delta_0` for a length scale :math:`\delta_0` built the
+    same way as :func:`double_well_equilibrium_width`'s ``delta`` but
+    from the half-span rather than the full span.
+    """
+    half_span = 0.5 * (c_beta - c_alpha)
+    delta_0 = xp.sqrt(gradient_energy / a) / (2.0 * half_span)
+    return 2.0 * xp.pi * delta_0
+
+
+def cahn_hilliard_periodic_profile(
+    x, length, a, c_alpha, c_beta, gradient_energy, center=0.0
+):
+    r"""Return the exact periodic 1D Cahn-Hilliard equilibrium profile.
+
+    A single tanh interface (:func:`double_well_equilibrium_width`) is
+    only a valid equilibrium on an infinite domain: a periodic domain's
+    left and right boundaries are identified, so a single kink from
+    ``c_alpha`` to ``c_beta`` cannot close up on itself -- the field must
+    come back via a second, opposite-signed interface (an "antikink"),
+    giving one kink-antikink pair per period. The exact solution of
+    ``kappa * c'' = f'(c)`` with this periodicity is a Jacobi elliptic
+    function,
+
+    .. math::
+
+        c(x) = m_0 + A \, \mathrm{sn}\!\left(\frac{x - x_0}{s}, k\right),
+        \qquad
+        m_0 = \frac{c_\alpha + c_\beta}{2},
+
+    with modulus ``k`` chosen so the profile's exact period (``4 K(k)
+    s``, ``K`` the complete elliptic integral of the first kind) equals
+    ``length``; ``k`` is solved for numerically since the length scale
+    ``s`` itself depends on it. As ``k -> 1`` (period much larger than
+    the tanh width), ``sn -> tanh`` and this reduces to two well-separated
+    tanh interfaces, each of width :func:`double_well_equilibrium_width`;
+    as ``k -> 0`` (period near the minimum in
+    :func:`cahn_hilliard_period_range`), it reduces to a small-amplitude
+    sinusoid.
+
+    Parameters
+    ----------
+    x : array_like
+        Positions at which to evaluate the profile.
+    length : float
+        Domain period. Must be at least
+        :func:`cahn_hilliard_period_range`'s value, below which no
+        periodic equilibrium exists.
+    a : float
+        Quartic barrier coefficient.
+    c_alpha, c_beta : float
+        The two stable equilibrium compositions.
+    gradient_energy : float
+        Isotropic gradient-energy coefficient ``kappa``.
+    center : float, default=0.0
+        Position of the kink (composition rising through the midpoint);
+        the antikink sits half a period away.
+
+    Returns
+    -------
+    ndarray
+        The periodic equilibrium profile at ``x``.
+
+    Raises
+    ------
+    ValueError
+        If ``length`` is below the minimum admissible period.
+    """
+    minimum_length = float(cahn_hilliard_period_range(a, c_alpha, c_beta, gradient_energy))
+    if length < minimum_length:
+        raise ValueError(
+            f"length must be at least {minimum_length:.6g} "
+            "for a periodic equilibrium to exist at this a/gradient_energy"
+        )
+
+    half_span = 0.5 * (c_beta - c_alpha)
+    midpoint = 0.5 * (c_beta + c_alpha)
+    length_scale = np.sqrt(gradient_energy / a) / (2.0 * half_span)
+
+    def scale(modulus):
+        return length_scale * np.sqrt(1.0 + modulus)
+
+    def period_residual(modulus):
+        return 4.0 * ellipk(modulus) * scale(modulus) - length
+
+    modulus = brentq(period_residual, 0.0, 1.0 - 1e-14, xtol=1e-14, rtol=1e-14)
+    profile_scale = scale(modulus)
+    amplitude = half_span * np.sqrt(2.0 * modulus / (1.0 + modulus))
+
+    x_cpu = x.get() if hasattr(x, "get") else np.asarray(x)
+    sn, _, _, _ = ellipj((x_cpu - center) / profile_scale, modulus)
+    return xp.asarray(midpoint + amplitude * sn)
 
 
 @dataclass(frozen=True)
@@ -402,6 +506,47 @@ class MassDiffusion:
         Left equilibrium composition in the default barrier form.
     right_well : float, default=1.0
         Right equilibrium composition in the default barrier form.
+    scheme : {"explicit", "semi_implicit"}, default="explicit"
+        Time-stepping scheme. ``"explicit"`` is plain forward Euler, whose
+        stable time step is limited by the shortest-wavelength (Nyquist)
+        mode -- typically far smaller than the time scale of real
+        spinodal growth, especially with a small gradient-energy
+        coefficient. ``"semi_implicit"`` treats a homogeneous reference
+        linearization of the dynamics implicitly (dividing the explicit
+        update by ``1 + alpha * dt * L(k)``, where ``L(k)`` is exactly
+        :class:`LinearSpectralDiffusion`'s ``decay_rate`` evaluated at
+        ``reference_mobility``/``reference_gradient_energy``/
+        ``reference_curvature``), which damps stiff high-``k`` modes
+        unconditionally while leaving the full nonlinear physics in the
+        explicit numerator -- allowing far larger, still-stable time
+        steps.
+    reference_mobility : float or array_like, optional
+        Homogeneous mobility used only to build the ``semi_implicit``
+        stabilizer. Defaults to ``mobility`` if that is not callable;
+        required (and must be a scalar or ``(3, 3)`` tensor) if it is.
+    reference_gradient_energy : float or array_like, optional
+        Homogeneous gradient-energy coefficient for the ``semi_implicit``
+        stabilizer, with the same default/callable rule as
+        ``reference_mobility``.
+    reference_curvature : float, optional
+        Homogeneous free-energy curvature ``f''`` at the linearization
+        point, for the ``semi_implicit`` stabilizer. Always required for
+        that scheme -- unlike ``reference_mobility``/
+        ``reference_gradient_energy`` it is never inferred, since
+        ``free_energy_derivative`` may be an arbitrary callable. For the
+        default quartic form, use :func:`double_well_curvature` at the
+        chosen reference composition.
+    alpha : float, default=1.0
+        Stabilization weight in the ``semi_implicit`` denominator.
+    dealias : bool, default=False
+        If True, multiply the chemical potential's Fourier transform by
+        ``grid.lanczos_filter`` each step -- a smooth taper to exactly 0
+        at the Nyquist frequency, suppressing the spurious high-``k``
+        content a nonlinear term (``f'(c)``, or a composition-dependent
+        mobility/gradient energy) generates via aliasing when evaluated
+        pseudo-spectrally. Standard practice for nonlinear pseudo-spectral
+        solvers; ported from the reference Fortran solver's own
+        ``sf_lanczos_filter``/``sf_filter``.
     """
 
     grid: object
@@ -412,6 +557,12 @@ class MassDiffusion:
     bulk_free_energy_coefficient: float = 1.0
     left_well: float = -1.0
     right_well: float = 1.0
+    scheme: str = "explicit"
+    reference_mobility: object = None
+    reference_gradient_energy: object = None
+    reference_curvature: object = None
+    alpha: float = 1.0
+    dealias: bool = False
 
     def __post_init__(self):
         if self.operator is None:
@@ -425,6 +576,39 @@ class MassDiffusion:
                     a=self.bulk_free_energy_coefficient,
                     c_alpha=self.left_well,
                     c_beta=self.right_well,
+                ),
+            )
+        if self.scheme not in ("explicit", "semi_implicit"):
+            raise ValueError("scheme must be 'explicit' or 'semi_implicit'")
+        if self.scheme == "semi_implicit":
+            reference_mobility = self.reference_mobility
+            if reference_mobility is None:
+                if callable(self.mobility):
+                    raise ValueError(
+                        "semi_implicit scheme needs reference_mobility "
+                        "when mobility is callable"
+                    )
+                reference_mobility = self.mobility
+            reference_gradient_energy = self.reference_gradient_energy
+            if reference_gradient_energy is None:
+                if callable(self.gradient_energy):
+                    raise ValueError(
+                        "semi_implicit scheme needs reference_gradient_energy "
+                        "when gradient_energy is callable"
+                    )
+                reference_gradient_energy = self.gradient_energy
+            if self.reference_curvature is None:
+                raise ValueError(
+                    "semi_implicit scheme needs reference_curvature"
+                )
+            object.__setattr__(
+                self,
+                "_reference_stepper",
+                LinearSpectralDiffusion(
+                    self.grid,
+                    mobility=reference_mobility,
+                    gradient_energy=reference_gradient_energy,
+                    free_energy_curvature=self.reference_curvature,
                 ),
             )
 
@@ -460,7 +644,10 @@ class MassDiffusion:
             k_grad_hat = _apply_property(
                 kappa, self.grid.shape, grad_c_hat, "gradient_energy"
             )
-        return self.grid.fft(derivative) - self.operator.div(k_grad_hat)
+        mu_hat = self.grid.fft(derivative) - self.operator.div(k_grad_hat)
+        if self.dealias:
+            mu_hat = mu_hat * self.grid.lanczos_filter
+        return mu_hat
 
     def chemical_potential(self, field):
         """Return the real-space chemical potential ``mu = f'(c) - div(K grad c)``.
@@ -494,7 +681,7 @@ class MassDiffusion:
         return -_apply_property(mobility, self.grid.shape, grad_mu_hat, "mobility")
 
     def step(self, field, time_step):
-        """Advance the field by one explicit mass-diffusion step."""
+        """Advance the field by one mass-diffusion step (see ``scheme``)."""
         field = xp.asarray(field)
         if field.shape != self.grid.shape:
             raise ValueError(
@@ -507,7 +694,12 @@ class MassDiffusion:
         field_hat = self.grid.fft(field)
         mu_hat = self._chemical_potential(field)
         flux_hat = self._flux(field, mu_hat)
-        updated_hat = field_hat - time_step * self.operator.div(flux_hat)
+        divergence_hat = self.operator.div(flux_hat)
+        if self.scheme == "semi_implicit":
+            divergence_hat = divergence_hat / (
+                1.0 + self.alpha * time_step * self._reference_stepper.decay_rate
+            )
+        updated_hat = field_hat - time_step * divergence_hat
         return self.grid.ifft(updated_hat)
 
     def energy(self, field):

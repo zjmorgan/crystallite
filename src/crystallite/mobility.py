@@ -192,8 +192,18 @@ def binary_mobility(
     array_like
         The interdiffusion mobility ``M(X_B)``, ``M = c0 * X_A * X_B *
         D_dark / (R * T)``.
+
+    Notes
+    -----
+    ``x_b`` is clipped to ``[0, 1]`` before use: a mole fraction outside
+    that range is unphysical, and would otherwise flip the sign of the
+    ``X_A * X_B`` degeneracy factor -- turning diffusion into unstable
+    anti-diffusion -- for any caller whose composition field transiently
+    overshoots ``0`` or ``1`` (routine for an explicit or semi-implicit
+    solver evolving a field that only asymptotically approaches those
+    bounds).
     """
-    x_b = xp.asarray(x_b)
+    x_b = xp.clip(xp.asarray(x_b), 0.0, 1.0)
     temperature = xp.asarray(temperature)
     if xp.any(temperature <= 0):
         raise ValueError("temperature must be positive")

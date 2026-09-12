@@ -111,3 +111,45 @@ def test_fft_ifft_roundtrip():
     np.testing.assert_allclose(
         np.asarray(recovered), np.asarray(real), atol=1e-4
     )
+
+
+def test_lanczos_filter_is_one_at_dc():
+    grid = Grid(shape=(8, 8, 8), lengths=(1.0, 1.0, 1.0))
+    assert np.asarray(grid.lanczos_filter)[0, 0, 0] == pytest.approx(1.0)
+
+
+def test_lanczos_filter_is_zero_at_nyquist_along_each_axis():
+    # Each axis's Nyquist bin (k * spacing = pi along that axis) must zero
+    # the whole separable product, regardless of the other two indices.
+    grid = Grid(shape=(8, 8, 8), lengths=(1.0, 1.0, 1.0))
+    filt = np.asarray(grid.lanczos_filter)
+
+    nyquist_0 = np.argmax(np.abs(np.asarray(grid.k[0]).reshape(-1)))
+    np.testing.assert_allclose(filt[nyquist_0], 0.0, atol=1e-6)
+
+
+def test_lanczos_filter_tapers_monotonically_from_dc_to_nyquist():
+    grid = Grid(shape=(1, 32, 1), lengths=(1.0, 1.0, 1.0))
+    filt = np.asarray(grid.lanczos_filter).reshape(-1)
+
+    assert filt[0] == pytest.approx(1.0)
+    assert np.all(np.diff(filt) < 0)
+    assert filt[-1] == pytest.approx(0.0, abs=1e-6)
+
+
+def test_lanczos_filter_matches_reference_sigma_formula():
+    # sigma(k) = sinc(k * dx) with the unnormalized sinc(x) = sin(x)/x,
+    # ported directly from the reference Fortran solver's
+    # sf_lanczos_filter (standard.functions.c), which uses sinc(m/N) on
+    # the raw mode index m and point count N -- equivalent to sinc(k*dx)
+    # once k is written in angular-wavenumber form k = 2*pi*m/(N*dx).
+    grid = Grid(shape=(1, 16, 1), lengths=(1.0, 1.0, 1.0))
+    k1 = np.asarray(grid.k[1])
+    dx1 = grid.spacing[1]
+
+    x = k1 * dx1
+    expected = np.where(x == 0, 1.0, np.sin(x) / np.where(x == 0, 1.0, x))
+
+    np.testing.assert_allclose(
+        np.asarray(grid.lanczos_filter).reshape(-1), expected.reshape(-1), atol=1e-6
+    )

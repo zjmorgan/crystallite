@@ -18,7 +18,7 @@ def arithmetic(a, b, fraction):
         or ``b``) -- broadcast against the tensor's leading axes rather
         than numpy's default trailing-axis alignment, matching the
         leading-tensor-axis convention used for property fields elsewhere
-        (e.g. :class:`crystallite.diffusion.MassDiffusion`).
+        (e.g. :class:`crystallite.mass_diffusion.MassDiffusion`).
 
     Returns
     -------

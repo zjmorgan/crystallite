@@ -35,6 +35,13 @@ class Grid:
         `k2` with the k=0 entry replaced by 1, to divide by safely.
     inv_k2 : ndarray
         Elementwise reciprocal of `k2`, with the k=0 entry set to 0.
+    lanczos_filter : ndarray
+        Separable Lanczos sigma factor, ``sinc(k[0] * spacing[0]) *
+        sinc(k[1] * spacing[1]) * sinc(k[2] * spacing[2])`` (unnormalized
+        sinc, ``sin(x)/x``): 1 at ``k=0``, tapering smoothly to exactly 0
+        at each axis's Nyquist frequency. A standard dealiasing/anti-Gibbs
+        multiplier for a field's Fourier transform in pseudo-spectral
+        solvers of nonlinear PDEs.
     """
 
     def __init__(self, shape=(256, 256, 1), lengths=(1.0, 1.0, 1.0)):
@@ -87,6 +94,12 @@ class Grid:
 
         self.safe_k2 = xp.where(self.k2 == 0, 1.0, self.k2)
         self.inv_k2 = xp.where(self.k2 == 0, 0.0, 1.0 / self.safe_k2)
+
+        self.lanczos_filter = (
+            xp.sinc(self.k[0] * self.spacing[0] / xp.pi)
+            * xp.sinc(self.k[1] * self.spacing[1] / xp.pi)
+            * xp.sinc(self.k[2] * self.spacing[2] / xp.pi)
+        ).astype(self.real_dtype)
 
     def fft(self, x):
         """Forward real FFT over the active axes.

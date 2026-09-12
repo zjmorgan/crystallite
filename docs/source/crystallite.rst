@@ -17,10 +17,10 @@ Subpackages
 
    mass_diffusion
 
-crystallite.diffusion module
-----------------------------
+crystallite.mass_diffusion module
+----------------------------------
 
-.. automodule:: crystallite.diffusion
+.. automodule:: crystallite.mass_diffusion
    :members:
    :show-inheritance:
    :undoc-members:

@@ -1,16 +1,18 @@
 import numpy as np
 import pytest
 
-from crystallite.diffusion import (
+from crystallite.mass_diffusion import (
     ChemicalFreeEnergy,
     GradientEnergy,
     LinearSpectralDiffusion,
     MassDiffusion,
+    cahn_hilliard_period_range,
+    cahn_hilliard_periodic_profile,
     double_well_curvature,
     double_well_derivative,
     double_well_equilibrium_width,
-    fick_free_energy,
-    fick_free_energy_derivative,
+    chemical_free_energy,
+    chemical_free_energy_derivative,
 )
 from crystallite.mobility import BinaryMobility
 from crystallite.mobility import mobility as composition_mobility
@@ -155,6 +157,95 @@ def test_double_well_equilibrium_width_matches_first_integral():
     assert double_well_equilibrium_width(1.0, -1.0, 1.0, 0.02) == pytest.approx(
         np.sqrt(0.01)
     )
+
+
+def test_cahn_hilliard_periodic_profile_satisfies_the_ode():
+    # A single tanh interface is only a valid equilibrium on an infinite
+    # domain -- a periodic domain needs a kink-antikink pair, whose exact
+    # equilibrium is a Jacobi elliptic sn profile. Check it directly
+    # against kappa*c'' = f'(c) via finite differences (periodic BCs).
+    a, c_alpha, c_beta, kappa = 1.0, -1.0, 1.0, 2.0e-3
+    length = 1.0
+    x = np.linspace(0.0, length, 4000, endpoint=False)
+    dx = x[1] - x[0]
+
+    profile = np.asarray(
+        cahn_hilliard_periodic_profile(
+            x, length, a, c_alpha, c_beta, kappa, center=0.5 * length
+        )
+    )
+    second_derivative = (np.roll(profile, -1) - 2 * profile + np.roll(profile, 1)) / dx**2
+    residual = kappa * second_derivative - double_well_derivative(
+        profile, a=a, c_alpha=c_alpha, c_beta=c_beta
+    )
+
+    assert np.max(np.abs(residual)) < 1e-3
+
+
+def test_cahn_hilliard_periodic_profile_is_exactly_periodic():
+    a, c_alpha, c_beta, kappa = 1.0, -1.0, 1.0, 2.0e-3
+    length = 1.0
+    x = np.array([0.1, 0.37, 0.6])
+
+    profile = np.asarray(
+        cahn_hilliard_periodic_profile(x, length, a, c_alpha, c_beta, kappa)
+    )
+    wrapped = np.asarray(
+        cahn_hilliard_periodic_profile(x + length, length, a, c_alpha, c_beta, kappa)
+    )
+
+    np.testing.assert_allclose(profile, wrapped, atol=1e-10)
+
+
+def test_cahn_hilliard_periodic_profile_reduces_to_two_tanh_interfaces():
+    # Well past the minimum period, the kink and antikink are far apart
+    # and each looks locally like the infinite-domain tanh solution. (Not
+    # pushed further: representing the elliptic modulus this close to 1
+    # -- e.g. for a >~100x separation -- needs more precision than
+    # float64 offers for 1 - m directly.)
+    a, c_alpha, c_beta, kappa = 1.0, -1.0, 1.0, 2.0e-3
+    width = double_well_equilibrium_width(a, c_alpha, c_beta, kappa)
+    length = 40.0 * width
+
+    x = np.linspace(-0.5 * length, 0.5 * length, 4001)
+    profile = np.asarray(
+        cahn_hilliard_periodic_profile(x, length, a, c_alpha, c_beta, kappa, center=0.0)
+    )
+    near_kink = np.abs(x) < 10 * width
+    tanh_reference = np.tanh(x[near_kink] / width)
+
+    np.testing.assert_allclose(profile[near_kink], tanh_reference, atol=1e-3)
+
+
+def test_cahn_hilliard_periodic_profile_rejects_too_short_a_period():
+    a, c_alpha, c_beta, kappa = 1.0, -1.0, 1.0, 2.0e-3
+    minimum = cahn_hilliard_period_range(a, c_alpha, c_beta, kappa)
+    with pytest.raises(ValueError, match="length"):
+        cahn_hilliard_periodic_profile(
+            np.array([0.0]), 0.5 * minimum, a, c_alpha, c_beta, kappa
+        )
+
+
+def test_cahn_hilliard_periodic_profile_is_a_chemical_potential_equilibrium():
+    # Unlike a single tanh evaluated on a periodic domain (which needs a
+    # margin excluded around the domain wrap to hide the mismatch there),
+    # the exact periodic profile should zero the chemical potential
+    # everywhere, with no exclusion needed.
+    a, c_alpha, c_beta, kappa = 1.0, -1.0, 1.0, 2.0e-3
+    grid = Grid(shape=(256, 1, 1), lengths=(1.0, 1.0, 1.0))
+    x = np.asarray(grid.x[0]).reshape(-1)
+    length = grid.lengths[0]
+
+    profile = cahn_hilliard_periodic_profile(
+        x, length, a, c_alpha, c_beta, kappa, center=0.5 * length
+    )
+    solver = MassDiffusion(
+        grid, mobility=1.0, gradient_energy=kappa,
+        bulk_free_energy_coefficient=a, left_well=c_alpha, right_well=c_beta,
+    )
+    mu = np.asarray(solver.chemical_potential(np.asarray(profile).reshape(grid.shape)))
+
+    assert np.max(np.abs(mu)) < 1e-4
 
 
 def test_negative_curvature_is_a_growing_spinodal_mode():
@@ -373,23 +464,23 @@ def test_invalid_callable_property_shape_raises():
         solver.step(case.initial_field(), 1.0e-3)
 
 
-def test_fick_free_energy_derivative_matches_finite_difference():
+def test_chemical_free_energy_derivative_matches_finite_difference():
     c = np.array([-0.6, -0.1, 0.0, 0.3, 0.9])
     barrier_height, c_alpha, c_beta = 0.5, -1.0, 1.0
     h = 1e-5
     finite_difference = (
-        fick_free_energy(c + h, barrier_height, c_alpha, c_beta)
-        - fick_free_energy(c - h, barrier_height, c_alpha, c_beta)
+        chemical_free_energy(c + h, barrier_height, c_alpha, c_beta)
+        - chemical_free_energy(c - h, barrier_height, c_alpha, c_beta)
     ) / (2 * h)
 
     np.testing.assert_allclose(
-        fick_free_energy_derivative(c, barrier_height, c_alpha, c_beta),
+        chemical_free_energy_derivative(c, barrier_height, c_alpha, c_beta),
         finite_difference,
         rtol=1e-4,
     )
 
 
-def test_fick_free_energy_derivative_matches_double_well_derivative():
+def test_chemical_free_energy_derivative_matches_double_well_derivative():
     # The fourth-order barrier-height parametrization is the same quartic
     # double well, just reparametrized by f0(X0) instead of `a`.
     c = np.array([-0.6, -0.1, 0.0, 0.3, 0.9])
@@ -397,20 +488,20 @@ def test_fick_free_energy_derivative_matches_double_well_derivative():
     a = 16.0 * barrier_height / (c_beta - c_alpha) ** 4
 
     np.testing.assert_allclose(
-        fick_free_energy_derivative(c, barrier_height, c_alpha, c_beta),
+        chemical_free_energy_derivative(c, barrier_height, c_alpha, c_beta),
         double_well_derivative(c, a=a, c_alpha=c_alpha, c_beta=c_beta),
     )
 
 
-def test_fick_free_energy_class_matches_functions():
+def test_chemical_free_energy_class_matches_functions():
     c = np.array([-0.6, -0.1, 0.0, 0.3, 0.9])
     model = ChemicalFreeEnergy(barrier_height=0.5, c_alpha=-1.0, c_beta=1.0)
 
     np.testing.assert_allclose(
-        model.value(c), fick_free_energy(c, 0.5, -1.0, 1.0)
+        model.value(c), chemical_free_energy(c, 0.5, -1.0, 1.0)
     )
     np.testing.assert_allclose(
-        model.derivative(c), fick_free_energy_derivative(c, 0.5, -1.0, 1.0)
+        model.derivative(c), chemical_free_energy_derivative(c, 0.5, -1.0, 1.0)
     )
 
 
@@ -458,3 +549,199 @@ def test_mass_diffusion_accepts_model_objects_directly_with_no_lambdas():
     updated = solver.step(field, 1.0e-6)
 
     assert np.mean(updated) == pytest.approx(np.mean(field), abs=1e-6)
+
+
+def test_invalid_scheme_raises():
+    case = SinusoidalCase()
+    with pytest.raises(ValueError, match="scheme"):
+        MassDiffusion(case.grid, scheme="bogus")
+
+
+def test_semi_implicit_requires_reference_mobility_for_callable_mobility():
+    case = SinusoidalCase()
+    with pytest.raises(ValueError, match="reference_mobility"):
+        MassDiffusion(
+            case.grid,
+            mobility=lambda c: np.full_like(c, 1.0),
+            scheme="semi_implicit",
+            reference_gradient_energy=0.01,
+            reference_curvature=-1.0,
+        )
+
+
+def test_semi_implicit_requires_reference_gradient_energy_for_callable_gradient_energy():
+    case = SinusoidalCase()
+    with pytest.raises(ValueError, match="reference_gradient_energy"):
+        MassDiffusion(
+            case.grid,
+            gradient_energy=lambda c: np.full_like(c, 0.01),
+            scheme="semi_implicit",
+            reference_mobility=1.0,
+            reference_curvature=-1.0,
+        )
+
+
+def test_semi_implicit_requires_reference_curvature():
+    case = SinusoidalCase()
+    with pytest.raises(ValueError, match="reference_curvature"):
+        MassDiffusion(
+            case.grid,
+            scheme="semi_implicit",
+            reference_mobility=1.0,
+            reference_gradient_energy=0.01,
+        )
+
+
+def test_semi_implicit_defaults_reference_values_from_constants():
+    # When mobility/gradient_energy are already constants, they don't need
+    # to be repeated as reference_mobility/reference_gradient_energy.
+    case = SinusoidalCase()
+    solver = MassDiffusion(
+        case.grid,
+        mobility=2.0,
+        gradient_energy=0.01,
+        scheme="semi_implicit",
+        reference_curvature=-1.0,
+    )
+    # Should not raise, and should actually run.
+    solver.step(case.initial_field(), 1.0e-3)
+
+
+def test_semi_implicit_matches_explicit_at_a_safe_time_step():
+    # At a time step small enough that dt * L(k_max) << 1 even for this
+    # grid's shortest wavelength -- so the semi_implicit denominator is
+    # close to 1 everywhere -- the two schemes should agree closely. (A
+    # "small" dt is only safe in this sense relative to k_max**4, which is
+    # why this uses a small grid rather than just a small dt.)
+    grid = Grid(shape=(16, 16, 1), lengths=(1.0, 1.0, 1.0))
+    case = SinusoidalCase(grid=grid)
+    field = 0.5 + case.initial_field()
+    dt = 1.0e-6
+
+    explicit = MassDiffusion(
+        grid, mobility=1.0, gradient_energy=0.01,
+        bulk_free_energy_coefficient=1.0, left_well=-1.0, right_well=1.0,
+    )
+    semi_implicit = MassDiffusion(
+        grid, mobility=1.0, gradient_energy=0.01,
+        bulk_free_energy_coefficient=1.0, left_well=-1.0, right_well=1.0,
+        scheme="semi_implicit", reference_mobility=1.0,
+        reference_gradient_energy=0.01,
+        reference_curvature=double_well_curvature(0.5, a=1.0, c_alpha=-1.0, c_beta=1.0),
+    )
+
+    np.testing.assert_allclose(
+        semi_implicit.step(field, dt), explicit.step(field, dt), rtol=1e-3, atol=1e-8
+    )
+
+
+def test_semi_implicit_reduces_exactly_to_linear_spectral_diffusion():
+    # For a genuinely linear PDE -- mobility, gradient_energy, and the
+    # free-energy curvature all constant and exactly equal to their
+    # "reference" values, so there is no nonlinear remainder anywhere --
+    # semi_implicit must reduce to LinearSpectralDiffusion's own exact
+    # solution, at a time step much larger than explicit stability would
+    # allow. This is the scheme's core correctness property: dividing only
+    # the flux-divergence term by (1 + alpha*dt*L(k)), not the whole
+    # update (which would double-count the implicit damping and decay
+    # roughly twice too fast -- a real bug this test would have caught).
+    mobility, kappa, curvature = 1.0, 0.05, -4.0
+    grid = Grid(shape=(32, 32, 1))
+    case = SinusoidalCase(grid=grid, amplitude=0.01)
+    dt, steps = 2.0e-7, 3000
+
+    semi_implicit = MassDiffusion(
+        grid, mobility=mobility, gradient_energy=kappa,
+        free_energy_derivative=lambda c: curvature * c,
+        scheme="semi_implicit", reference_mobility=mobility,
+        reference_gradient_energy=kappa, reference_curvature=curvature,
+    )
+    field = case.initial_field()
+    for _ in range(steps):
+        field = semi_implicit.step(field, dt)
+
+    linear = LinearSpectralDiffusion(
+        grid, mobility=mobility, gradient_energy=kappa, free_energy_curvature=curvature
+    )
+    rate = float(np.asarray(linear.decay_rate)[case.mode, 0, 0])
+    expected = case.expected_amplitude(steps * dt, rate)
+
+    assert case.amplitude_of(field) == pytest.approx(expected, rel=1e-3)
+
+
+def test_semi_implicit_stays_stable_where_explicit_blows_up():
+    # A deliberately aggressive time step relative to this small grid's
+    # Nyquist mode: the plain explicit scheme diverges within a couple of
+    # steps, while semi_implicit -- treating the same homogeneous linear
+    # operator implicitly -- stays bounded over many more steps.
+    grid = Grid(shape=(16, 16, 1), lengths=(1.0, 1.0, 1.0))
+    rng = np.random.default_rng(0)
+    field0 = 0.5 + 0.05 * rng.standard_normal(grid.shape)
+    dt = 1.0e-3
+
+    explicit = MassDiffusion(
+        grid, mobility=1.0, gradient_energy=0.01,
+        bulk_free_energy_coefficient=1.0, left_well=-1.0, right_well=1.0,
+    )
+    field = field0.copy()
+    for _ in range(3):
+        field = explicit.step(field, dt)
+    assert not np.all(np.isfinite(field)) or np.max(np.abs(field)) > 50
+
+    reference_curvature = double_well_curvature(0.5, a=1.0, c_alpha=-1.0, c_beta=1.0)
+    semi_implicit = MassDiffusion(
+        grid, mobility=1.0, gradient_energy=0.01,
+        bulk_free_energy_coefficient=1.0, left_well=-1.0, right_well=1.0,
+        scheme="semi_implicit", reference_mobility=1.0,
+        reference_gradient_energy=0.01, reference_curvature=reference_curvature,
+    )
+    field = field0.copy()
+    for _ in range(30):
+        field = semi_implicit.step(field, dt)
+    assert np.all(np.isfinite(field))
+    assert np.max(np.abs(field)) < 50
+
+
+def test_semi_implicit_conserves_mass():
+    case = SinusoidalCase()
+    field = 0.5 + case.initial_field()
+    reference_curvature = double_well_curvature(0.5, a=1.0, c_alpha=-1.0, c_beta=1.0)
+    solver = MassDiffusion(
+        case.grid, mobility=1.0, gradient_energy=0.01,
+        bulk_free_energy_coefficient=1.0, left_well=-1.0, right_well=1.0,
+        scheme="semi_implicit", reference_mobility=1.0,
+        reference_gradient_energy=0.01, reference_curvature=reference_curvature,
+    )
+    updated = solver.step(field, 1.0e-2)
+    assert np.mean(updated) == pytest.approx(np.mean(field), abs=1e-8)
+
+
+def test_dealias_multiplies_chemical_potential_by_the_lanczos_filter():
+    case = SinusoidalCase()
+    field = 0.5 + case.initial_field()
+
+    plain = MassDiffusion(case.grid, mobility=1.0, gradient_energy=5.0e-4)
+    filtered = MassDiffusion(
+        case.grid, mobility=1.0, gradient_energy=5.0e-4, dealias=True
+    )
+
+    plain_hat = np.asarray(plain._chemical_potential(field))
+    filtered_hat = np.asarray(filtered._chemical_potential(field))
+    expected = plain_hat * np.asarray(case.grid.lanczos_filter)
+
+    np.testing.assert_allclose(filtered_hat, expected, rtol=1e-5, atol=1e-8)
+    # A no-op filter would make this check vacuous.
+    assert np.min(np.asarray(case.grid.lanczos_filter)) < 0.5
+
+
+def test_dealias_still_conserves_mass():
+    # The filter is 1 at k=0 (DC), so it must not perturb mass conservation.
+    case = SinusoidalCase()
+    field = 0.5 + case.initial_field()
+    solver = MassDiffusion(
+        case.grid, mobility=1.0, gradient_energy=5.0e-4, dealias=True
+    )
+
+    updated = solver.step(field, 1.0e-3)
+
+    assert np.mean(updated) == pytest.approx(np.mean(field), abs=1e-8)
