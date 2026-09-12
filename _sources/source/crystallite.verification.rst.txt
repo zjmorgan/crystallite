@@ -1,14 +1,14 @@
 crystallite.verification namespace
 ==================================
 
-The verification namespace contains small, reproducible cases based on the
-Fick presentation examples. These cases define initial conditions and
-observables; numerical time integration belongs to the diffusion solver.
+The verification namespace contains small, reproducible mass-diffusion
+verification cases. These cases define initial conditions and observables;
+numerical time integration belongs to the mass-diffusion solver.
 
-Fick examples
--------------
+Mass diffusion cases
+---------------------
 
-.. automodule:: crystallite.verification.fick
+.. automodule:: crystallite.verification.mass_diffusion
    :members:
    :show-inheritance:
    :undoc-members:
