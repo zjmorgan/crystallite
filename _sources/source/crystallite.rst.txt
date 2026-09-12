@@ -36,10 +36,10 @@ crystallite.backend module
    :show-inheritance:
    :undoc-members:
 
-crystallite.phase module
+crystallite.grid module
 ------------------------
 
-.. automodule:: crystallite.phase
+.. automodule:: crystallite.grid
    :members:
    :show-inheritance:
    :undoc-members:
