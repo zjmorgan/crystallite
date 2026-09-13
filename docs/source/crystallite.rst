@@ -16,11 +16,29 @@ Subpackages
    :maxdepth: 2
 
    mass_diffusion
+   grain_orientation
+   elastic_deformation
 
 crystallite.mass_diffusion module
 ----------------------------------
 
 .. automodule:: crystallite.mass_diffusion
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.grain_orientation module
+-------------------------------------
+
+.. automodule:: crystallite.grain_orientation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.elastic_deformation module
+----------------------------------------
+
+.. automodule:: crystallite.elastic_deformation
    :members:
    :show-inheritance:
    :undoc-members:

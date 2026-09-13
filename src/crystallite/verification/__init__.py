@@ -1,5 +1,6 @@
 """Small, reproducible verification cases for crystallite models."""
 
+from crystallite.verification.elastic_deformation import HoleInPlateCase
 from crystallite.verification.grain_orientation import (
     CircularGrainCase,
     PlanarGrainBoundaryCase,
@@ -11,4 +12,5 @@ __all__ = [
     "InterfaceCase",
     "PlanarGrainBoundaryCase",
     "CircularGrainCase",
+    "HoleInPlateCase",
 ]

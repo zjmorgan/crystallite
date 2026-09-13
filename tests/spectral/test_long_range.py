@@ -3,6 +3,7 @@ import pytest
 
 from crystallite.backend import xp
 from crystallite.grid import Grid
+from crystallite.material.properties import isotropic_stiffness as _isotropic_stiffness
 from crystallite.spectral.long_range import CoulombOperator, GreenOperator
 from crystallite.spectral.short_range import DifferentialOperators
 
@@ -231,14 +232,6 @@ def test_dipole_dipole_via_divergence_source(coulomb, ops, fourier_shape):
 
 # -- GreenOperator: conduction (rank-2 medium) and elasticity
 #    (rank-4 medium) share the same acoustic-tensor-inversion core --
-
-
-def _isotropic_stiffness(lam, mu):
-    delta = np.eye(3)
-    return lam * np.einsum("ij,kl->ijkl", delta, delta) + mu * (
-        np.einsum("ik,jl->ijkl", delta, delta)
-        + np.einsum("il,jk->ijkl", delta, delta)
-    )
 
 
 def _isotropic_green_manual(grid, lam, mu):

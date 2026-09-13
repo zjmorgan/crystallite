@@ -153,7 +153,7 @@ def run_example(
         for ax, (step, snap) in zip(axes, snapshots):
             grain_map = np.argmax(np.abs(snap), axis=0)[:, :, 0]
             ax.imshow(
-                grain_map, origin="lower", cmap="binary",
+                grain_map, origin="lower", cmap="viridis",
                 vmin=0, vmax=N_ORIENTATIONS - 1, interpolation="nearest",
             )
             ax.set_title(rf"step {step}, {grain_count(snap)} grains")

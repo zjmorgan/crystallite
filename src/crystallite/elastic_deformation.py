@@ -1,0 +1,272 @@
+"""Static heterogeneous linear elasticity (Hooke's law) via a matrix-free,
+preconditioned-conjugate-gradient spectral solver."""
+
+from dataclasses import dataclass
+
+from crystallite.backend import xp
+from crystallite.material.properties import isotropic_stiffness
+from crystallite.spectral.long_range import GreenOperator
+from crystallite.spectral.short_range import DifferentialOperators
+
+
+@dataclass(frozen=True)
+class ElasticSolution:
+    """Result of :meth:`ElasticDeformation.solve`.
+
+    Attributes
+    ----------
+    displacement : ndarray
+        Periodic displacement fluctuation ``u*``, shape ``(3,) + grid.shape``.
+    strain : ndarray
+        Total strain ``macro_strain + sym(grad(u*))``, shape
+        ``(3, 3) + grid.shape``.
+    stress : ndarray
+        Stress ``C(x):strain``, shape ``(3, 3) + grid.shape``.
+    residual_norm : float
+        Final relative Krylov residual, ``||b - A(u*)|| / ||b||`` (0 if the
+        applied load produces no net force, e.g. a homogeneous material).
+    iterations : int
+        Number of conjugate-gradient iterations taken.
+    converged : bool
+        Whether ``residual_norm`` reached ``tol``.
+    """
+
+    displacement: object
+    strain: object
+    stress: object
+    residual_norm: float
+    iterations: int
+    converged: bool
+
+
+@dataclass(frozen=True)
+class ElasticDeformation:
+    r"""Static mechanical equilibrium in a heterogeneous isotropic solid.
+
+    Solves periodic equilibrium :math:`\nabla\cdot\sigma(x) = 0` with
+    :math:`\sigma(x) = C(x):\varepsilon(x)`,
+    :math:`\varepsilon(x) = \bar\varepsilon + \mathrm{sym}(\nabla u^*(x))`
+    for a periodic displacement fluctuation :math:`u^*` (zero mean) under a
+    prescribed macroscopic strain :math:`\bar\varepsilon`. The material is
+    isotropic but may vary in space -- :math:`\lambda(x)`, :math:`\mu(x)`
+    are each a scalar or a ``grid.shape`` field, applied pointwise via
+    :math:`\sigma_{ij} = \lambda\,\mathrm{tr}(\varepsilon)\delta_{ij} +
+    2\mu\varepsilon_{ij}` -- e.g. a soft circular inclusion approximating a
+    hole. This is deliberately *not* coupled to any eigenstrain or
+    phase-field driving force; it solves plain Hooke's law in isolation.
+
+    Substituting the strain decomposition into equilibrium gives a
+    matrix-free linear system for :math:`u^*`,
+
+    .. math::
+
+        A(u^*) = b, \qquad
+        A(u) = -\nabla\cdot\!\left[C(x):\mathrm{sym}(\nabla u)\right],
+        \qquad
+        b = -\nabla\cdot\!\left[C(x):\bar\varepsilon\right],
+
+    solved by preconditioned conjugate gradient. :math:`A` is symmetric
+    (:class:`crystallite.spectral.short_range.DifferentialOperators`'s
+    ``grad``/``div`` are exact discrete adjoints of each other by
+    construction: ``grad`` inserts :math:`ik`, ``div`` contracts the same
+    index with :math:`ik`) and positive semi-definite, with a spatially
+    uniform displacement as its only null direction. That null direction
+    never enters the iteration: every right-hand side and every
+    preconditioned residual below has an identically zero k=0 Fourier
+    component (a divergence's k=0 mode vanishes on any periodic grid, and
+    :meth:`GreenOperator.potential` already zeroes its own k=0 output), so
+    no explicit projection step is needed.
+
+    The preconditioner is the existing
+    :class:`crystallite.spectral.long_range.GreenOperator` for a homogeneous
+    *reference* medium :math:`C_0` (Lame parameters `reference_lame_lambda`,
+    `reference_lame_mu`, e.g. the matrix phase's own values): applying
+    :meth:`GreenOperator.potential` to a residual is exactly solving the
+    reference medium's own equilibrium problem for that residual as a body
+    force, i.e. exactly the classic Khachaturyan-Shatalov/Moulinec-Suquet
+    reference-medium correction, reused here as a linear preconditioner
+    rather than iterated to convergence on its own (the "basic scheme",
+    whose convergence rate degrades badly for a high-contrast/void
+    inclusion -- CG on top of the same reference-medium solve does not).
+    `reference_green` is public so callers can reuse it directly, e.g.
+    ``solver.reference_green.apply_compliance(sigma_target)`` to convert a
+    target remote stress into the macroscopic strain this solver takes as
+    input.
+
+    Parameters
+    ----------
+    grid : Grid
+    lame_lambda, lame_mu : float or array_like
+        Lame parameters of the (possibly heterogeneous) material. Each a
+        scalar or a ``grid.shape`` real field.
+    reference_lame_lambda, reference_lame_mu : float
+        Lame parameters of the homogeneous reference medium used to build
+        the preconditioner.
+    operator : object, optional
+        Defaults to :class:`DifferentialOperators(grid)`.
+    reference_green : object, optional
+        Defaults to ``GreenOperator(grid, isotropic_stiffness(
+        reference_lame_lambda, reference_lame_mu))``.
+    """
+
+    grid: object
+    lame_lambda: object
+    lame_mu: object
+    reference_lame_lambda: float
+    reference_lame_mu: float
+    operator: object = None
+    reference_green: object = None
+
+    def __post_init__(self):
+        if self.operator is None:
+            object.__setattr__(self, "operator", DifferentialOperators(self.grid))
+        if self.reference_green is None:
+            reference_stiffness = isotropic_stiffness(
+                self.reference_lame_lambda, self.reference_lame_mu
+            )
+            object.__setattr__(
+                self, "reference_green", GreenOperator(self.grid, reference_stiffness)
+            )
+
+    def stress(self, strain):
+        """Return the pointwise isotropic stress ``C(x):strain``.
+
+        Parameters
+        ----------
+        strain : array_like
+            Shape ``(3, 3) + grid.shape`` (or broadcastable to it, e.g. a
+            bare ``(3, 3)`` constant strain).
+
+        Returns
+        -------
+        ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        strain = xp.asarray(strain)
+        trace = xp.einsum("ii...->...", strain)
+        spatial_ndim = len(self.grid.shape)
+        delta = xp.eye(3, dtype=strain.dtype).reshape((3, 3) + (1,) * spatial_ndim)
+        sigma = self.lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.lame_mu * strain
+        )
+        return xp.broadcast_to(sigma, (3, 3) + self.grid.shape)
+
+    def _strain_from_displacement(self, u):
+        u_hat = self.grid.fft(u)
+        grad_u_hat = self.operator.grad(u_hat)
+        grad_u = self.grid.ifft(grad_u_hat)
+        return 0.5 * (grad_u + xp.swapaxes(grad_u, 0, 1))
+
+    def _divergence_of_stress(self, sigma):
+        sigma_hat = self.grid.fft(sigma)
+        divergence_hat = self.operator.div(sigma_hat)
+        return self.grid.ifft(divergence_hat)
+
+    def _matvec(self, u):
+        strain = self._strain_from_displacement(u)
+        sigma = self.stress(strain)
+        return -self._divergence_of_stress(sigma)
+
+    def _precondition(self, r):
+        r_hat = self.grid.fft(r)
+        u_hat = self.reference_green.potential(r_hat)
+        return self.grid.ifft(u_hat)
+
+    def _body_force(self, macro_strain):
+        macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
+        if macro_strain.shape != (3, 3):
+            raise ValueError(f"macro_strain must have shape (3, 3), got {macro_strain.shape}")
+        spatial_ndim = len(self.grid.shape)
+        strain_field = macro_strain.reshape((3, 3) + (1,) * spatial_ndim)
+        sigma_bar = self.stress(strain_field)
+        # Equilibrium: div(C:eps_bar) + div(C:eps*(u*)) = 0, and A(u) is
+        # defined as -div(C:eps*(u)), so A(u*) = +div(C:eps_bar) here --
+        # no leading minus (a previous version of this had one, which is
+        # invisible far from any heterogeneity, since u* -> 0 there
+        # regardless of its sign, but flips the correction's sign exactly
+        # where it matters, right around a heterogeneity).
+        return self._divergence_of_stress(sigma_bar)
+
+    def solve(
+        self, macro_strain, tol=1.0e-6, max_iterations=500, initial_displacement=None
+    ):
+        """Solve for the equilibrium displacement fluctuation.
+
+        Parameters
+        ----------
+        macro_strain : array_like
+            Prescribed macroscopic strain, shape ``(3, 3)``.
+        tol : float, default=1e-6
+            Relative Krylov residual at which to stop. The default
+            reflects `Grid`'s float32 arithmetic, not a limitation of the
+            method.
+        max_iterations : int, default=500
+        initial_displacement : ndarray, optional
+            Warm-start displacement, shape ``(3,) + grid.shape``. Defaults
+            to zero.
+
+        Returns
+        -------
+        ElasticSolution
+        """
+        macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
+        b = self._body_force(macro_strain)
+
+        if initial_displacement is None:
+            u = xp.zeros((3,) + self.grid.shape, dtype=self.grid.real_dtype)
+        else:
+            u = xp.asarray(initial_displacement, dtype=self.grid.real_dtype)
+            if u.shape != (3,) + self.grid.shape:
+                raise ValueError(
+                    "initial_displacement must have shape (3,) + grid.shape: "
+                    f"expected {(3,) + self.grid.shape}, got {u.shape}"
+                )
+
+        b_norm = float(xp.sqrt(xp.sum(b * b)))
+        r = b - self._matvec(u)
+
+        iterations = 0
+        if b_norm < 1.0e-12:
+            # No net body force (e.g. a homogeneous material, or C(x)
+            # already matching the reference medium): u=0 already solves
+            # A(u)=b=0 exactly, to floating-point noise -- skip the
+            # relative-residual check, which would divide by ~0.
+            residual_norm = 0.0
+            converged = True
+        else:
+            z = self._precondition(r)
+            p = z
+            rz_old = xp.sum(r * z)
+            residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
+            converged = residual_norm < tol
+
+            while not converged and iterations < max_iterations:
+                iterations += 1
+                a_p = self._matvec(p)
+                alpha = rz_old / xp.sum(p * a_p)
+                u = u + alpha * p
+                r = r - alpha * a_p
+                residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
+                if residual_norm < tol:
+                    converged = True
+                    break
+                z = self._precondition(r)
+                rz_new = xp.sum(r * z)
+                beta = rz_new / rz_old
+                p = z + beta * p
+                rz_old = rz_new
+
+        strain = macro_strain.reshape((3, 3) + (1,) * len(self.grid.shape)) + (
+            self._strain_from_displacement(u)
+        )
+        strain = xp.broadcast_to(strain, (3, 3) + self.grid.shape)
+        stress = self.stress(strain)
+
+        return ElasticSolution(
+            displacement=u,
+            strain=strain,
+            stress=stress,
+            residual_norm=residual_norm,
+            iterations=iterations,
+            converged=converged,
+        )

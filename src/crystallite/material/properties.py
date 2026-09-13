@@ -39,6 +39,33 @@ def as_tensor(value, dim=3):
     return value
 
 
+def isotropic_stiffness(lam, mu):
+    r"""Return the isotropic rank-4 elastic stiffness tensor.
+
+    .. math::
+
+        C_{ijkl} = \lambda \, \delta_{ij}\delta_{kl}
+        + \mu \left(\delta_{ik}\delta_{jl} + \delta_{il}\delta_{jk}\right)
+
+    for Lame parameters :math:`\lambda`, :math:`\mu`.
+
+    Parameters
+    ----------
+    lam, mu : float
+        Lame's first parameter and the shear modulus.
+
+    Returns
+    -------
+    ndarray
+        Shape ``(3, 3, 3, 3)``.
+    """
+    delta = xp.eye(3)
+    return lam * xp.einsum("ij,kl->ijkl", delta, delta) + mu * (
+        xp.einsum("ik,jl->ijkl", delta, delta)
+        + xp.einsum("il,jk->ijkl", delta, delta)
+    )
+
+
 def voigt_stiffness(medium):
     r"""Rank-4 elastic tensor -> (6, 6) Voigt stiffness matrix.
 
