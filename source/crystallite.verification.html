@@ -41,6 +41,7 @@
     <script src="../_static/documentation_options.js?v=5929fcd5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/crystallite.verification';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -301,6 +302,8 @@
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
 </ul>
 </div>
 </nav></div>
@@ -363,9 +366,11 @@
                   
   <section id="crystallite-verification-namespace">
 <h1>crystallite.verification namespace<a class="headerlink" href="#crystallite-verification-namespace" title="Link to this heading">#</a></h1>
-<p>The verification namespace contains small, reproducible mass-diffusion
-verification cases. These cases define initial conditions and observables;
-numerical time integration belongs to the mass-diffusion solver.</p>
+<p>The verification namespace contains small, reproducible verification cases
+for each physical model. These cases define initial conditions and
+observables (and, where a closed-form solution exists, the analytic
+comparison); numerical time integration or equilibrium solving belongs to
+the corresponding solver.</p>
 <section id="module-crystallite.verification.mass_diffusion">
 <span id="mass-diffusion-cases"></span><h2>Mass diffusion cases<a class="headerlink" href="#module-crystallite.verification.mass_diffusion" title="Link to this heading">#</a></h2>
 <p>Verification cases for Fick’s-law mass diffusion.</p>
@@ -579,6 +584,511 @@ which case the amplitude grows rather than decays.</p>
 </dd></dl>
 
 </section>
+<section id="module-crystallite.verification.grain_orientation">
+<span id="grain-orientation-cases"></span><h2>Grain orientation cases<a class="headerlink" href="#module-crystallite.verification.grain_orientation" title="Link to this heading">#</a></h2>
+<p>Verification cases for grain-orientation (Allen-Cahn) dynamics.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CircularGrainCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quartic_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orientations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_orientation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L91-L207"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A shrinking circular grain under curvature-driven Allen-Cahn dynamics.</p>
+<p>A single order parameter is <span class="math notranslate nohighlight">\(+\eta_0\)</span> inside a disk of radius
+<span class="math notranslate nohighlight">\(R\)</span> and <span class="math notranslate nohighlight">\(-\eta_0\)</span> outside (the rest held at zero, the
+radial analog of <a class="reference internal" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase" title="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase</span></code></a>’s kink profile).</p>
+<p>The equilibrium radial profile is taken to be the flat-interface
+tanh profile evaluated at <code class="docutils literal notranslate"><span class="pre">r</span> <span class="pre">-</span> <span class="pre">R</span></code> – exact on an infinite plane,
+and a good approximation here whenever the interface width is small
+relative to <span class="math notranslate nohighlight">\(R\)</span>. Substituting this ansatz into the Allen-Cahn
+equation and expanding the radial Laplacian’s curvature term,
+<span class="math notranslate nohighlight">\(\nabla^2\eta = \eta'' + \eta'/r\)</span>, to leading order in
+<span class="math notranslate nohighlight">\(1/R\)</span> gives an exact cancellation of every term <em>except</em> the
+curvature term, because the flat-interface profile already solves
+<span class="math notranslate nohighlight">\(\kappa\Phi'' = f'(\Phi)\)</span> identically
+(<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.double_well_equilibrium_width" title="crystallite.mass_diffusion.double_well_equilibrium_width"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.double_well_equilibrium_width()</span></code></a>).
+What remains is</p>
+<div class="math notranslate nohighlight">
+\[R \frac{dR}{dt} = -L \kappa,
+\qquad
+R(t)^2 = R_0^2 - 2 L \kappa t,\]</div>
+<p>where <span class="math notranslate nohighlight">\(L\)</span> is <code class="docutils literal notranslate"><span class="pre">mobility</span></code> and <span class="math notranslate nohighlight">\(\kappa\)</span> is
+<code class="docutils literal notranslate"><span class="pre">gradient_energy</span></code> – notably the <em>gradient-energy coefficient
+itself</em>, not the interfacial (line-tension) energy <a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy" title="crystallite.verification.grain_orientation.CircularGrainCase.surface_energy"><code class="xref py py-attr docutils literal notranslate"><span class="pre">surface_energy</span></code></a>.
+The two are easy to conflate (the standard curvature-flow heuristic
+“velocity = mobility x surface energy x curvature” from sharp-interface
+theory) but are only proportional to each other up to a factor of
+<span class="math notranslate nohighlight">\(\eta_0^2/\text{width}^2\)</span> here, which is not of order 1 in
+general – using <a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy" title="crystallite.verification.grain_orientation.CircularGrainCase.surface_energy"><code class="xref py py-attr docutils literal notranslate"><span class="pre">surface_energy</span></code></a> in place of <code class="docutils literal notranslate"><span class="pre">gradient_energy</span></code>
+in the rate law overstates or understates the true shrink rate by
+that factor. <a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy" title="crystallite.verification.grain_orientation.CircularGrainCase.surface_energy"><code class="xref py py-attr docutils literal notranslate"><span class="pre">surface_energy</span></code></a> remains the correct quantity for
+the <em>static</em> excess energy of the boundary, <span class="math notranslate nohighlight">\(F = 2\pi R\,\sigma\)</span>
+in 2D (verified directly against <code class="xref py py-meth docutils literal notranslate"><span class="pre">GrainOrientation.free_energy()</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd><p>A 2D (or 3D) grid.</p>
+</dd>
+<dt><strong>barrier_coefficient</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Coefficient <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+</dd>
+<dt><strong>quartic_coefficient</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Coefficient <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+</dd>
+<dt><strong>gradient_energy</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Gradient-energy coefficient <code class="docutils literal notranslate"><span class="pre">kappa</span></code> for the active orientation.</p>
+</dd>
+<dt><strong>mobility</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Kinetic coefficient <code class="docutils literal notranslate"><span class="pre">L</span></code> for the active orientation.</p>
+</dd>
+<dt><strong>n_orientations</strong><span class="classifier">int, default=2</span></dt><dd><p>Total number of order parameters in the field returned by
+<a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.profile" title="crystallite.verification.grain_orientation.CircularGrainCase.profile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile()</span></code></a> (only one is active; the rest are held at zero).</p>
+</dd>
+<dt><strong>active_orientation</strong><span class="classifier">int, default=0</span></dt><dd><p>Index of the active order parameter.</p>
+</dd>
+<dt><strong>center</strong><span class="classifier">tuple of float, default=(0.0, 0.0)</span></dt><dd><p>Center of the disk in the grid’s first two coordinates.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.eta0" title="crystallite.verification.grain_orientation.CircularGrainCase.eta0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eta0</span></code></a></dt><dd><p>Equilibrium single-grain magnitude, <code class="docutils literal notranslate"><span class="pre">sqrt(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy" title="crystallite.verification.grain_orientation.CircularGrainCase.surface_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">surface_energy</span></code></a></dt><dd><p>Interfacial (line-tension) energy per unit boundary length.</p>
+</dd>
+<dt><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.width" title="crystallite.verification.grain_orientation.CircularGrainCase.width"><code class="xref py py-obj docutils literal notranslate"><span class="pre">width</span></code></a></dt><dd><p>Analytic equilibrium interface width.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.profile" title="crystallite.verification.grain_orientation.CircularGrainCase.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile</span></code></a>(initial_radius)</p></td>
+<td><p>Return the initial field, shape <code class="docutils literal notranslate"><span class="pre">(n_orientations,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.radius" title="crystallite.verification.grain_orientation.CircularGrainCase.radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radius</span></code></a>(t, initial_radius)</p></td>
+<td><p>Return the analytic radius at time <code class="docutils literal notranslate"><span class="pre">t</span></code>, clipped at zero.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.grain_orientation.CircularGrainCase.vanishing_time" title="crystallite.verification.grain_orientation.CircularGrainCase.vanishing_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vanishing_time</span></code></a>(initial_radius)</p></td>
+<td><p>Return the time at which the analytic radius reaches zero.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.active_orientation">
+<span class="sig-name descname"><span class="pre">active_orientation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.active_orientation" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.barrier_coefficient">
+<span class="sig-name descname"><span class="pre">barrier_coefficient</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.barrier_coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.0,</span> <span class="pre">0.0)</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.eta0">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">eta0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.eta0" title="Link to this definition">#</a></dt>
+<dd><p>Equilibrium single-grain magnitude, <code class="docutils literal notranslate"><span class="pre">sqrt(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.gradient_energy">
+<span class="sig-name descname"><span class="pre">gradient_energy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.gradient_energy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.mobility">
+<span class="sig-name descname"><span class="pre">mobility</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.mobility" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.n_orientations">
+<span class="sig-name descname"><span class="pre">n_orientations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.n_orientations" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.profile">
+<span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_radius</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L198-L207"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.profile" title="Link to this definition">#</a></dt>
+<dd><p>Return the initial field, shape <code class="docutils literal notranslate"><span class="pre">(n_orientations,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.quartic_coefficient">
+<span class="sig-name descname"><span class="pre">quartic_coefficient</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.quartic_coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.radius">
+<span class="sig-name descname"><span class="pre">radius</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_radius</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L189-L192"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.radius" title="Link to this definition">#</a></dt>
+<dd><p>Return the analytic radius at time <code class="docutils literal notranslate"><span class="pre">t</span></code>, clipped at zero.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.surface_energy">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">surface_energy</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy" title="Link to this definition">#</a></dt>
+<dd><p>Interfacial (line-tension) energy per unit boundary length.</p>
+<p>Equal to <span class="math notranslate nohighlight">\(\int \kappa (\Phi')^2\,dx = \tfrac{4}{3}\kappa
+\eta_0^2/\text{width}\)</span>, using equipartition
+(<span class="math notranslate nohighlight">\(\kappa(\Phi')^2/2 = f(\Phi) - f(\eta_0)\)</span> on the exact
+static profile) and <span class="math notranslate nohighlight">\(\int \mathrm{sech}^4 = 4/3\)</span>. Sets the
+static excess energy <span class="math notranslate nohighlight">\(F=2\pi R\sigma\)</span>, not the shrink rate
+(see class docstring).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.vanishing_time">
+<span class="sig-name descname"><span class="pre">vanishing_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">initial_radius</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L194-L196"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.vanishing_time" title="Link to this definition">#</a></dt>
+<dd><p>Return the time at which the analytic radius reaches zero.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.CircularGrainCase.width">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">width</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.CircularGrainCase.width" title="Link to this definition">#</a></dt>
+<dd><p>Analytic equilibrium interface width.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">PlanarGrainBoundaryCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quartic_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_orientations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">active_orientation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L13-L88"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A stationary planar boundary between two grain-orientation states.</p>
+<p>One order parameter runs from <span class="math notranslate nohighlight">\(-\eta_0\)</span> to <span class="math notranslate nohighlight">\(+\eta_0\)</span> and
+back across a periodic domain (a kink-antikink pair, exactly
+<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.cahn_hilliard_periodic_profile" title="crystallite.mass_diffusion.cahn_hilliard_periodic_profile"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.cahn_hilliard_periodic_profile()</span></code></a>),
+the rest held at zero. The single-order-parameter homogeneous term
+<span class="math notranslate nohighlight">\(-\tfrac{a}{2}\eta^2+\tfrac{b}{4}\eta^4\)</span> is algebraically
+<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.double_well_derivative" title="crystallite.mass_diffusion.double_well_derivative"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.double_well_derivative()</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">a_param</span> <span class="pre">=</span> <span class="pre">b/4</span></code>, <code class="docutils literal notranslate"><span class="pre">c_alpha</span> <span class="pre">=</span> <span class="pre">-eta0</span></code>, <code class="docutils literal notranslate"><span class="pre">c_beta</span> <span class="pre">=</span> <span class="pre">eta0</span></code>,
+<span class="math notranslate nohighlight">\(\eta_0=\sqrt{a/b}\)</span> – so the exact equilibrium profile and its
+width reuse that existing machinery directly, with no new interface
+math needed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd><p>A grid with one active (1D) axis, matching
+<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.cahn_hilliard_periodic_profile" title="crystallite.mass_diffusion.cahn_hilliard_periodic_profile"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.cahn_hilliard_periodic_profile()</span></code></a>’s
+own requirement.</p>
+</dd>
+<dt><strong>barrier_coefficient</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Coefficient <code class="docutils literal notranslate"><span class="pre">a</span></code>.</p>
+</dd>
+<dt><strong>quartic_coefficient</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Coefficient <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
+</dd>
+<dt><strong>gradient_energy</strong><span class="classifier">float, default=1.0</span></dt><dd><p>Gradient-energy coefficient <code class="docutils literal notranslate"><span class="pre">kappa</span></code> for the active orientation.</p>
+</dd>
+<dt><strong>n_orientations</strong><span class="classifier">int, default=2</span></dt><dd><p>Total number of order parameters in the field returned by
+<a class="reference internal" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile" title="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile"><code class="xref py py-meth docutils literal notranslate"><span class="pre">profile()</span></code></a> (only one is active; the rest are held at zero).</p>
+</dd>
+<dt><strong>active_orientation</strong><span class="classifier">int, default=0</span></dt><dd><p>Index of the active order parameter.</p>
+</dd>
+<dt><strong>center</strong><span class="classifier">float, default=0.0</span></dt><dd><p>Position of the kink; the antikink sits half a period away.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.eta0" title="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.eta0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eta0</span></code></a></dt><dd><p>Equilibrium single-grain magnitude, <code class="docutils literal notranslate"><span class="pre">sqrt(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.width" title="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.width"><code class="xref py py-obj docutils literal notranslate"><span class="pre">width</span></code></a></dt><dd><p>Analytic equilibrium interface width.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile" title="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile"><code class="xref py py-obj docutils literal notranslate"><span class="pre">profile</span></code></a>()</p></td>
+<td><p>Return the exact equilibrium field, shape <code class="docutils literal notranslate"><span class="pre">(n_orientations,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.active_orientation">
+<span class="sig-name descname"><span class="pre">active_orientation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.active_orientation" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.barrier_coefficient">
+<span class="sig-name descname"><span class="pre">barrier_coefficient</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.barrier_coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.eta0">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">eta0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.eta0" title="Link to this definition">#</a></dt>
+<dd><p>Equilibrium single-grain magnitude, <code class="docutils literal notranslate"><span class="pre">sqrt(a</span> <span class="pre">/</span> <span class="pre">b)</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.gradient_energy">
+<span class="sig-name descname"><span class="pre">gradient_energy</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.gradient_energy" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.n_orientations">
+<span class="sig-name descname"><span class="pre">n_orientations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.n_orientations" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile">
+<span class="sig-name descname"><span class="pre">profile</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py#L73-L88"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile" title="Link to this definition">#</a></dt>
+<dd><p>Return the exact equilibrium field, shape
+<code class="docutils literal notranslate"><span class="pre">(n_orientations,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.quartic_coefficient">
+<span class="sig-name descname"><span class="pre">quartic_coefficient</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.quartic_coefficient" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.width">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">width</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/grain_orientation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.width" title="Link to this definition">#</a></dt>
+<dd><p>Analytic equilibrium interface width.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-crystallite.verification.elastic_deformation">
+<span id="elastic-deformation-cases"></span><h2>Elastic deformation cases<a class="headerlink" href="#module-crystallite.verification.elastic_deformation" title="Link to this heading">#</a></h2>
+<p>Verification case for heterogeneous elasticity: the Kirsch problem.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">HoleInPlateCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hole_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L234-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A circular hole (soft inclusion) in a periodic 2D isotropic plate,
+with the analytic Kirsch stress field for validation.</p>
+<p>The hole is represented as a region of much softer material
+(<cite>contrast</cite> times the matrix’s Lame parameters, not literally zero –
+a true void makes the elasticity operator singular there) centered in
+the grid’s first two coordinates – the same “diffuse/soft
+approximation of a sharp feature, quantified rather than assumed”
+idea as <code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.verification.CircularGrainCase</span></code>. Valid
+against Kirsch’s <em>infinite</em>-plate solution only for <cite>hole_radius</cite>
+small relative to the domain, since the FFT solver actually sees a
+periodic array of holes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd><p>A 2D grid (<code class="docutils literal notranslate"><span class="pre">grid.shape[2]</span> <span class="pre">==</span> <span class="pre">1</span></code>).</p>
+</dd>
+<dt><strong>matrix_lame_lambda, matrix_lame_mu</strong><span class="classifier">float</span></dt><dd><p>Lame parameters of the matrix material.</p>
+</dd>
+<dt><strong>hole_radius</strong><span class="classifier">float</span></dt><dd></dd>
+<dt><strong>contrast</strong><span class="classifier">float, default=1.0e-3</span></dt><dd><p>Ratio of the hole’s Lame parameters to the matrix’s.</p>
+</dd>
+<dt><strong>center</strong><span class="classifier">tuple of float, default=(0.5, 0.5)</span></dt><dd><p>Hole center in the grid’s first two coordinates.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.angle" title="crystallite.verification.elastic_deformation.HoleInPlateCase.angle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">angle</span></code></a></dt><dd><p>Polar angle from the hole center, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.radius" title="crystallite.verification.elastic_deformation.HoleInPlateCase.radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">radius</span></code></a></dt><dd><p>Distance from the hole center, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">analytic_stress</span></code></a>(r, theta, load, magnitude)</p></td>
+<td><p>Return the analytic <code class="docutils literal notranslate"><span class="pre">(sigma_rr,</span> <span class="pre">sigma_theta_theta,</span> <span class="pre">sigma_r_theta)</span></code> at polar position <code class="docutils literal notranslate"><span class="pre">(r,</span> <span class="pre">theta)</span></code> (center-relative).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole" title="crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hoop_stress_at_hole</span></code></a>(theta, load, magnitude)</p></td>
+<td><p>Analytic hoop stress <code class="docutils literal notranslate"><span class="pre">sigma_theta_theta</span></code> at <code class="docutils literal notranslate"><span class="pre">r=hole_radius</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lame_fields</span></code></a>()</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">(lam(x),</span> <span class="pre">mu(x))</span></code>: matrix constants outside the hole, <code class="docutils literal notranslate"><span class="pre">contrast</span></code> times them inside.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">macro_strain</span></code></a>(load, magnitude[, solver])</p></td>
+<td><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far from the hole, via the matrix's own compliance.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_analytic_solution</span></code></a>(load, magnitude)</p></td>
+<td><p>Exact analytic solution for the <em>periodic</em> array problem this grid actually represents -- not the isolated-hole approximation <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">analytic_stress()</span></code></a> gives.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remote_stress</span></code></a>(load, magnitude)</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver" title="crystallite.verification.elastic_deformation.HoleInPlateCase.solver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solver</span></code></a>()</p></td>
+<td><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress">
+<span class="sig-name descname"><span class="pre">analytic_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L353-L375"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="Link to this definition">#</a></dt>
+<dd><p>Return the analytic <code class="docutils literal notranslate"><span class="pre">(sigma_rr,</span> <span class="pre">sigma_theta_theta,</span>
+<span class="pre">sigma_r_theta)</span></code> at polar position <code class="docutils literal notranslate"><span class="pre">(r,</span> <span class="pre">theta)</span></code> (center-relative).</p>
+<p><code class="docutils literal notranslate"><span class="pre">load=&quot;shear&quot;</span></code> is obtained by superposing two rotated tension
+solutions (magnitude <code class="docutils literal notranslate"><span class="pre">+/-magnitude</span></code> at +/-45 degrees) – the
+standard construction, since pure shear is biaxial tension and
+compression of equal magnitude at 45 degrees to the shear axes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.angle">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">angle</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.angle" title="Link to this definition">#</a></dt>
+<dd><p>Polar angle from the hole center, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.contrast">
+<span class="sig-name descname"><span class="pre">contrast</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.contrast" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.hole_radius">
+<span class="sig-name descname"><span class="pre">hole_radius</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hole_radius" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole">
+<span class="sig-name descname"><span class="pre">hoop_stress_at_hole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L377-L382"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole" title="Link to this definition">#</a></dt>
+<dd><p>Analytic hoop stress <code class="docutils literal notranslate"><span class="pre">sigma_theta_theta</span></code> at <code class="docutils literal notranslate"><span class="pre">r=hole_radius</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields">
+<span class="sig-name descname"><span class="pre">lame_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L292-L309"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">(lam(x),</span> <span class="pre">mu(x))</span></code>: matrix constants outside the hole,
+<code class="docutils literal notranslate"><span class="pre">contrast</span></code> times them inside.</p>
+<p>A sharp cutoff (<cite>smoothing_width=0</cite>, the default) introduces
+Gibbs-ringing in the spectral stress field right at the boundary;
+<cite>smoothing_width</cite> blends the two values with a tanh profile over
+that many length units, the same “diffuse rather than sharp”
+treatment used for every other interface in this project.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain">
+<span class="sig-name descname"><span class="pre">macro_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L342-L351"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="Link to this definition">#</a></dt>
+<dd><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far
+from the hole, via the matrix’s own compliance.</p>
+<p>Exact here (not an approximate homogenization) because the
+reference medium <em>is</em> the actual matrix material.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_lambda">
+<span class="sig-name descname"><span class="pre">matrix_lame_lambda</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_lambda" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_mu">
+<span class="sig-name descname"><span class="pre">matrix_lame_mu</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_mu" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution">
+<span class="sig-name descname"><span class="pre">periodic_analytic_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L384-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="Link to this definition">#</a></dt>
+<dd><p>Exact analytic solution for the <em>periodic</em> array problem this
+grid actually represents – not the isolated-hole approximation
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">analytic_stress()</span></code></a> gives.</p>
+<p>Replaces the true finite-contrast inhomogeneity with an Eshelby
+equivalent eigenstrain (<code class="xref py py-func docutils literal notranslate"><span class="pre">_equivalent_eigenstrain()</span></code>) over a
+matrix-material disk, then solves the resulting periodic
+(Khachaturyan-Shatalov) eigenstrain problem exactly in Fourier
+space, reusing <code class="xref py py-meth docutils literal notranslate"><span class="pre">ElasticDeformation.reference_green()</span></code> directly
+(a homogeneous-medium body-force solve is exactly what a fixed
+eigenstrain distribution needs) with a purely analytic source term
+built from <code class="xref py py-func docutils literal notranslate"><span class="pre">_disk_fourier_transform()</span></code> – no discretized
+real-space eigenstrain array, no CG iteration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>strain, stress</strong><span class="classifier">ndarray</span></dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>, in the same convention as
+<a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticSolution" title="crystallite.elastic_deformation.ElasticSolution"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticSolution</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.radius">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">radius</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.radius" title="Link to this definition">#</a></dt>
+<dd><p>Distance from the hole center, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress">
+<span class="sig-name descname"><span class="pre">remote_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L322-L340"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="Link to this definition">#</a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>load</strong><span class="classifier">{“tension”, “compression”, “shear”}</span></dt><dd></dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">sigma_inf</span></code> (tension/compression) or <code class="docutils literal notranslate"><span class="pre">tau_inf</span></code> (shear).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.smoothing_width">
+<span class="sig-name descname"><span class="pre">smoothing_width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.smoothing_width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.solver">
+<span class="sig-name descname"><span class="pre">solver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L311-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver" title="Link to this definition">#</a></dt>
+<dd><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.cartesian_to_polar_stress">
+<span class="sig-name descname"><span class="pre">cartesian_to_polar_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma_xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L210-L231"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress" title="Link to this definition">#</a></dt>
+<dd><p>Rotate a 2D Cartesian stress state into polar (r, theta) components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>sigma_xx, sigma_yy, sigma_xy</strong><span class="classifier">array_like</span></dt><dd></dd>
+<dt><strong>theta</strong><span class="classifier">array_like</span></dt><dd><p>Polar angle, same shape (or broadcastable).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>sigma_rr, sigma_theta_theta, sigma_r_theta</strong><span class="classifier">ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -650,6 +1160,62 @@ which case the amplitude grows rather than decays.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.mass_diffusion.SinusoidalCase.wave_number"><code class="docutils literal notranslate"><span class="pre">SinusoidalCase.wave_number</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.verification.grain_orientation">Grain orientation cases</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.active_orientation"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.active_orientation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.barrier_coefficient"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.barrier_coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.center"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.eta0"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.eta0</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.gradient_energy"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.gradient_energy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.grid"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.mobility"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.mobility</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.n_orientations"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.n_orientations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.profile"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.profile()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.quartic_coefficient"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.quartic_coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.radius"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.radius()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.surface_energy"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.surface_energy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.vanishing_time"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.vanishing_time()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.CircularGrainCase.width"><code class="docutils literal notranslate"><span class="pre">CircularGrainCase.width</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.active_orientation"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.active_orientation</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.barrier_coefficient"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.barrier_coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.center"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.eta0"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.eta0</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.gradient_energy"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.gradient_energy</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.grid"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.n_orientations"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.n_orientations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.profile"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.profile()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.quartic_coefficient"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.quartic_coefficient</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.grain_orientation.PlanarGrainBoundaryCase.width"><code class="docutils literal notranslate"><span class="pre">PlanarGrainBoundaryCase.width</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.verification.elastic_deformation">Elastic deformation cases</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.analytic_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.angle"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.angle</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.center"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.contrast"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.contrast</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.grid"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hole_radius"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hole_radius</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hoop_stress_at_hole()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.lame_fields()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_lambda"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.matrix_lame_lambda</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_mu"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.matrix_lame_mu</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_analytic_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.radius"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.radius</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.remote_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.smoothing_width"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.smoothing_width</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.solver()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress"><code class="docutils literal notranslate"><span class="pre">cartesian_to_polar_stress()</span></code></a></li>
 </ul>
 </li>
 </ul>
