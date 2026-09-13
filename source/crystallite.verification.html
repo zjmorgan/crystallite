@@ -870,8 +870,250 @@ own requirement.</p>
 <span id="elastic-deformation-cases"></span><h2>Elastic deformation cases<a class="headerlink" href="#module-crystallite.verification.elastic_deformation" title="Link to this heading">#</a></h2>
 <p>Verification case for heterogeneous elasticity: the Kirsch problem.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">EllipticalHoleInPlateCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semi_axis_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">semi_axis_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L866-L1115"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>An elliptical hole (soft inclusion) in a periodic 2D isotropic
+plate, with the analytic Kirsch/Inglis stress field
+(<code class="xref py py-func docutils literal notranslate"><span class="pre">_ellipse_void_cartesian_stress()</span></code>) for validation – the
+elliptical-geometry counterpart of <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="crystallite.verification.elastic_deformation.HoleInPlateCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoleInPlateCase</span></code></a>.</p>
+<p>Unlike <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="crystallite.verification.elastic_deformation.HoleInPlateCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoleInPlateCase</span></code></a>, the periodic reference solution here
+(<a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_stress()</span></code></a>) is <em>not</em> built from an Eshelby
+equivalent eigenstrain: the general elliptical Eshelby tensor is a
+much larger derivation this project does not have implemented (see
+the reference material’s <code class="docutils literal notranslate"><span class="pre">stress.hole.sage.py</span></code>, worked out only for
+the general ellipsoidal-inhomogeneity <em>interior</em>-stress problem, not
+transcribed here). Instead it sums the exact isolated closed form
+over periodic images of the hole – exact per image, approximate only
+in how many periodic neighbors are included, and converging quickly
+since each image’s correction decays as the cube of the ellipse-to-
+spacing size ratio (see <code class="xref py py-func docutils literal notranslate"><span class="pre">_ellipse_hole_correction_cartesian()</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd><p>A 2D grid (<code class="docutils literal notranslate"><span class="pre">grid.shape[2]</span> <span class="pre">==</span> <span class="pre">1</span></code>).</p>
+</dd>
+<dt><strong>matrix_lame_lambda, matrix_lame_mu</strong><span class="classifier">float</span></dt><dd><p>Lame parameters of the matrix material.</p>
+</dd>
+<dt><strong>semi_axis_a, semi_axis_b</strong><span class="classifier">float</span></dt><dd><p>Ellipse semi-axes along the grid’s first and second coordinates.</p>
+</dd>
+<dt><strong>contrast</strong><span class="classifier">float, default=1.0e-3</span></dt><dd><p>Ratio of the hole’s Lame parameters to the matrix’s.</p>
+</dd>
+<dt><strong>center</strong><span class="classifier">tuple of float, default=(0.5, 0.5)</span></dt><dd><p>Hole center in the grid’s first two coordinates.</p>
+</dd>
+<dt><strong>smoothing_width</strong><span class="classifier">float, default=0.0</span></dt><dd><p>Diffuse-boundary width in the <em>dimensionless</em> elliptical radius
+<span class="math notranslate nohighlight">\(\rho=\sqrt{(x/a)^2+(y/b)^2}\)</span> (<span class="math notranslate nohighlight">\(\rho=1\)</span> exactly at
+the boundary) – unlike <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="crystallite.verification.elastic_deformation.HoleInPlateCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">HoleInPlateCase</span></code></a>’s
+<cite>smoothing_width</cite>, this is a fraction of the ellipse size, not a
+length, since <span class="math notranslate nohighlight">\(\rho\)</span> itself is dimensionless.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.elliptical_radius" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.elliptical_radius"><code class="xref py py-obj docutils literal notranslate"><span class="pre">elliptical_radius</span></code></a></dt><dd><p>Dimensionless <span class="math notranslate nohighlight">\(\rho=\sqrt{(x/a)^2+(y/b)^2}\)</span>, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code> – exactly 1 on the ellipse boundary.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.boundary_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.boundary_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">boundary_stress</span></code></a>(load, magnitude, theta[, ...])</p></td>
+<td><p>Periodic-array Cartesian stress (<code class="docutils literal notranslate"><span class="pre">sigma_xx</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_yy</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_xy</span></code>) exactly at the hole boundary point <span class="math notranslate nohighlight">\((a\cos\theta, b\sin\theta)\)</span> (<cite>theta</cite> the ellipse's own parametric angle, not the polar angle) -- well defined there (no singularity: traction-free means the radial/shear components vanish at the boundary, not the hoop stress), and the natural way to query &quot;the stress at the edge&quot; pointwise, without the grid-interpolation instability <a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_stress()</span></code></a> has right at its &quot;zero inside the void&quot; mask boundary (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_periodic_stress_at()</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.lame_fields" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.lame_fields"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lame_fields</span></code></a>()</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">(lam(x),</span> <span class="pre">mu(x))</span></code>: matrix constants outside the hole, <code class="docutils literal notranslate"><span class="pre">contrast</span></code> times them inside -- see <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.lame_fields()</span></code></a>, identical in spirit (including its <cite>dealias</cite> option) but blending over the dimensionless <cite>elliptical_radius</cite> instead of a Euclidean radius.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.macro_strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">macro_strain</span></code></a>(load, magnitude[, solver])</p></td>
+<td><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far from the hole, via the matrix's own compliance -- see <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain()</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_analytic_stress</span></code></a>(load, magnitude[, ...])</p></td>
+<td><p>Periodic-array stress field for the hole under remote <cite>load</cite> (see <a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remote_stress()</span></code></a>), built by summing <code class="xref py py-func docutils literal notranslate"><span class="pre">_ellipse_hole_correction_cartesian()</span></code> over periodic images of the hole -- see this class's own docstring for why (no elliptical Eshelby tensor implemented here).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_pressurized_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_pressurized_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_pressurized_stress</span></code></a>(magnitude[, ...])</p></td>
+<td><p>Periodic-array stress field for the hole loaded by uniform internal pressure <cite>magnitude</cite> (zero remote stress) -- the elliptical-hole counterpart of <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_pressurized_stress()</span></code></a>, built the same way and for the same reason (a spatially uniform stress tensor is trivially divergence-free everywhere, regardless of the heterogeneous stiffness field or the hole's shape, so it may be freely superposed onto the &quot;biaxial&quot; solution to cancel its remote stress and leave only the boundary's traction jump).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remote_stress</span></code></a>(load, magnitude)</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.solver" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.solver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solver</span></code></a>()</p></td>
+<td><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.boundary_stress">
+<span class="sig-name descname"><span class="pre">boundary_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L1024-L1053"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.boundary_stress" title="Link to this definition">#</a></dt>
+<dd><p>Periodic-array Cartesian stress
+(<code class="docutils literal notranslate"><span class="pre">sigma_xx</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_yy</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_xy</span></code>) exactly at the hole
+boundary point <span class="math notranslate nohighlight">\((a\cos\theta, b\sin\theta)\)</span> (<cite>theta</cite> the
+ellipse’s own parametric angle, not the polar angle) – well
+defined there (no singularity: traction-free means the
+radial/shear components vanish at the boundary, not the hoop
+stress), and the natural way to query “the stress at the edge”
+pointwise, without the grid-interpolation instability
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_stress()</span></code></a> has right at its “zero inside the
+void” mask boundary (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_periodic_stress_at()</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>load</strong><span class="classifier">{“tension”, “biaxial”, “shear”}</span></dt><dd></dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd></dd>
+<dt><strong>theta</strong><span class="classifier">float or array_like</span></dt><dd><p>Elliptical parametric angle(s); <code class="docutils literal notranslate"><span class="pre">theta=pi/2</span></code> is the tip of
+the <cite>semi_axis_b</cite> semi-axis, <code class="docutils literal notranslate"><span class="pre">theta=0</span></code> the tip of
+<cite>semi_axis_a</cite>.</p>
+</dd>
+<dt><strong>n_images</strong><span class="classifier">int, default=3</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>sigma_xx, sigma_yy, sigma_xy</strong><span class="classifier">float or ndarray</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.center">
+<span class="sig-name descname"><span class="pre">center</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.center" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.contrast">
+<span class="sig-name descname"><span class="pre">contrast</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.contrast" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.dealias">
+<span class="sig-name descname"><span class="pre">dealias</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.dealias" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.elliptical_radius">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">elliptical_radius</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.elliptical_radius" title="Link to this definition">#</a></dt>
+<dd><p>Dimensionless <span class="math notranslate nohighlight">\(\rho=\sqrt{(x/a)^2+(y/b)^2}\)</span>, shape
+<code class="docutils literal notranslate"><span class="pre">grid.shape</span></code> – exactly 1 on the ellipse boundary.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.lame_fields">
+<span class="sig-name descname"><span class="pre">lame_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L933-L951"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.lame_fields" title="Link to this definition">#</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">(lam(x),</span> <span class="pre">mu(x))</span></code>: matrix constants outside the hole,
+<code class="docutils literal notranslate"><span class="pre">contrast</span></code> times them inside – see <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.lame_fields()</span></code></a>,
+identical in spirit (including its <cite>dealias</cite> option) but blending
+over the dimensionless <cite>elliptical_radius</cite> instead of a Euclidean
+radius.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.macro_strain">
+<span class="sig-name descname"><span class="pre">macro_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L983-L990"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.macro_strain" title="Link to this definition">#</a></dt>
+<dd><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far
+from the hole, via the matrix’s own compliance – see
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_lambda">
+<span class="sig-name descname"><span class="pre">matrix_lame_lambda</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_lambda" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_mu">
+<span class="sig-name descname"><span class="pre">matrix_lame_mu</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_mu" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress">
+<span class="sig-name descname"><span class="pre">periodic_analytic_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L1055-L1100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress" title="Link to this definition">#</a></dt>
+<dd><p>Periodic-array stress field for the hole under remote <cite>load</cite>
+(see <a class="reference internal" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remote_stress()</span></code></a>), built by summing
+<code class="xref py py-func docutils literal notranslate"><span class="pre">_ellipse_hole_correction_cartesian()</span></code> over periodic images of
+the hole – see this class’s own docstring for why (no elliptical
+Eshelby tensor implemented here).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>load</strong><span class="classifier">{“tension”, “biaxial”, “shear”}</span></dt><dd></dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd></dd>
+<dt><strong>n_images</strong><span class="classifier">int, default=3</span></dt><dd><p>Sum periodic images in <code class="docutils literal notranslate"><span class="pre">[-n_images,</span> <span class="pre">n_images]</span></code> along each
+in-plane axis.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>stress</strong><span class="classifier">ndarray</span></dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code> – only the in-plane
+<code class="docutils literal notranslate"><span class="pre">sigma_xx</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_yy</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_xy</span></code> components are
+populated, as with <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_gradient_stress()</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_pressurized_stress">
+<span class="sig-name descname"><span class="pre">periodic_pressurized_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L1102-L1115"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_pressurized_stress" title="Link to this definition">#</a></dt>
+<dd><p>Periodic-array stress field for the hole loaded by uniform
+internal pressure <cite>magnitude</cite> (zero remote stress) – the
+elliptical-hole counterpart of
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_pressurized_stress()</span></code></a>, built the same
+way and for the same reason (a spatially uniform stress tensor is
+trivially divergence-free everywhere, regardless of the
+heterogeneous stiffness field or the hole’s shape, so it may be
+freely superposed onto the “biaxial” solution to cancel its remote
+stress and leave only the boundary’s traction jump).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress">
+<span class="sig-name descname"><span class="pre">remote_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L964-L981"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress" title="Link to this definition">#</a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>load</strong><span class="classifier">{“tension”, “biaxial”, “shear”}</span></dt><dd></dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_a">
+<span class="sig-name descname"><span class="pre">semi_axis_a</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_a" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_b">
+<span class="sig-name descname"><span class="pre">semi_axis_b</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_b" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.smoothing_width">
+<span class="sig-name descname"><span class="pre">smoothing_width</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.smoothing_width" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.solver">
+<span class="sig-name descname"><span class="pre">solver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L953-L962"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.solver" title="Link to this definition">#</a></dt>
+<dd><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">HoleInPlateCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hole_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L234-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">HoleInPlateCase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hole_radius</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contrast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.5,</span> <span class="pre">0.5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing_width</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L491-L863"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A circular hole (soft inclusion) in a periodic 2D isotropic plate,
 with the analytic Kirsch stress field for validation.</p>
@@ -922,11 +1164,23 @@ periodic array of holes.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">macro_strain</span></code></a>(load, magnitude[, solver])</p></td>
 <td><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far from the hole, via the matrix's own compliance.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_analytic_solution</span></code></a>(load, magnitude)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">macro_strain_gradient</span></code></a>(load, magnitude[, solver])</p></td>
+<td><p>Return the macroscopic strain gradient reproducing <cite>remote_stress_gradient</cite> far from the hole, via the matrix's own compliance -- the gradient counterpart of <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">macro_strain()</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_analytic_solution</span></code></a>(load, magnitude)</p></td>
 <td><p>Exact analytic solution for the <em>periodic</em> array problem this grid actually represents -- not the isolated-hole approximation <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">analytic_stress()</span></code></a> gives.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remote_stress</span></code></a>(load, magnitude)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_gradient_stress</span></code></a>(magnitude[, n_images])</p></td>
+<td><p>Periodic-array stress field for the hole under the &quot;moment&quot; remote stress gradient <cite>magnitude</cite> (see <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remote_stress_gradient()</span></code></a>), built by summing the exact traction-free-void closed form (<code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.verification.elastic_deformation._gradient_void_hole_correction_cartesian()</span></code>) over periodic images of the hole, rather than an equivalent-eigenstrain construction: unlike the uniform loads (<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_solution()</span></code></a>), the disk sits exactly at the zero of this background field, so its <em>leading-order</em> (uniform) equivalent eigenstrain response is exactly zero -- capturing the hole's actual perturbation correctly would need a linear (&quot;dipole&quot;) eigenstrain within the disk and the matching higher-order Eshelby tensor, which this project does not have implemented.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">periodic_pressurized_stress</span></code></a>(magnitude)</p></td>
+<td><p>Periodic-array stress field for the hole loaded by uniform internal pressure <cite>magnitude</cite> (zero remote stress), built from <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_solution()</span></code></a>'s <code class="docutils literal notranslate"><span class="pre">&quot;biaxial&quot;</span></code> field rather than re-deriving a new eigenstrain.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remote_stress</span></code></a>(load, magnitude)</p></td>
 <td><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient"><code class="xref py py-obj docutils literal notranslate"><span class="pre">remote_stress_gradient</span></code></a>(load, magnitude)</p></td>
+<td><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> remote stress <em>gradient</em> tensor (component, component, direction) for <cite>load</cite>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver" title="crystallite.verification.elastic_deformation.HoleInPlateCase.solver"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solver</span></code></a>()</p></td>
 <td><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p></td>
@@ -936,13 +1190,15 @@ periodic array of holes.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress">
-<span class="sig-name descname"><span class="pre">analytic_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L353-L375"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">analytic_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L639-L669"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="Link to this definition">#</a></dt>
 <dd><p>Return the analytic <code class="docutils literal notranslate"><span class="pre">(sigma_rr,</span> <span class="pre">sigma_theta_theta,</span>
 <span class="pre">sigma_r_theta)</span></code> at polar position <code class="docutils literal notranslate"><span class="pre">(r,</span> <span class="pre">theta)</span></code> (center-relative).</p>
 <p><code class="docutils literal notranslate"><span class="pre">load=&quot;shear&quot;</span></code> is obtained by superposing two rotated tension
 solutions (magnitude <code class="docutils literal notranslate"><span class="pre">+/-magnitude</span></code> at +/-45 degrees) – the
 standard construction, since pure shear is biaxial tension and
-compression of equal magnitude at 45 degrees to the shear axes.</p>
+compression of equal magnitude at 45 degrees to the shear axes.
+<code class="docutils literal notranslate"><span class="pre">load=&quot;biaxial&quot;</span></code> superposes two tension solutions at 0 and 90
+degrees instead (equal tension along both axes).</p>
 </dd></dl>
 
 <dl class="py property">
@@ -962,6 +1218,11 @@ compression of equal magnitude at 45 degrees to the shear axes.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.dealias">
+<span class="sig-name descname"><span class="pre">dealias</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.dealias" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.grid">
 <span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="crystallite.html#crystallite.grid.Grid" title="crystallite.grid.Grid"><span class="pre">Grid</span></a></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.grid" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -973,29 +1234,67 @@ compression of equal magnitude at 45 degrees to the shear axes.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole">
-<span class="sig-name descname"><span class="pre">hoop_stress_at_hole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L377-L382"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">hoop_stress_at_hole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L671-L676"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole" title="Link to this definition">#</a></dt>
 <dd><p>Analytic hoop stress <code class="docutils literal notranslate"><span class="pre">sigma_theta_theta</span></code> at <code class="docutils literal notranslate"><span class="pre">r=hole_radius</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields">
-<span class="sig-name descname"><span class="pre">lame_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L292-L309"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">lame_fields</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L550-L593"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields" title="Link to this definition">#</a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">(lam(x),</span> <span class="pre">mu(x))</span></code>: matrix constants outside the hole,
 <code class="docutils literal notranslate"><span class="pre">contrast</span></code> times them inside.</p>
-<p>A sharp cutoff (<cite>smoothing_width=0</cite>, the default) introduces
-Gibbs-ringing in the spectral stress field right at the boundary;
-<cite>smoothing_width</cite> blends the two values with a tanh profile over
-that many length units, the same “diffuse rather than sharp”
-treatment used for every other interface in this project.</p>
+<p>Three ways to handle the sharp material discontinuity, in
+increasing order of how close to the boundary the <em>numerical</em>
+solve stays trustworthy:</p>
+<ul class="simple">
+<li><p><cite>smoothing_width=0</cite>, <cite>dealias=False</cite> (both defaults): a literal
+sharp cutoff, which leaves real Gibbs-ringing right at the
+boundary in the spectral stress field.</p></li>
+<li><p><cite>smoothing_width&gt;0</cite>: blend the two values with a tanh profile
+over that many length units – the same “diffuse rather than
+sharp” treatment used for every other interface in this
+project. Robust and always in <code class="docutils literal notranslate"><span class="pre">[contrast,</span> <span class="pre">1]</span></code>, but smears the
+transition over a width you choose, which is <em>also</em> roughly how
+close to the boundary a comparison against a sharp-boundary
+analytic solution can be trusted.</p></li>
+<li><p><cite>dealias=True</cite>: keep the indicator sharp, but suppress the
+spectral ringing directly by multiplying its Fourier transform
+by <code class="docutils literal notranslate"><span class="pre">grid.lanczos_filter</span></code> (the same dealiasing filter
+<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.MassDiffusion" title="crystallite.mass_diffusion.MassDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.MassDiffusion</span></code></a> uses) instead
+of smearing it in real space first. Only <code class="docutils literal notranslate"><span class="pre">smoothing_width</span></code> or
+<cite>dealias</cite> should be set at a time – <cite>dealias</cite> is checked first.
+Clipped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code> after filtering: an unclipped
+Lanczos-filtered step rings slightly negative right at the
+jump, which pushed the local stiffness negative and broke the
+CG solver’s positive-definiteness assumption outright (observed
+directly – it failed to converge, residual stalled around 0.4
+for 8000 iterations, not merely a small accuracy loss) before
+this clip was added.</p></li>
+</ul>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain">
-<span class="sig-name descname"><span class="pre">macro_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L342-L351"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">macro_strain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L628-L637"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="Link to this definition">#</a></dt>
 <dd><p>Return the macroscopic strain reproducing <cite>remote_stress</cite> far
 from the hole, via the matrix’s own compliance.</p>
 <p>Exact here (not an approximate homogenization) because the
 reference medium <em>is</em> the actual matrix material.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient">
+<span class="sig-name descname"><span class="pre">macro_strain_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L785-L800"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient" title="Link to this definition">#</a></dt>
+<dd><p>Return the macroscopic strain gradient reproducing
+<cite>remote_stress_gradient</cite> far from the hole, via the matrix’s own
+compliance – the gradient counterpart of <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain" title="crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">macro_strain()</span></code></a>.</p>
+<p>Passed to <a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticDeformation.solve" title="crystallite.elastic_deformation.ElasticDeformation.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation.solve()</span></code></a>
+as <cite>macro_strain_gradient</cite>, together with <cite>center</cite> as
+<cite>gradient_origin</cite> so the background vanishes exactly at the hole
+center (where the “moment” load’s bending field has its zero) –
+see that method for why this particular construction, unlike an
+arbitrary affine field, is safe to combine with the periodic FFT
+solver.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1010,7 +1309,7 @@ reference medium <em>is</em> the actual matrix material.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution">
-<span class="sig-name descname"><span class="pre">periodic_analytic_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L384-L439"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">periodic_analytic_solution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L678-L733"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="Link to this definition">#</a></dt>
 <dd><p>Exact analytic solution for the <em>periodic</em> array problem this
 grid actually represents – not the isolated-hole approximation
 <a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress" title="crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">analytic_stress()</span></code></a> gives.</p>
@@ -1034,6 +1333,85 @@ real-space eigenstrain array, no CG iteration.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress">
+<span class="sig-name descname"><span class="pre">periodic_gradient_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L802-L863"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress" title="Link to this definition">#</a></dt>
+<dd><p>Periodic-array stress field for the hole under the “moment”
+remote stress gradient <cite>magnitude</cite> (see
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient" title="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient"><code class="xref py py-meth docutils literal notranslate"><span class="pre">remote_stress_gradient()</span></code></a>), built by summing the exact
+traction-free-void closed form
+(<code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.verification.elastic_deformation._gradient_void_hole_correction_cartesian()</span></code>)
+over periodic images of the hole, rather than an
+equivalent-eigenstrain construction: unlike the uniform loads
+(<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_solution()</span></code></a>), the disk sits exactly at the
+zero of this background field, so its <em>leading-order</em> (uniform)
+equivalent eigenstrain response is exactly zero – capturing the
+hole’s actual perturbation correctly would need a linear
+(“dipole”) eigenstrain within the disk and the matching
+higher-order Eshelby tensor, which this project does not have
+implemented. Image summation sidesteps that: it reuses the
+already-validated <em>exact</em> isolated solution directly (traction-
+free at the hole boundary, in full pointwise equilibrium, and
+exactly consistent with this background far away – all checked
+independently of this codebase, by finite differences), and each
+image’s correction decays as <span class="math notranslate nohighlight">\((a/r)^3\)</span>, so with holes spaced
+~10 radii apart on this grid a handful of images already converges
+far beyond the diffuse-boundary numerical solver’s own accuracy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd></dd>
+<dt><strong>n_images</strong><span class="classifier">int, default=3</span></dt><dd><p>Sum periodic images in <code class="docutils literal notranslate"><span class="pre">[-n_images,</span> <span class="pre">n_images]</span></code> along each
+in-plane axis.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>stress</strong><span class="classifier">ndarray</span></dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code> – only the in-plane
+<code class="docutils literal notranslate"><span class="pre">sigma_xx</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_yy</span></code>, <code class="docutils literal notranslate"><span class="pre">sigma_xy</span></code> components are
+populated (as with the true-void closed forms used
+elsewhere in this module, <code class="docutils literal notranslate"><span class="pre">sigma_33</span></code> is left to the solver
+rather than fixed by this 2D construction).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress">
+<span class="sig-name descname"><span class="pre">periodic_pressurized_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L735-L765"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress" title="Link to this definition">#</a></dt>
+<dd><p>Periodic-array stress field for the hole loaded by uniform
+internal pressure <cite>magnitude</cite> (zero remote stress), built from
+<a class="reference internal" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution" title="crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="xref py py-meth docutils literal notranslate"><span class="pre">periodic_analytic_solution()</span></code></a>’s <code class="docutils literal notranslate"><span class="pre">&quot;biaxial&quot;</span></code> field rather
+than re-deriving a new eigenstrain.</p>
+<p>A spatially uniform stress tensor trivially satisfies equilibrium
+<span class="math notranslate nohighlight">\(\nabla\cdot\sigma=0\)</span> everywhere regardless of the
+heterogeneous stiffness field (its divergence is exactly zero at
+every Fourier mode, including on this project’s discrete
+operators, since a uniform field has no k != 0 content and the k=0
+mode of a divergence is always zero) – so it may be freely
+superposed onto <em>any</em> equilibrium solution on this grid, numerical
+or analytic alike. Subtracting the uniform stress
+<span class="math notranslate nohighlight">\(-\text{magnitude}\cdot I\)</span> from the “traction-free hole
+under remote biaxial tension <cite>magnitude</cite>” state turns it into the
+“hole boundary carrying radial traction <code class="docutils literal notranslate"><span class="pre">-magnitude</span></code>, zero
+remote stress” state, i.e. exactly a hole pressurized from inside
+with pressure <cite>magnitude</cite>: at the hole boundary the biaxial
+solution is traction-free (<span class="math notranslate nohighlight">\(\sigma_{rr}=0\)</span>) so the result is
+<span class="math notranslate nohighlight">\(\sigma_{rr}=-\text{magnitude}\)</span>, while far away the biaxial
+remote stress <span class="math notranslate nohighlight">\(\text{magnitude}\cdot I\)</span> is exactly cancelled.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>stress</strong><span class="classifier">ndarray</span></dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.radius">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">radius</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.radius" title="Link to this definition">#</a></dt>
@@ -1042,14 +1420,32 @@ real-space eigenstrain array, no CG iteration.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress">
-<span class="sig-name descname"><span class="pre">remote_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L322-L340"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">remote_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L606-L626"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress" title="Link to this definition">#</a></dt>
 <dd><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> remote stress tensor for <cite>load</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>load</strong><span class="classifier">{“tension”, “compression”, “shear”}</span></dt><dd></dd>
-<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">sigma_inf</span></code> (tension/compression) or <code class="docutils literal notranslate"><span class="pre">tau_inf</span></code> (shear).</p>
+<dt><strong>load</strong><span class="classifier">{“tension”, “compression”, “shear”, “biaxial”}</span></dt><dd></dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">sigma_inf</span></code> (tension/compression/biaxial) or <code class="docutils literal notranslate"><span class="pre">tau_inf</span></code> (shear).</p>
 </dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient">
+<span class="sig-name descname"><span class="pre">remote_stress_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnitude</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L767-L783"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient" title="Link to this definition">#</a></dt>
+<dd><p>Return the <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> remote stress <em>gradient</em> tensor
+(component, component, direction) for <cite>load</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>load</strong><span class="classifier">{“moment”}</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">d(sigma_11)/dx2</span> <span class="pre">=</span> <span class="pre">magnitude</span></code> (a pure-bending/”moment”
+background, <span class="math notranslate nohighlight">\(\sigma_{11}\to\mathrm{magnitude}\cdot
+x_2\)</span>, <span class="math notranslate nohighlight">\(\sigma_{22}=\sigma_{12}=0\)</span> far away).</p>
+</dd>
+<dt><strong>magnitude</strong><span class="classifier">float</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1062,7 +1458,7 @@ real-space eigenstrain array, no CG iteration.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.HoleInPlateCase.solver">
-<span class="sig-name descname"><span class="pre">solver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L311-L320"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solver</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L595-L604"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver" title="Link to this definition">#</a></dt>
 <dd><p>Return the <code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code> solver for this case.</p>
 </dd></dl>
 
@@ -1070,7 +1466,7 @@ real-space eigenstrain array, no CG iteration.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.cartesian_to_polar_stress">
-<span class="sig-name descname"><span class="pre">cartesian_to_polar_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma_xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L210-L231"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cartesian_to_polar_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma_xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_xy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L213-L234"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress" title="Link to this definition">#</a></dt>
 <dd><p>Rotate a 2D Cartesian stress state into polar (r, theta) components.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1086,6 +1482,12 @@ real-space eigenstrain array, no CG iteration.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.verification.elastic_deformation.polar_to_cartesian_stress">
+<span class="sig-name descname"><span class="pre">polar_to_cartesian_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigma_rr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_theta_theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_r_theta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/elastic_deformation.py#L237-L247"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.elastic_deformation.polar_to_cartesian_stress" title="Link to this definition">#</a></dt>
+<dd><p>Inverse of <a class="reference internal" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress" title="crystallite.verification.elastic_deformation.cartesian_to_polar_stress"><code class="xref py py-func docutils literal notranslate"><span class="pre">cartesian_to_polar_stress()</span></code></a>.</p>
 </dd></dl>
 
 </section>
@@ -1196,26 +1598,52 @@ real-space eigenstrain array, no CG iteration.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.verification.elastic_deformation">Elastic deformation cases</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.boundary_stress"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.boundary_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.center"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.center</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.contrast"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.contrast</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.dealias"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.dealias</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.elliptical_radius"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.elliptical_radius</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.grid"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.lame_fields"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.lame_fields()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.macro_strain"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.macro_strain()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_lambda"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.matrix_lame_lambda</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.matrix_lame_mu"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.matrix_lame_mu</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_analytic_stress"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.periodic_analytic_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.periodic_pressurized_stress"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.periodic_pressurized_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.remote_stress"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.remote_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_a"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.semi_axis_a</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.semi_axis_b"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.semi_axis_b</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.smoothing_width"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.smoothing_width</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.EllipticalHoleInPlateCase.solver"><code class="docutils literal notranslate"><span class="pre">EllipticalHoleInPlateCase.solver()</span></code></a></li>
+</ul>
+</li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.analytic_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.analytic_stress()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.angle"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.angle</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.center"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.center</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.contrast"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.contrast</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.dealias"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.dealias</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.grid"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.grid</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hole_radius"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hole_radius</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hoop_stress_at_hole()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.lame_fields()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain_gradient()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_lambda"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.matrix_lame_lambda</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.matrix_lame_mu"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.matrix_lame_mu</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_analytic_solution"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_analytic_solution()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_gradient_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_pressurized_stress()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.radius"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.radius</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.remote_stress()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.remote_stress_gradient"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.remote_stress_gradient()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.smoothing_width"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.smoothing_width</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.HoleInPlateCase.solver"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.solver()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.cartesian_to_polar_stress"><code class="docutils literal notranslate"><span class="pre">cartesian_to_polar_stress()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.elastic_deformation.polar_to_cartesian_stress"><code class="docutils literal notranslate"><span class="pre">polar_to_cartesian_stress()</span></code></a></li>
 </ul>
 </li>
 </ul>
