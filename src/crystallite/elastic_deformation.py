@@ -128,6 +128,33 @@ class ElasticDeformation:
                 self, "reference_green", GreenOperator(self.grid, reference_stiffness)
             )
 
+    def _gradient_strain_field(self, macro_strain_gradient, origin):
+        r"""Return the pure (offset-free) affine strain field
+        :math:`\sum_m \mathrm{macro\_strain\_gradient}[\ldots, m]\,
+        (x_m - \mathrm{origin}_m)`, shape ``(3, 3) + grid.shape``.
+
+        Built directly in real space, not via FFT -- safe here (unlike a
+        genuinely non-periodic field run through `grid.fft`) only because
+        callers only ever contract it against :math:`\delta C(x) =
+        C(x) - C_0` (:meth:`_body_force`) or leave it as a plain pointwise
+        addition to the fluctuation strain (:meth:`solve`), never FFT it
+        directly -- a linearly-growing real-space array is not periodic,
+        so FFTing it raw would alias.
+        """
+        macro_strain_gradient = xp.asarray(macro_strain_gradient, dtype=self.grid.real_dtype)
+        if macro_strain_gradient.shape != (3, 3, 3):
+            raise ValueError(
+                "macro_strain_gradient must have shape (3, 3, 3), got "
+                f"{macro_strain_gradient.shape}"
+            )
+        origin = (0.0, 0.0, 0.0) if origin is None else origin
+        field = xp.zeros((3, 3) + self.grid.shape, dtype=self.grid.real_dtype)
+        for axis in range(3):
+            field = field + macro_strain_gradient[:, :, axis].reshape(
+                (3, 3) + (1,) * len(self.grid.shape)
+            ) * (self.grid.x[axis] - origin[axis])
+        return field
+
     def stress(self, strain):
         """Return the pointwise isotropic stress ``C(x):strain``.
 
@@ -172,7 +199,7 @@ class ElasticDeformation:
         u_hat = self.reference_green.potential(r_hat)
         return self.grid.ifft(u_hat)
 
-    def _body_force(self, macro_strain):
+    def _body_force(self, macro_strain, macro_strain_gradient=None, gradient_origin=None):
         macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
         if macro_strain.shape != (3, 3):
             raise ValueError(f"macro_strain must have shape (3, 3), got {macro_strain.shape}")
@@ -185,10 +212,43 @@ class ElasticDeformation:
         # invisible far from any heterogeneity, since u* -> 0 there
         # regardless of its sign, but flips the correction's sign exactly
         # where it matters, right around a heterogeneity).
+        if macro_strain_gradient is not None:
+            # The gradient part must be handled separately from the plain
+            # C(x):eps_bar path above: eps_bar is spatially constant, so
+            # C(x):eps_bar is trivially periodic (its C0 part is a
+            # constant array, and only the localized deltaC(x):eps_bar
+            # part varies), safe to FFT as `sigma_bar` already is. A
+            # spatially *growing* affine field is not periodic, so
+            # C0:eps_grad(x) must never be formed and FFT'd -- but its
+            # analytic divergence is exactly zero everywhere by
+            # construction (`macro_strain_gradient` comes from applying
+            # the reference medium's own compliance to a target stress
+            # gradient, so C0:eps_grad(x) reproduces that target stress
+            # gradient pointwise, which is trivially divergence-free: see
+            # HoleInPlateCase.remote_stress_gradient/macro_strain_gradient
+            # for the "moment" case this exists for). So only the
+            # localized deltaC(x):eps_grad(x) term contributes to the
+            # body force, and it alone is safe to FFT (deltaC -> 0 away
+            # from any heterogeneity, keeping the product periodic even
+            # though eps_grad(x) itself is not).
+            eps_grad = self._gradient_strain_field(macro_strain_gradient, gradient_origin)
+            trace = xp.einsum("ii...->...", eps_grad)
+            delta = xp.eye(3, dtype=eps_grad.dtype).reshape((3, 3) + (1,) * spatial_ndim)
+            delta_lambda = self.lame_lambda - self.reference_lame_lambda
+            delta_mu = self.lame_mu - self.reference_lame_mu
+            sigma_bar = sigma_bar + (
+                delta_lambda * trace[None, None, ...] * delta + 2.0 * delta_mu * eps_grad
+            )
         return self._divergence_of_stress(sigma_bar)
 
     def solve(
-        self, macro_strain, tol=1.0e-6, max_iterations=500, initial_displacement=None
+        self,
+        macro_strain,
+        tol=1.0e-6,
+        max_iterations=500,
+        initial_displacement=None,
+        macro_strain_gradient=None,
+        gradient_origin=None,
     ):
         """Solve for the equilibrium displacement fluctuation.
 
@@ -204,13 +264,27 @@ class ElasticDeformation:
         initial_displacement : ndarray, optional
             Warm-start displacement, shape ``(3,) + grid.shape``. Defaults
             to zero.
+        macro_strain_gradient : array_like, optional
+            Constant gradient of an additional affine background strain,
+            shape ``(3, 3, 3)`` (strain component, direction) -- the total
+            prescribed background becomes ``macro_strain +
+            macro_strain_gradient[..., m] * (x_m - gradient_origin[m])``.
+            Meant for a background that is itself an exact, divergence-free
+            equilibrium field of the *reference* medium (e.g. built via
+            ``reference_green.apply_compliance`` on a target stress
+            gradient, as :class:`crystallite.verification.HoleInPlateCase`
+            does for its ``"moment"`` load) -- see :meth:`_body_force` for
+            why an arbitrary affine field would not be safe here.
+        gradient_origin : array_like of shape (3,), optional
+            Reference point for `macro_strain_gradient`. Defaults to the
+            grid's own origin (all zero).
 
         Returns
         -------
         ElasticSolution
         """
         macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
-        b = self._body_force(macro_strain)
+        b = self._body_force(macro_strain, macro_strain_gradient, gradient_origin)
 
         if initial_displacement is None:
             u = xp.zeros((3,) + self.grid.shape, dtype=self.grid.real_dtype)
@@ -259,6 +333,8 @@ class ElasticDeformation:
         strain = macro_strain.reshape((3, 3) + (1,) * len(self.grid.shape)) + (
             self._strain_from_displacement(u)
         )
+        if macro_strain_gradient is not None:
+            strain = strain + self._gradient_strain_field(macro_strain_gradient, gradient_origin)
         strain = xp.broadcast_to(strain, (3, 3) + self.grid.shape)
         stress = self.stress(strain)
 
