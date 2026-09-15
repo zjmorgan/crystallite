@@ -497,6 +497,7 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.grid"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.grid</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.hole_radius"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hole_radius</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.hoop_stress_at_hole"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.hoop_stress_at_hole()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.inhomogeneity_analytic_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.inhomogeneity_analytic_stress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.lame_fields"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.lame_fields()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.macro_strain_gradient"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.macro_strain_gradient()</span></code></a></li>
@@ -507,6 +508,7 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_eshelby_tensor"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_eshelby_tensor()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_eigenstrain_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_gradient_eigenstrain_stress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_gradient_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_gradient_stress()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_inhomogeneity_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_inhomogeneity_stress()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_prescribed_eigenstrain_solution"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_prescribed_eigenstrain_solution()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_prescribed_gradient_eigenstrain_solution"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_prescribed_gradient_eigenstrain_solution()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.HoleInPlateCase.periodic_pressurized_stress"><code class="docutils literal notranslate"><span class="pre">HoleInPlateCase.periodic_pressurized_stress()</span></code></a></li>
@@ -1312,7 +1314,7 @@ over orientation pairs.</p>
 preconditioned-conjugate-gradient spectral solver.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L42-L376"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preconditioner_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L42-L405"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Static mechanical equilibrium in a heterogeneous isotropic solid.</p>
 <p>Solves periodic equilibrium <span class="math notranslate nohighlight">\(\nabla\cdot\sigma(x) = 0\)</span> with
@@ -1361,6 +1363,24 @@ inclusion – CG on top of the same reference-medium solve does not).
 <code class="docutils literal notranslate"><span class="pre">solver.reference_green.apply_compliance(sigma_target)</span></code> to convert a
 target remote stress into the macroscopic strain this solver takes as
 input.</p>
+<p><cite>preconditioner_green</cite> (optional, distinct from <cite>reference_green</cite>) is
+the Green’s operator CG actually preconditions with in
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_precondition()</span></code>. It defaults to <cite>reference_green</cite> (the original,
+single-reference-medium behavior), but a caller with an extreme,
+one-directional stiffness contrast (e.g. a small stiff/rigid inclusion
+in a much softer matrix) can pass a <em>different</em> homogeneous medium here
+– e.g. the geometric mean of the two phases’ stiffnesses, the standard
+heuristic for balancing a Lippmann-Schwinger-type scheme’s convergence
+across both phases (Moulinec &amp; Suquet 1998; Eyre &amp; Milton 1999) –
+without disturbing <cite>reference_lame_lambda</cite>/<cite>reference_lame_mu</cite>/
+<cite>reference_green</cite> themselves, which other call sites rely on for exact
+results (e.g. <code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.verification.HoleInPlateCase.macro_strain()</span></code>
+computing the macro strain that reproduces a target remote stress
+<em>in the true matrix material</em> – that identity would break if the
+“reference” fed to it silently became some fictitious blend). CG’s
+correctness (the value it converges to) never depends on which SPD
+preconditioner is used, only how fast it gets there, so this is purely
+a convergence-rate knob, safe to change independently.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1369,18 +1389,26 @@ input.</p>
 scalar or a <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code> real field.</p>
 </dd>
 <dt><strong>reference_lame_lambda, reference_lame_mu</strong><span class="classifier">float</span></dt><dd><p>Lame parameters of the homogeneous reference medium used to build
-the preconditioner.</p>
+<cite>reference_green</cite> (see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_body_force()</span></code>’s
+<cite>macro_strain_gradient</cite> handling and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.verification.HoleInPlateCase.macro_strain()</span></code> for
+why this must be the <em>true</em> matrix material, not a preconditioning
+convenience).</p>
 </dd>
 <dt><strong>operator</strong><span class="classifier">object, optional</span></dt><dd><p>Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">DifferentialOperators(grid)</span></code>.</p>
 </dd>
 <dt><strong>reference_green</strong><span class="classifier">object, optional</span></dt><dd><p>Defaults to <code class="docutils literal notranslate"><span class="pre">GreenOperator(grid,</span> <span class="pre">isotropic_stiffness(</span>
 <span class="pre">reference_lame_lambda,</span> <span class="pre">reference_lame_mu))</span></code>.</p>
 </dd>
+<dt><strong>preconditioner_green</strong><span class="classifier">object, optional</span></dt><dd><p>The Green’s operator <code class="xref py py-meth docutils literal notranslate"><span class="pre">_precondition()</span></code> actually uses. Defaults
+to <cite>reference_green</cite>.</p>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Attributes<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt><strong>operator</strong></dt><dd></dd>
+<dt><strong>preconditioner_green</strong></dt><dd></dd>
 <dt><strong>reference_green</strong></dt><dd></dd>
 </dl>
 </dd>
@@ -1418,6 +1446,11 @@ the preconditioner.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.preconditioner_green">
+<span class="sig-name descname"><span class="pre">preconditioner_green</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.preconditioner_green" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.reference_green">
 <span class="sig-name descname"><span class="pre">reference_green</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.reference_green" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
@@ -1434,7 +1467,7 @@ the preconditioner.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L261-L376"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L290-L405"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.solve" title="Link to this definition">#</a></dt>
 <dd><p>Solve for the equilibrium displacement fluctuation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1482,7 +1515,7 @@ disk) – see <code class="xref py py-meth docutils literal notranslate"><span c
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.stress">
-<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L160-L181"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L189-L210"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.stress" title="Link to this definition">#</a></dt>
 <dd><p>Return the pointwise isotropic stress <code class="docutils literal notranslate"><span class="pre">C(x):strain</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1802,6 +1835,7 @@ solvers of nonlinear PDEs.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.lame_lambda"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.lame_lambda</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.lame_mu"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.lame_mu</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.operator"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.operator</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.preconditioner_green"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.preconditioner_green</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.reference_green"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.reference_green</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.reference_lame_lambda"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.reference_lame_lambda</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticDeformation.reference_lame_mu"><code class="docutils literal notranslate"><span class="pre">ElasticDeformation.reference_lame_mu</span></code></a></li>
