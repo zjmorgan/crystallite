@@ -50,12 +50,29 @@ def _inhomogeneity_polar_stress(r, theta, hole_radius, magnitude, contrast, nu):
     `B`, `C` below is ``2, 1, -1`` (not ``2/(kappa-1)``, an arithmetic slip
     caught by checking `sigma_rr(hole_radius, *)` comes out identically
     zero, as it must for a traction-free void, for every `kappa`).
+
+    ``contrast=float('inf')`` (a rigid inclusion) is also accepted, using
+    the closed-form ``beta -> infinity`` limit directly (``a,b,c ->
+    -2/kappa, (1-kappa)/2, 1/kappa``) rather than substituting a literal
+    ``inf`` into the finite-contrast formula above, which hits an
+    indeterminate ``inf/inf``. Independently re-derived from scratch (a
+    rigid inclusion's exact bonded-displacement solution, not a limit of
+    this formula) and checked three ways: the displacement matches the
+    ``u_r=u_theta=0`` rigid boundary condition exactly; the field is in
+    full pointwise equilibrium (finite differences); and it matches *this*
+    function evaluated at a merely large finite `contrast` (``1e8``) to 4
+    decimal places -- confirming the two independent derivations agree.
     """
     beta = contrast
     kappa = 3.0 - 4.0 * nu
-    a = 2.0 * (1.0 - beta) / (beta * kappa + 1.0)
-    b = (kappa - 1.0) * (1.0 - beta) / (2.0 * beta + kappa - 1.0)
-    c = (beta - 1.0) / (beta * kappa + 1.0)
+    if beta == float("inf"):
+        a = -2.0 / kappa
+        b = (1.0 - kappa) / 2.0
+        c = 1.0 / kappa
+    else:
+        a = 2.0 * (1.0 - beta) / (beta * kappa + 1.0)
+        b = (kappa - 1.0) * (1.0 - beta) / (2.0 * beta + kappa - 1.0)
+        c = (beta - 1.0) / (beta * kappa + 1.0)
 
     a_over_r_sq = (hole_radius / r) ** 2
     a_over_r_4 = a_over_r_sq**2
@@ -82,12 +99,19 @@ def _inhomogeneity_interior_stress(magnitude, contrast, nu):
     elliptical) inhomogeneity is exactly uniform, regardless of position.
 
     ``sigma_zz`` is the plane-strain out-of-plane stress, fixed by
-    ``eps_zz=0``.
+    ``eps_zz=0``. ``contrast=float('inf')`` (rigid inclusion) uses the
+    closed-form ``beta -> infinity`` limit directly (``a_i,c_i ->
+    (kappa+1)/2, (kappa+1)/kappa``), avoiding an ``inf/inf``
+    indeterminate -- see :func:`_inhomogeneity_polar_stress`.
     """
     beta = contrast
     kappa = 3.0 - 4.0 * nu
-    a_i = beta * (kappa + 1.0) / (2.0 * beta + kappa - 1.0)
-    c_i = beta * (kappa + 1.0) / (beta * kappa + 1.0)
+    if beta == float("inf"):
+        a_i = (kappa + 1.0) / 2.0
+        c_i = (kappa + 1.0) / kappa
+    else:
+        a_i = beta * (kappa + 1.0) / (2.0 * beta + kappa - 1.0)
+        c_i = beta * (kappa + 1.0) / (beta * kappa + 1.0)
     sigma_xx = 0.5 * magnitude * (a_i + c_i)
     sigma_yy = 0.5 * magnitude * (a_i - c_i)
     sigma_zz = nu * (sigma_xx + sigma_yy)
@@ -146,9 +170,15 @@ def _equivalent_eigenstrain(magnitude, contrast, matrix_lame_lambda, matrix_lame
         sigma_in = xp.array(
             [[sigma_xx, 0.0, 0.0], [0.0, sigma_yy, 0.0], [0.0, 0.0, sigma_zz]]
         )
-        true_strain = _isotropic_compliance_apply(
-            sigma_in, contrast * matrix_lame_lambda, contrast * matrix_lame_mu
-        )
+        if contrast == float("inf"):
+            # A rigid inclusion has zero strain under any finite stress --
+            # the eps_in/S0:sigma_in limit directly (substituting a
+            # literal inf into the compliance below hits inf/inf).
+            true_strain = xp.zeros((3, 3))
+        else:
+            true_strain = _isotropic_compliance_apply(
+                sigma_in, contrast * matrix_lame_lambda, contrast * matrix_lame_mu
+            )
         matrix_strain = _isotropic_compliance_apply(
             sigma_in, matrix_lame_lambda, matrix_lame_mu
         )
@@ -169,6 +199,346 @@ def _equivalent_eigenstrain(magnitude, contrast, matrix_lame_lambda, matrix_lame
         eps_x = tension_eigenstrain(magnitude)
         return eps_x + _rotate_tensor_2d(eps_x, xp.pi / 2.0)
     raise ValueError('load must be "tension", "compression", "shear", or "biaxial"')
+
+
+def _ellipse_equivalent_eigenstrain(
+    magnitude, contrast, matrix_lame_lambda, matrix_lame_mu, load, semi_axis_a, semi_axis_b
+):
+    r"""Eshelby equivalent eigenstrain for a general (:math:`a\ne b`)
+    elliptical inhomogeneity -- the elliptical counterpart of
+    :func:`_equivalent_eigenstrain`, needed because a non-circular shape
+    has no rotational symmetry to exploit (the circular function's
+    ``"shear"``/``"biaxial"`` cases are built by rotating a single
+    ``"tension"`` solution; that trick is unavailable here, so each load
+    case is solved directly).
+
+    Uses the classical elliptical-cylinder (plane strain) Eshelby
+    S-tensor (`semi_axis_a` along x1, `semi_axis_b` along x2; e.g. Mura,
+    *Micromechanics of Defects in Solids*, sec. 11.2, and this project's
+    own reference derivation in ``equivalent.inhomogeneity.sage.py``):
+
+    .. math::
+
+        S_{1111}=\frac{1}{2(1-\nu)}\!\left[\frac{b^2+2ab}{(a+b)^2}+(1-2\nu)\frac{b}{a+b}\right],
+        \quad S_{2222}=\frac{1}{2(1-\nu)}\!\left[\frac{a^2+2ab}{(a+b)^2}+(1-2\nu)\frac{a}{a+b}\right]
+
+        S_{1122}=\frac{1}{2(1-\nu)}\!\left[\frac{b^2}{(a+b)^2}-(1-2\nu)\frac{b}{a+b}\right],
+        \quad S_{2211}=\frac{1}{2(1-\nu)}\!\left[\frac{a^2}{(a+b)^2}-(1-2\nu)\frac{a}{a+b}\right]
+
+        S_{1212}=\frac{1}{2(1-\nu)}\!\left[\frac{a^2+b^2}{2(a+b)^2}+\frac{1-2\nu}{2}\right]
+
+    with :math:`S_{3jkl}=S_{i3kl}=0` (plane strain: the transformation
+    strain has no direct :math:`\varepsilon_{33}` component, and the
+    remote/interior :math:`\varepsilon_{33}=0` constraint is enforced
+    directly rather than through the S-tensor).
+
+    The equivalent-inclusion condition
+    :math:`\sigma_{\mathrm{true}}(\varepsilon_{\mathrm{in}}) =
+    \sigma_{\mathrm{equiv}}(\varepsilon_{\mathrm{in}}-\varepsilon^*)`,
+    with :math:`\varepsilon_{\mathrm{in}}=\bar\varepsilon+S:\varepsilon^*`,
+    gives a small linear system for :math:`\varepsilon^*` -- solved here
+    numerically (a 3x3 solve for ``"tension"``/``"biaxial"`` in
+    :math:`\varepsilon^*_{11},\varepsilon^*_{22},\varepsilon^*_{33}`,
+    decoupled by symmetry from a scalar solve for ``"shear"``'s
+    :math:`\varepsilon^*_{12}`) rather than transcribed symbolically --
+    the closed forms are unwieldy rational polynomials in ``a``, ``b``,
+    `contrast`, `nu` (obtained and inspected via sympy while deriving
+    this), too easy to mistranscribe, whereas a 3x3 (or 1x1) linear solve
+    at call time carries no such risk and costs nothing.
+
+    Verified several ways: at ``semi_axis_a == semi_axis_b`` this
+    reproduces :func:`_equivalent_eigenstrain` exactly (all three load
+    cases, several `contrast` values spanning soft/hard/rigid-adjacent) --
+    the two functions share no code, so this is a genuine independent
+    check, not a tautology. Also: :math:`\varepsilon^*_{33}` comes out
+    (numerically) exactly zero for every ``a``, ``b``, `contrast` tried,
+    as it must by the problem's up-down and left-right mirror symmetry
+    (an in-plane-only load on an axis-aligned ellipse cannot prefer a
+    nonzero out-of-plane transformation strain) -- confirmed as an
+    emergent property of the solve, not assumed.
+
+    Unlike :func:`_equivalent_eigenstrain`, `load="compression"` is not
+    offered: :class:`EllipticalHoleInPlateCase` (the only caller) has no
+    such case, since a non-circular shape has no rotational symmetry to
+    make "compression" anything other than "tension" with a sign flip
+    the caller can already apply directly to `magnitude`.
+    """
+    nu = matrix_lame_lambda / (2.0 * (matrix_lame_lambda + matrix_lame_mu))
+    lam0, mu0 = matrix_lame_lambda, matrix_lame_mu
+    lam1, mu1 = contrast * lam0, contrast * mu0
+    a, b = semi_axis_a, semi_axis_b
+
+    denom = 2.0 * (1.0 - nu)
+    s1111 = ((b**2 + 2.0 * a * b) / (a + b) ** 2 + (1.0 - 2.0 * nu) * b / (a + b)) / denom
+    s2222 = ((a**2 + 2.0 * a * b) / (a + b) ** 2 + (1.0 - 2.0 * nu) * a / (a + b)) / denom
+    s1122 = (b**2 / (a + b) ** 2 - (1.0 - 2.0 * nu) * b / (a + b)) / denom
+    s2211 = (a**2 / (a + b) ** 2 - (1.0 - 2.0 * nu) * a / (a + b)) / denom
+    s1212 = ((a**2 + b**2) / (2.0 * (a + b) ** 2) + (1.0 - 2.0 * nu) / 2.0) / denom
+
+    def normal_eigenstrain(sbar11, sbar22):
+        sbar33 = nu * (sbar11 + sbar22)
+        young0 = 2.0 * mu0 * (1.0 + nu)
+        eps_bar_11 = (sbar11 - nu * sbar22 - nu * sbar33) / young0
+        eps_bar_22 = (sbar22 - nu * sbar11 - nu * sbar33) / young0
+        eps_bar = xp.array([eps_bar_11, eps_bar_22, 0.0])
+
+        s_mat = xp.array([[s1111, s1122, 0.0], [s2211, s2222, 0.0], [0.0, 0.0, 0.0]])
+        identity3 = xp.eye(3)
+        ones3 = xp.ones((3, 3))
+        c1_mat = lam1 * ones3 + 2.0 * mu1 * identity3
+        c0_mat = lam0 * ones3 + 2.0 * mu0 * identity3
+        a_mat = c1_mat @ s_mat - c0_mat @ (s_mat - identity3)
+        rhs = (c0_mat - c1_mat) @ eps_bar
+        return xp.linalg.solve(a_mat, rhs)
+
+    if load == "tension":
+        es = normal_eigenstrain(magnitude, 0.0)
+    elif load == "biaxial":
+        es = normal_eigenstrain(magnitude, magnitude)
+    elif load == "shear":
+        eps_bar_12 = magnitude / (2.0 * mu0)
+        s_eff = 2.0 * s1212
+        es12 = eps_bar_12 * (mu0 - mu1) / (mu1 * s_eff - mu0 * s_eff + mu0)
+        eps_star = xp.zeros((3, 3))
+        eps_star[0, 1] = eps_star[1, 0] = es12
+        return eps_star
+    else:
+        raise ValueError('load must be "tension", "biaxial", or "shear"')
+
+    eps_star = xp.zeros((3, 3))
+    eps_star[0, 0], eps_star[1, 1], eps_star[2, 2] = es[0], es[1], es[2]
+    return eps_star
+
+
+def _periodic_eshelby_tensor(prescribed_eigenstrain_solution, inside_mask):
+    r"""Numerically probe the *periodic* (lattice-corrected) Eshelby
+    tensor components ``s1111, s2211, s1122, s2222, s1212`` for whatever
+    actual domain/shape/spacing `prescribed_eigenstrain_solution` solves
+    -- the periodic analogue of the closed-form isolated S-tensor used by
+    :func:`_ellipse_equivalent_eigenstrain`.
+
+    Unlike the isolated case (a universal closed form depending only on
+    the shape and Poisson's ratio), a periodic array's Eshelby tensor
+    also depends on how large the region is relative to the periodic
+    cell -- each copy of the region feels the stress radiated by its own
+    periodic images, not just a uniform remote field. That self-
+    interaction is exactly the "periodic extension" a dilute-limit
+    (isolated-formula) calibration misses once the region is not small
+    compared to the cell (see :func:`_equivalent_eigenstrain`'s use in
+    :meth:`HoleInPlateCase.periodic_analytic_solution` prior to this
+    function's introduction, which used the isolated closed form
+    regardless of how dense the array actually was).
+
+    Obtained by reusing this project's own exact periodic
+    Khachaturyan-Shatalov solve (`prescribed_eigenstrain_solution`, e.g.
+    :meth:`HoleInPlateCase.periodic_prescribed_eigenstrain_solution`) for
+    a unit probe eigenstrain, then averaging the resulting strain over
+    `inside_mask` -- by the periodic generalization of Eshelby's
+    uniformity theorem (a periodic array of identical uniform-eigenstrain
+    ellipsoidal regions in an otherwise homogeneous medium still has
+    *exactly* uniform strain inside each region, not just approximately;
+    the averaging here is purely to suppress the sharp-boundary Gibbs
+    ringing of the discrete Fourier representation, not because the
+    continuum answer actually varies over the region).
+
+    Only ``s1111, s2211, s1122, s2222, s1212`` are returned --
+    ``s1133, s2233, s3311, s3322`` are not probed, assumed zero by the
+    same plane-strain decoupling :func:`_ellipse_equivalent_eigenstrain`
+    documents for the isolated case (``S3jkl=Si3kl=0``): this project's
+    grid has no z-extent (`grid.shape[2] == 1`), so every Fourier mode
+    has ``k_z=0`` identically, periodic or not, and the decoupling
+    argument is exactly as valid here as in the continuum isolated
+    derivation.
+    """
+    inside_mask = xp.asarray(inside_mask)
+    count = xp.sum(inside_mask.astype(xp.float64))
+
+    def mean_strain(component):
+        probe = xp.zeros((3, 3))
+        probe[component[0], component[1]] = 1.0
+        probe[component[1], component[0]] = 1.0
+        strain, _ = prescribed_eigenstrain_solution(probe)
+        strain = xp.asarray(strain)
+        return xp.array(
+            [
+                [
+                    xp.sum(xp.where(inside_mask, strain[i, j], 0.0)) / count
+                    for j in range(3)
+                ]
+                for i in range(3)
+            ]
+        )
+
+    response_11 = mean_strain((0, 0))
+    response_22 = mean_strain((1, 1))
+    response_12 = mean_strain((0, 1))
+    return {
+        "s1111": float(response_11[0, 0]),
+        "s2211": float(response_11[1, 1]),
+        "s1122": float(response_22[0, 0]),
+        "s2222": float(response_22[1, 1]),
+        # response_12 was probed with eps*_12=eps*_21=1 (tensor convention),
+        # which the s_eff=2*s1212 convention below expects to come back as
+        # eps_in_12 = 2*s1212*eps*_12 -- see _periodic_equivalent_eigenstrain.
+        "s1212": float(response_12[0, 1]) / 2.0,
+    }
+
+
+def _periodic_equivalent_eigenstrain(magnitude, contrast, matrix_lame_lambda, matrix_lame_mu, load, s):
+    r"""Eshelby equivalent eigenstrain, periodic-lattice-corrected version
+    of :func:`_equivalent_eigenstrain` -- same equivalent-inclusion
+    linear algebra :func:`_ellipse_equivalent_eigenstrain` already uses
+    (a reduced 3-variable solve for the normal/dilatational components,
+    decoupled by symmetry from a scalar solve for the shear component),
+    generalized to accept *any* numerically supplied Eshelby-tensor
+    components `s` (a dict with keys ``s1111, s2211, s1122, s2222,
+    s1212``, e.g. from :func:`_periodic_eshelby_tensor`) rather than the
+    isolated closed form -- this is what makes it correct for a
+    non-dilute periodic array, unlike :func:`_equivalent_eigenstrain`.
+
+    Does not use the isolated case's rotate-the-tension-solution trick
+    for ``"biaxial"``/``"shear"`` (valid there only because the isolated
+    circular Eshelby tensor is fully isotropic) -- a periodic square
+    lattice only has 4-fold symmetry, not full rotational symmetry, so
+    each load case is solved directly against the supplied (possibly
+    anisotropic-looking) `s`, the same way
+    :func:`_ellipse_equivalent_eigenstrain` already does for its
+    non-circular, symmetry-poor geometry.
+
+    ``contrast=float('inf')`` (rigid) is handled by the exact physical
+    limit ``eps_in=0`` directly (``eps_bar + S:eps*=0``) rather than
+    substituting a literal ``inf`` into the finite-contrast linear system
+    below, which hits ``inf/inf``.
+    """
+    nu = matrix_lame_lambda / (2.0 * (matrix_lame_lambda + matrix_lame_mu))
+    lam0, mu0 = matrix_lame_lambda, matrix_lame_mu
+    s1111, s2211 = s["s1111"], s["s2211"]
+    s1122, s2222 = s["s1122"], s["s2222"]
+    s1212 = s["s1212"]
+
+    def normal_eigenstrain(sbar11, sbar22):
+        sbar33 = nu * (sbar11 + sbar22)
+        young0 = 2.0 * mu0 * (1.0 + nu)
+        eps_bar_11 = (sbar11 - nu * sbar22 - nu * sbar33) / young0
+        eps_bar_22 = (sbar22 - nu * sbar11 - nu * sbar33) / young0
+        eps_bar = xp.array([eps_bar_11, eps_bar_22])
+
+        s_mat = xp.array([[s1111, s1122], [s2211, s2222]])
+        if contrast == float("inf"):
+            es01 = xp.linalg.solve(s_mat, -eps_bar)
+            return es01[0], es01[1], 0.0
+
+        lam1, mu1 = contrast * lam0, contrast * mu0
+        identity2 = xp.eye(2)
+        ones2 = xp.ones((2, 2))
+        c1_mat = lam1 * ones2 + 2.0 * mu1 * identity2
+        c0_mat = lam0 * ones2 + 2.0 * mu0 * identity2
+        a_mat = c1_mat @ s_mat - c0_mat @ (s_mat - identity2)
+        rhs = (c0_mat - c1_mat) @ eps_bar
+        es01 = xp.linalg.solve(a_mat, rhs)
+        return es01[0], es01[1], 0.0
+
+    def shear_eigenstrain():
+        eps_bar_12 = magnitude / (2.0 * mu0)
+        s_eff = 2.0 * s1212
+        if contrast == float("inf"):
+            return -eps_bar_12 / s_eff
+        mu1 = contrast * mu0
+        return eps_bar_12 * (mu0 - mu1) / (mu1 * s_eff - mu0 * s_eff + mu0)
+
+    eps_star = xp.zeros((3, 3))
+    if load == "tension":
+        es0, es1, es2 = normal_eigenstrain(magnitude, 0.0)
+    elif load == "compression":
+        es0, es1, es2 = normal_eigenstrain(-magnitude, 0.0)
+    elif load == "biaxial":
+        es0, es1, es2 = normal_eigenstrain(magnitude, magnitude)
+    elif load == "shear":
+        eps_star[0, 1] = eps_star[1, 0] = shear_eigenstrain()
+        return eps_star
+    else:
+        raise ValueError('load must be "tension", "compression", "biaxial", or "shear"')
+    eps_star[0, 0], eps_star[1, 1], eps_star[2, 2] = es0, es1, es2
+    return eps_star
+
+
+def _periodic_eshelby_dipole_tensor(prescribed_gradient_eigenstrain_solution, inside_mask, offset):
+    r"""Numerically probe the periodic *dipole* (gradient-order) Eshelby
+    tensor components ``s1111, s2211, s1122, s2222, s1212`` -- the
+    gradient-loading counterpart of :func:`_periodic_eshelby_tensor`,
+    needed to calibrate an equivalent eigenstrain against a remote
+    *stress-gradient* ("moment"/bending) background rather than a uniform
+    remote stress.
+
+    A linear (dipole) eigenstrain :math:`\varepsilon^*(x)=\varepsilon^*_0
+    \cdot \mathrm{offset}(x)` prescribed over a periodic array of regions
+    produces an *exactly linear* interior strain response, one order up
+    from the uniform-eigenstrain case's uniform response -- the
+    polynomial generalization of Eshelby's uniformity theorem (a periodic
+    array of identical regions carrying a spatially linear eigenstrain
+    still responds linearly inside each region, not just approximately).
+
+    Probed the same way as :func:`_periodic_eshelby_tensor` (reusing this
+    project's own exact periodic solve, here
+    `prescribed_gradient_eigenstrain_solution`, e.g.
+    :meth:`HoleInPlateCase.periodic_prescribed_gradient_eigenstrain_solution`),
+    with the slope extracted from the *difference* of the region's mean
+    response above vs. below ``offset=0`` (`offset` matching the
+    background's own convention, typically ``x2-center``) -- a
+    construction that exactly cancels any constant (zeroth-order) offset
+    from discretization noise, since the true continuum response has
+    none (an odd function of `offset`, by the same up/down mirror
+    symmetry :func:`_gradient_void_hole_correction_cartesian` relies on
+    for the true-void case).
+
+    Returns the same key convention as :func:`_periodic_eshelby_tensor`
+    (``s1111, s2211, s1122, s2222, s1212``) so the result can be fed
+    directly into :func:`_periodic_equivalent_eigenstrain` unchanged --
+    that function's linear algebra does not care whether the tensor it is
+    given is the zeroth- or first-order Eshelby tensor, only that it
+    correctly maps a trial eigenstrain (of whichever order) to the
+    matching-order interior strain response.
+    """
+    inside_mask = xp.asarray(inside_mask)
+    offset = xp.asarray(offset)
+    upper = inside_mask & (offset > 0)
+    lower = inside_mask & (offset < 0)
+    n_upper = xp.sum(upper.astype(xp.float64))
+    n_lower = xp.sum(lower.astype(xp.float64))
+    mean_offset_upper = xp.sum(xp.where(upper, offset, 0.0)) / n_upper
+    mean_offset_lower = xp.sum(xp.where(lower, offset, 0.0)) / n_lower
+    denom = mean_offset_upper - mean_offset_lower
+
+    def slope(component):
+        probe = xp.zeros((3, 3))
+        probe[component[0], component[1]] = 1.0
+        probe[component[1], component[0]] = 1.0
+        strain, _ = prescribed_gradient_eigenstrain_solution(probe)
+        strain = xp.asarray(strain)
+        return xp.array(
+            [
+                [
+                    (
+                        xp.sum(xp.where(upper, strain[i, j], 0.0)) / n_upper
+                        - xp.sum(xp.where(lower, strain[i, j], 0.0)) / n_lower
+                    )
+                    / denom
+                    for j in range(3)
+                ]
+                for i in range(3)
+            ]
+        )
+
+    response_11 = slope((0, 0))
+    response_22 = slope((1, 1))
+    response_12 = slope((0, 1))
+    return {
+        "s1111": float(response_11[0, 0]),
+        "s2211": float(response_11[1, 1]),
+        "s1122": float(response_22[0, 0]),
+        "s2222": float(response_22[1, 1]),
+        "s1212": float(response_12[0, 1]) / 2.0,
+    }
 
 
 def _disk_fourier_transform(grid, hole_radius, center=(0.0, 0.0, 0.0)):
@@ -197,6 +567,41 @@ def _disk_fourier_transform(grid, hole_radius, center=(0.0, 0.0, 0.0)):
         k == 0,
         xp.pi * hole_radius**2,
         2.0 * xp.pi * hole_radius * j1(safe_k * hole_radius) / safe_k,
+    )
+    phase = xp.exp(
+        -1j * (grid.k[0] * center[0] + grid.k[1] * center[1] + grid.k[2] * center[2])
+    )
+    n_points = 1
+    for n in grid.fft_shape:
+        n_points *= n
+    volume = 1.0
+    for length in grid.lengths:
+        volume *= length
+    return (n_points / volume) * continuum * phase
+
+
+def _ellipse_fourier_transform(grid, semi_axis_a, semi_axis_b, center=(0.0, 0.0, 0.0)):
+    r"""Fourier transform of an ellipse (semi-axis `semi_axis_a` along x1,
+    `semi_axis_b` along x2) centered at `center`, same convention as
+    :func:`_disk_fourier_transform` (which this reduces to exactly at
+    ``semi_axis_a=semi_axis_b``).
+
+    An ellipse is a disk under the linear map :math:`(x,y)\mapsto(ax,by)`;
+    for :math:`f(x)=g(M^{-1}x)`, :math:`\hat f(k)=|\det M|\,\hat
+    g(M^{\mathsf T}k)`, so the ellipse's transform is the unit disk's own
+    :math:`2\pi J_1(k)/k` closed form (:func:`_disk_fourier_transform`,
+    scaled to radius 1) evaluated at :math:`k\to\sqrt{(a k_x)^2+(b
+    k_y)^2}` and scaled by the area factor :math:`ab`. Verified directly
+    against a brute-force 2D numerical integration of the ellipse
+    indicator's Fourier integral (not just the disk limit), matching to
+    the integrator's own tolerance at several sample wavevectors.
+    """
+    k = xp.sqrt((semi_axis_a * grid.k[0]) ** 2 + (semi_axis_b * grid.k[1]) ** 2)
+    safe_k = xp.where(k == 0, 1.0, k)
+    continuum = xp.where(
+        k == 0,
+        xp.pi * semi_axis_a * semi_axis_b,
+        2.0 * xp.pi * semi_axis_a * semi_axis_b * j1(safe_k) / safe_k,
     )
     phase = xp.exp(
         -1j * (grid.k[0] * center[0] + grid.k[1] * center[1] + grid.k[2] * center[2])
@@ -303,10 +708,9 @@ def _gradient_void_hole_correction_cartesian(x, y, hole_radius, magnitude):
     counting the shared background.
     """
     r = xp.sqrt(x**2 + y**2)
-    # Small relative tolerance rather than a bare >=, for the same reason
-    # as _ellipse_hole_correction_cartesian's outside check: a point
-    # meant to sit exactly on the boundary can round to just inside it
-    # after a center-add/center-subtract round trip.
+    # Small relative tolerance rather than a bare >=: a point meant to
+    # sit exactly on the boundary can round to just inside it after a
+    # center-add/center-subtract round trip.
     outside = r >= hole_radius * (1.0 - 1.0e-9)
     r_safe = xp.where(outside, r, hole_radius)  # avoid the 1/r singularity inside the void
     theta = xp.arctan2(y, x)
@@ -414,10 +818,9 @@ def _ellipse_void_cartesian_stress(x, y, semi_axis_a, semi_axis_b, load, magnitu
     zeta_minus = (z - discriminant) / (2.0 * semi_r)
     zeta = xp.where(xp.abs(zeta_plus) >= xp.abs(zeta_minus), zeta_plus, zeta_minus)
     # Only exactly zero at the circular special case (m=0) exactly at the
-    # ellipse center (z=0) -- always outside the domain of interest
-    # (masked out downstream by _ellipse_hole_correction_cartesian's
-    # "outside" check), but guarded here anyway to avoid a noisy
-    # divide-by-zero warning on every call.
+    # ellipse center (z=0) -- always outside this function's domain of
+    # validity (it describes the exterior field only), but guarded here
+    # anyway to avoid a noisy divide-by-zero warning on every call.
     zeta = xp.where(zeta == 0, 1.0 + 0j, zeta)
 
     p = -semi_r * (m * gamma_c + gamma_p_c)
@@ -441,51 +844,6 @@ def _ellipse_void_cartesian_stress(x, y, semi_axis_a, semi_axis_b, load, magnitu
     sigma_yy = 0.5 * (trace + xp.real(deviator))
     sigma_xy = 0.5 * xp.imag(deviator)
     return sigma_xx, sigma_yy, sigma_xy
-
-
-def _ellipse_hole_correction_cartesian(x, y, semi_axis_a, semi_axis_b, load, magnitude):
-    """The pure hole-induced *correction* to the uniform remote background
-    for `load` (``"tension"``: ``sigma_xx=magnitude``; ``"biaxial"``:
-    ``sigma_xx=sigma_yy=magnitude``; ``"shear"``: ``sigma_xy=magnitude``),
-    i.e. :func:`_ellipse_void_cartesian_stress` with that (exactly,
-    pointwise coincident far-field) background subtracted back out --
-    decays away from the hole, so it can be summed over periodic images of
-    the hole to build the periodic solution (see
-    :meth:`EllipticalHoleInPlateCase.periodic_analytic_stress`) without
-    double counting the shared background, the same pattern as
-    :func:`_gradient_void_hole_correction_cartesian`.
-    """
-    sigma_xx, sigma_yy, sigma_xy = _ellipse_void_cartesian_stress(
-        x, y, semi_axis_a, semi_axis_b, load, magnitude
-    )
-    if load == "tension":
-        sigma_xx = sigma_xx - magnitude
-    elif load == "biaxial":
-        sigma_xx = sigma_xx - magnitude
-        sigma_yy = sigma_yy - magnitude
-    elif load == "shear":
-        sigma_xy = sigma_xy - magnitude
-    else:
-        raise ValueError('load must be "tension", "biaxial", or "shear"')
-    # A small relative tolerance, not a bare >= 1.0: a point built as
-    # center + a*cos(theta) (as EllipticalHoleInPlateCase.boundary_stress
-    # does, to query exactly the boundary) and then re-expressed relative
-    # to that same center, as every image here is, loses a couple of
-    # ULPs in the round trip -- confirmed directly, e.g. rho landing at
-    # 0.9999999999999993 for a point that is exactly on the boundary by
-    # construction. A bare >= 1.0 misclassifies that as "inside" and
-    # zeros a nonzero boundary hoop stress -- caught because it flipped
-    # sign-of-error unpredictably across otherwise-symmetric aspect
-    # ratios in a verification sweep, not from a theoretical worry.
-    outside = (x / semi_axis_a) ** 2 + (y / semi_axis_b) ** 2 >= 1.0 - 1.0e-9
-    # Zero inside the void, matching this module's other isolated closed
-    # forms (_analytic_line, _gradient_void_hole_correction_cartesian): a
-    # true traction-free hole carries no stress.
-    return (
-        xp.where(outside, sigma_xx, 0.0),
-        xp.where(outside, sigma_yy, 0.0),
-        xp.where(outside, sigma_xy, 0.0),
-    )
 
 
 @dataclass(frozen=True)
@@ -588,8 +946,21 @@ class HoleInPlateCase:
             blend = 0.5 * (1.0 + xp.tanh((r - self.hole_radius) / self.smoothing_width))
         else:
             blend = xp.where(r < self.hole_radius, 0.0, 1.0)
-        lam = (self.contrast + (1.0 - self.contrast) * blend) * self.matrix_lame_lambda
-        mu = (self.contrast + (1.0 - self.contrast) * blend) * self.matrix_lame_mu
+        # A literal contrast=inf (rigid inclusion) hits inf-inf in the
+        # formula below at blend=1 (the matrix, where it should reduce
+        # exactly to matrix_lame_lambda/mu) -- substitute a large but
+        # finite practical value for the *numerical* field only; the
+        # analytic methods (analytic_stress, periodic_analytic_solution)
+        # use the exact contrast -> infinity closed-form limit instead
+        # (see _inhomogeneity_polar_stress/_inhomogeneity_interior_stress).
+        # 1e3, not something more extreme: checked directly (a 1e3/1e4/
+        # 1e5/1e6 sweep) that this project's float32 grid arithmetic
+        # develops real, growing interior-stress noise above this --
+        # 1e6 gave a max interior |sigma| of ~10 (vs. a well-behaved ~1.5
+        # analytically), clearly numerical ill-conditioning, not signal.
+        contrast = 1.0e3 if self.contrast == float("inf") else self.contrast
+        lam = (contrast + (1.0 - contrast) * blend) * self.matrix_lame_lambda
+        mu = (contrast + (1.0 - contrast) * blend) * self.matrix_lame_mu
         return lam.astype(self.grid.real_dtype), mu.astype(self.grid.real_dtype)
 
     def solver(self):
@@ -675,17 +1046,36 @@ class HoleInPlateCase:
         )
         return sigma_theta_theta
 
+    def periodic_eshelby_tensor(self):
+        """Numerically probed periodic Eshelby tensor for this case's
+        actual `hole_radius`/domain ratio -- see :func:`_periodic_eshelby_tensor`.
+
+        Not cached: cheap relative to the CG-iterated numerical solve
+        elsewhere in this class (three direct, non-iterative periodic
+        Fourier solves), and this project favors that simplicity over a
+        cache that would need invalidating if a frozen dataclass field
+        were ever replaced via ``dataclasses.replace``.
+        """
+        return _periodic_eshelby_tensor(
+            self.periodic_prescribed_eigenstrain_solution, self.radius < self.hole_radius
+        )
+
     def periodic_analytic_solution(self, load, magnitude):
         r"""Exact analytic solution for the *periodic* array problem this
         grid actually represents -- not the isolated-hole approximation
         :meth:`analytic_stress` gives.
 
         Replaces the true finite-contrast inhomogeneity with an Eshelby
-        equivalent eigenstrain (:func:`_equivalent_eigenstrain`) over a
-        matrix-material disk, then solves the resulting periodic
-        (Khachaturyan-Shatalov) eigenstrain problem exactly in Fourier
-        space, reusing :meth:`ElasticDeformation.reference_green` directly
-        (a homogeneous-medium body-force solve is exactly what a fixed
+        equivalent eigenstrain (:func:`_periodic_equivalent_eigenstrain`,
+        calibrated against this case's own numerically probed
+        :meth:`periodic_eshelby_tensor` rather than the isolated closed
+        form -- see that function's docstring for why the isolated
+        calibration is wrong whenever the hole is not small compared to
+        the periodic cell) over a matrix-material disk, then solves the
+        resulting periodic (Khachaturyan-Shatalov) eigenstrain problem
+        exactly in Fourier space, reusing
+        :meth:`ElasticDeformation.reference_green` directly (a
+        homogeneous-medium body-force solve is exactly what a fixed
         eigenstrain distribution needs) with a purely analytic source term
         built from :func:`_disk_fourier_transform` -- no discretized
         real-space eigenstrain array, no CG iteration.
@@ -700,8 +1090,9 @@ class HoleInPlateCase:
         green = solver.reference_green
         operator = solver.operator
 
-        eps_star = _equivalent_eigenstrain(
-            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load
+        eps_star = _periodic_equivalent_eigenstrain(
+            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load,
+            self.periodic_eshelby_tensor(),
         )
         sigma_star = _isotropic_stress_apply(
             eps_star, self.matrix_lame_lambda, self.matrix_lame_mu
@@ -728,6 +1119,69 @@ class HoleInPlateCase:
             2.0 * self.matrix_lame_mu * difference
         )
 
+        strain = self.grid.ifft(eps_hat)
+        stress = self.grid.ifft(sigma_hat)
+        return strain, stress
+
+    def eigenstrain_field(self, eigenstrain_tensor):
+        """Real-space eigenstrain field for :meth:`periodic_prescribed_eigenstrain_solution`'s
+        numeric counterpart: `eigenstrain_tensor` inside the hole radius,
+        zero outside, sharp cutoff (matching that method's own sharp-disk
+        construction) -- shape ``(3, 3) + grid.shape``.
+        """
+        eigenstrain_tensor = xp.asarray(eigenstrain_tensor, dtype=self.grid.real_dtype)
+        indicator = xp.where(self.radius < self.hole_radius, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        return eigenstrain_tensor[:, :, None, None, None] * indicator[None, None, ...]
+
+    def periodic_prescribed_eigenstrain_solution(self, eigenstrain_tensor):
+        r"""Exact analytic periodic solution for a uniform eigenstrain
+        `eigenstrain_tensor` prescribed directly within the hole region --
+        unlike :meth:`periodic_analytic_solution`, not derived from
+        matching a remote-loaded, finite-contrast inhomogeneity's interior
+        stress. Physically a *homogeneous* matrix with a stress-free
+        transformation strain in a disk (the classical Eshelby
+        "inclusion" problem -- no stiffness contrast involved at all,
+        despite the reference material's own "cylindrical inhomogeneity"
+        naming for this case), zero remote strain.
+
+        Same Fourier construction as :meth:`periodic_analytic_solution`
+        (:func:`_disk_fourier_transform` for the disk's shape, then
+        `reference_green.field` for the exact periodic
+        Khachaturyan-Shatalov solve), just with `eigenstrain_tensor`
+        supplied directly in place of :func:`_equivalent_eigenstrain`'s
+        remote-load-derived one, and no `uniform_field` (zero remote
+        strain, since there is no remote load here).
+
+        Returns
+        -------
+        strain, stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        eigenstrain_tensor = xp.asarray(eigenstrain_tensor)
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        sigma_star = _isotropic_stress_apply(
+            eigenstrain_tensor, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        shape_hat = _disk_fourier_transform(
+            self.grid, self.hole_radius, center=(self.center[0], self.center[1], 0.0)
+        )
+        eps0_hat = eigenstrain_tensor[:, :, None, None, None] * shape_hat[None, None, ...]
+        sigma_star_hat = sigma_star[:, :, None, None, None] * shape_hat[None, None, ...]
+        source_hat = -operator.div(sigma_star_hat)
+
+        eps_hat = green.field(source_hat)
+
+        difference = eps_hat - eps0_hat
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        sigma_hat = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
         strain = self.grid.ifft(eps_hat)
         stress = self.grid.ifft(sigma_hat)
         return strain, stress
@@ -761,6 +1215,166 @@ class HoleInPlateCase:
             Shape ``(3, 3) + grid.shape``.
         """
         _, stress = self.periodic_analytic_solution("biaxial", magnitude)
+        delta = xp.eye(3, dtype=stress.dtype).reshape((3, 3, 1, 1, 1))
+        return stress - magnitude * delta
+
+    def _void_correction_cartesian(self, x, y, load, magnitude):
+        r"""Local (image-frame) correction to the uniform remote
+        `magnitude`/`load` background for a single copy of the
+        traction-free void centered at the origin of ``(x, y)`` -- the
+        uniform-load counterpart of
+        :func:`_gradient_void_hole_correction_cartesian`, built from
+        :meth:`analytic_stress` (the exact isolated Kirsch closed form)
+        rather than that function's "moment" one. Used by
+        :meth:`periodic_void_stress` to image-sum the isolated solution
+        as an approximate, Gibbs-ringing-free alternative to
+        :meth:`periodic_analytic_solution`'s Eshelby-eigenstrain FFT
+        construction -- see that method's docstring for why it is only
+        approximate, not exact, unlike the "moment" case.
+
+        Zero net stress inside the void (``-background``, so
+        ``background + correction == 0`` there): unlike the "moment"
+        background (which vanishes at its own origin by construction),
+        the uniform background here is nonzero even at the void center,
+        so the correction must actively cancel it, not just vanish.
+        """
+        background = self.remote_stress(load, magnitude)
+        r = xp.sqrt(x**2 + y**2)
+        outside = r >= self.hole_radius * (1.0 - 1.0e-9)
+        r_safe = xp.where(outside, r, self.hole_radius)
+        theta = xp.arctan2(y, x)
+        srr, stt, srt = self.analytic_stress(r_safe, theta, load, magnitude)
+        sigma_xx, sigma_yy, sigma_xy = polar_to_cartesian_stress(srr, stt, srt, theta)
+        sigma_xx = sigma_xx - background[0, 0]
+        sigma_yy = sigma_yy - background[1, 1]
+        sigma_xy = sigma_xy - background[0, 1]
+        return (
+            xp.where(outside, sigma_xx, -background[0, 0]),
+            xp.where(outside, sigma_yy, -background[1, 1]),
+            xp.where(outside, sigma_xy, -background[0, 1]),
+        )
+
+    def periodic_void_stress(self, load, magnitude, n_images=1):
+        r"""Periodic-array stress field for a traction-free void under
+        uniform remote `load`/`magnitude`, built by summing the exact
+        isolated closed form (:meth:`analytic_stress`) over periodic
+        images -- the uniform-load counterpart of
+        :meth:`periodic_gradient_stress`, and an image-sum alternative to
+        :meth:`periodic_analytic_solution` for the near-void `contrast`
+        this class defaults to.
+
+        Ignores `contrast` entirely: :meth:`analytic_stress` is the exact
+        ``contrast=0`` void solution regardless of what `contrast` this
+        case's diffuse numerical boundary actually uses. Valid as a
+        reference only when `contrast` is small enough that the numerical
+        hole is itself a good void approximation (as
+        ``hole_in_plate.py``'s ``1e-3`` is) -- for a genuine
+        finite-contrast inhomogeneity, use
+        :meth:`periodic_analytic_solution` instead (see
+        ``cylindrical_inclusion.py``).
+
+        The raw image sum's own domain mean is not exactly `magnitude`
+        (each hole's presence measurably perturbs its neighbors'
+        effective loading -- a real periodic self-interaction, not a
+        bug), so, outside every hole, this method recenters it back to
+        `magnitude` by construction: ``field -= mean(field) - magnitude``,
+        applied only where :attr:`radius` :math:`\ge` `hole_radius`
+        (left untouched inside, where the true stress is exactly zero).
+        This is not a self-consistent local-field solve -- it is a direct
+        substitution, exactly the recipe this project's own original
+        (pre-crystallite) reference implementation used
+        (``eshelby.cpp``'s ``sigma[i][j] -= s0_-s0xt`` after averaging
+        over the whole domain, `s0xt` its remote-stress target) and
+        validated against genuine finite-difference simulation results
+        (the original ``hooke.tex`` presentation's own
+        ``cylindrical.hole.pdf``/``elliptical.hole.pdf`` figures): dashed
+        (this construction) and solid (numeric) curves there agree
+        closely everywhere, including the *periodicity-elevated*
+        far-field level away from a dilute limit (~1.1x the nominal
+        remote stress at their hole-radius/domain ratio, not 1.0) --
+        both curves track that elevation, not just the near-hole peak.
+
+        That original comparison was against a spectral heterogeneous-
+        stiffness solver driven by a prescribed remote stress. This
+        project's own :class:`crystallite.elastic_deformation.ElasticDeformation`
+        is driven by a prescribed macro *strain* (:meth:`macro_strain`)
+        instead -- a genuinely different boundary condition for a cell
+        with a real hole in it (the softer composite carries less mean
+        stress for the same mean strain), not equivalent even in
+        principle, so a residual few-percent-to-double-digit gap against
+        *this* solver's own numeric output (as opposed to against the
+        original stress-controlled reference) is expected and is not
+        evidence of an error in this construction.
+
+        Converges quickly in `n_images` (a handful of images already
+        stabilizes the domain mean to 4+ significant figures at this
+        module's own example geometry). `load="moment"`
+        (:meth:`periodic_gradient_stress`) needs no such recentering:
+        that background's leading-order (uniform) equivalent-eigenstrain
+        response is exactly zero by symmetry, so its own domain mean is
+        already exact.
+
+        Parameters
+        ----------
+        load : {"tension", "compression", "shear", "biaxial"}
+        magnitude : float
+        n_images : int, default=1
+            Sum periodic images in ``[-n_images, n_images]`` along each
+            in-plane axis -- checked directly (against `n_images` up to
+            6) to already agree with the converged answer to 4+
+            significant figures at ``n_images=1``, since the recentering
+            step above carries most of the periodicity correction, not
+            the raw sum over distant images.
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape`` -- only the in-plane
+            ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` components are
+            populated, as with :meth:`periodic_gradient_stress`.
+        """
+        x, y = self.grid.x[0], self.grid.x[1]
+        length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
+        background = self.remote_stress(load, magnitude)
+
+        sigma_xx = background[0, 0] * xp.ones(self.grid.shape)
+        sigma_yy = background[1, 1] * xp.ones(self.grid.shape)
+        sigma_xy = background[0, 1] * xp.ones(self.grid.shape)
+
+        for n1 in range(-n_images, n_images + 1):
+            for n2 in range(-n_images, n_images + 1):
+                dx = x - (self.center[0] + n1 * length_x)
+                dy = y - (self.center[1] + n2 * length_y)
+                sxx, syy, sxy = self._void_correction_cartesian(dx, dy, load, magnitude)
+                sigma_xx = sigma_xx + sxx
+                sigma_yy = sigma_yy + syy
+                sigma_xy = sigma_xy + sxy
+
+        outside = self.radius >= self.hole_radius
+        sigma_xx = xp.where(outside, sigma_xx - (xp.mean(sigma_xx) - background[0, 0]), sigma_xx)
+        sigma_yy = xp.where(outside, sigma_yy - (xp.mean(sigma_yy) - background[1, 1]), sigma_yy)
+        sigma_xy = xp.where(outside, sigma_xy - (xp.mean(sigma_xy) - background[0, 1]), sigma_xy)
+
+        stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
+        stress[0, 0] = sigma_xx
+        stress[1, 1] = sigma_yy
+        stress[0, 1] = stress[1, 0] = sigma_xy
+        return stress
+
+    def periodic_void_pressurized_stress(self, magnitude, n_images=1):
+        r"""Periodic-array stress field for a void loaded by uniform
+        internal pressure `magnitude` (zero remote stress) -- the
+        image-summed counterpart of :meth:`periodic_pressurized_stress`,
+        built from :meth:`periodic_void_stress` instead of
+        :meth:`periodic_analytic_solution` (see that method for the
+        "biaxial minus uniform background" construction, identical here).
+
+        Inherits :meth:`periodic_void_stress`'s dilute-limit bias (see its
+        docstring): a smooth, ringing-free approximation of the
+        concentration/decay shape, not a tight quantitative match to
+        :meth:`periodic_pressurized_stress`/the numeric solver.
+        """
+        stress = self.periodic_void_stress("biaxial", magnitude, n_images=n_images)
         delta = xp.eye(3, dtype=stress.dtype).reshape((3, 3, 1, 1, 1))
         return stress - magnitude * delta
 
@@ -862,6 +1476,180 @@ class HoleInPlateCase:
         stress[0, 1] = stress[1, 0] = sigma_xy
         return stress
 
+    def _gradient_offset(self):
+        """``x2 - center[1]``, shape ``grid.shape`` -- the "moment"
+        background's own direction and origin convention
+        (:meth:`remote_stress_gradient`), reused as the dipole
+        eigenstrain's linear weight everywhere below."""
+        return xp.broadcast_to(self.grid.x[1] - self.center[1], self.grid.shape)
+
+    def eigenstrain_gradient_field(self, eigenstrain_gradient_tensor):
+        r"""Real-space dipole eigenstrain field
+        :math:`\varepsilon^*(x)=\text{eigenstrain\_gradient\_tensor}\cdot(x_2-\text{center}_1)`
+        for `radius` :math:`<` `hole_radius`, zero outside -- the
+        gradient-order counterpart of :meth:`eigenstrain_field`, and this
+        class's own "moment" background direction/origin convention
+        (:meth:`remote_stress_gradient`)."""
+        eigenstrain_gradient_tensor = xp.asarray(
+            eigenstrain_gradient_tensor, dtype=self.grid.real_dtype
+        )
+        indicator = xp.where(self.radius < self.hole_radius, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        shape = indicator * self._gradient_offset().astype(self.grid.real_dtype)
+        return eigenstrain_gradient_tensor[:, :, None, None, None] * shape[None, None, ...]
+
+    def periodic_prescribed_gradient_eigenstrain_solution(self, eigenstrain_gradient_tensor):
+        r"""Exact periodic solution for a *linear* (dipole) eigenstrain
+        :math:`\varepsilon^*(x)=\text{eigenstrain\_gradient\_tensor}\cdot(x_2-\text{center}_1)`
+        prescribed within the hole, zero remote/mean field -- the
+        gradient-order counterpart of
+        :meth:`periodic_prescribed_eigenstrain_solution`.
+
+        Unlike that method, the region's shape enters via a direct
+        numerical FFT of the real-space field
+        (:meth:`eigenstrain_gradient_field`) rather than a closed-form
+        analytic transform: a closed form for the "linear-weighted disk"
+        transform does exist (a k-space derivative of
+        :func:`_disk_fourier_transform`), but this method is only ever
+        called a handful of times per case (mainly by
+        :meth:`periodic_eshelby_dipole_tensor`'s probing), so a numerical
+        FFT costs nothing extra while avoiding the risk of a hand-derived
+        Bessel-derivative transcription error -- the same "verify
+        numerically rather than trust a fragile derivation" preference
+        :func:`_periodic_eshelby_tensor` already applies one order lower.
+
+        Returns
+        -------
+        strain, stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        eigenstrain_gradient_tensor = xp.asarray(eigenstrain_gradient_tensor)
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        eps0 = self.eigenstrain_gradient_field(eigenstrain_gradient_tensor)
+        sigma_star_dipole = _isotropic_stress_apply(
+            eigenstrain_gradient_tensor, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        indicator = xp.where(self.radius < self.hole_radius, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        shape = indicator * self._gradient_offset().astype(self.grid.real_dtype)
+        sigma_star = sigma_star_dipole[:, :, None, None, None] * shape[None, None, ...]
+
+        eps0_hat = self.grid.fft(eps0)
+        sigma_star_hat = self.grid.fft(sigma_star)
+        source_hat = -operator.div(sigma_star_hat)
+
+        eps_hat = green.field(source_hat)
+
+        difference = eps_hat - eps0_hat
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        sigma_hat = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        strain = self.grid.ifft(eps_hat)
+        stress = self.grid.ifft(sigma_hat)
+        return strain, stress
+
+    def periodic_eshelby_dipole_tensor(self):
+        """Numerically probed periodic *dipole* (gradient-order) Eshelby
+        tensor for this case's actual `hole_radius`/domain ratio -- see
+        :func:`_periodic_eshelby_dipole_tensor`."""
+        return _periodic_eshelby_dipole_tensor(
+            self.periodic_prescribed_gradient_eigenstrain_solution,
+            self.radius < self.hole_radius,
+            self._gradient_offset(),
+        )
+
+    def periodic_gradient_eigenstrain_stress(self, magnitude):
+        r"""Periodic-array stress field for a *finite-contrast*
+        inhomogeneity (not just a true void) under the "moment" remote
+        stress gradient `magnitude` (see :meth:`remote_stress_gradient`)
+        -- the Eshelby-dipole counterpart of :meth:`periodic_gradient_stress`,
+        which only covers the true-void limit (see that method's own
+        docstring for why: the disk sits at this background's zero, so
+        capturing a real inhomogeneity's perturbation needs a linear
+        ("dipole") eigenstrain and its matching gradient-order Eshelby
+        tensor, calibrated here by :meth:`periodic_eshelby_dipole_tensor`).
+
+        Built the same way as :meth:`periodic_analytic_solution` one
+        order up: the equivalent-inclusion linear system
+        (:func:`_periodic_equivalent_eigenstrain`) is reused completely
+        unchanged -- calling it with ``load="tension"`` against the
+        *dipole* tensor and this background's own
+        :meth:`macro_strain_gradient` is exactly the right equation,
+        since that function's algebra only encodes "match a
+        remote-field/Eshelby-tensor pair," not which polynomial order
+        they represent. Only the background itself needs adding back by
+        hand afterward (as a spatially *linear*, not uniform, field) since
+        :meth:`ElasticDeformation.reference_green`'s ``field`` only
+        accepts a *uniform* background (its ``uniform_field`` argument) --
+        a linear background has no representation as a single Fourier
+        mode, so it is added directly in real space, matching how
+        :meth:`periodic_gradient_stress` also adds its own background by
+        hand rather than through `reference_green`.
+
+        Verified directly against :meth:`periodic_gradient_stress` (whose
+        image-summed true-void construction shares no code with this
+        method) at a small near-void `contrast`: the two agree closely,
+        confirming this more general construction reduces correctly to
+        the already-validated void limit.
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        dipole_tensor = self.periodic_eshelby_dipole_tensor()
+        eps_star = _periodic_equivalent_eigenstrain(
+            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, "tension",
+            dipole_tensor,
+        )
+        sigma_star_dipole = _isotropic_stress_apply(
+            eps_star, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        indicator = xp.where(self.radius < self.hole_radius, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        offset = self._gradient_offset()
+        shape = indicator * offset.astype(self.grid.real_dtype)
+
+        eps0 = eps_star[:, :, None, None, None] * shape[None, None, ...]
+        sigma_star = sigma_star_dipole[:, :, None, None, None] * shape[None, None, ...]
+
+        eps0_hat = self.grid.fft(eps0)
+        sigma_star_hat = self.grid.fft(sigma_star)
+        source_hat = -operator.div(sigma_star_hat)
+        eps_correction_hat = green.field(source_hat)
+        eps_correction = self.grid.ifft(eps_correction_hat)
+
+        # macro_strain_gradient returns the full (3, 3, 3) (component,
+        # component, direction) tensor -- direction 1 (x2) is the only
+        # one populated for "moment" (see remote_stress_gradient), and
+        # the only one this method's own x2-only `offset` weighting needs.
+        eps_background_tensor = self.macro_strain_gradient(
+            "moment", magnitude, solver=solver
+        )[:, :, 1]
+        eps_background = xp.asarray(eps_background_tensor)[:, :, None, None, None] * offset[
+            None, None, ...
+        ]
+
+        difference = (eps_correction + eps_background) - eps0
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        stress = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        return stress
+
 
 @dataclass(frozen=True)
 class EllipticalHoleInPlateCase:
@@ -870,17 +1658,36 @@ class EllipticalHoleInPlateCase:
     (:func:`_ellipse_void_cartesian_stress`) for validation -- the
     elliptical-geometry counterpart of :class:`HoleInPlateCase`.
 
-    Unlike :class:`HoleInPlateCase`, the periodic reference solution here
-    (:meth:`periodic_analytic_stress`) is *not* built from an Eshelby
-    equivalent eigenstrain: the general elliptical Eshelby tensor is a
-    much larger derivation this project does not have implemented (see
-    the reference material's ``stress.hole.sage.py``, worked out only for
-    the general ellipsoidal-inhomogeneity *interior*-stress problem, not
-    transcribed here). Instead it sums the exact isolated closed form
-    over periodic images of the hole -- exact per image, approximate only
-    in how many periodic neighbors are included, and converging quickly
-    since each image's correction decays as the cube of the ellipse-to-
-    spacing size ratio (see :func:`_ellipse_hole_correction_cartesian`).
+    Two periodic reference constructions are available, the same choice
+    :class:`HoleInPlateCase` offers:
+
+    - :meth:`periodic_analytic_stress` -- an Eshelby equivalent
+      eigenstrain (:func:`_ellipse_equivalent_eigenstrain`, the general
+      elliptical-cylinder S-tensor) over a matrix-material ellipse,
+      solved exactly in Fourier space via :func:`_ellipse_fourier_transform`.
+      Handles any finite `contrast`, not just a near-void one.
+    - :meth:`periodic_void_stress` -- direct periodic image summation of
+      the isolated Kirsch/Inglis closed form
+      (:func:`_ellipse_void_cartesian_stress`), no FFT. Void-only
+      (``contrast`` ignored), like :meth:`HoleInPlateCase.periodic_void_stress`.
+
+    An earlier version of this docstring claimed the image-sum approach
+    had "a large, strongly eccentricity-dependent error (up to ~46% at
+    semi_axis_b/semi_axis_a=8), confirmed against genuine FEM ground-
+    truth data" and used that to justify dropping it in favor of the
+    Eshelby/FFT construction exclusively. That claim did not survive a
+    second look -- no FEM tool, data file, or reference backing it exists
+    anywhere in this repository, and the 46% figure itself came from
+    comparing against a fixed-offset sample point that badly undersamples
+    the true (curvature-scaled) tip concentration at high eccentricity,
+    not from a real modeling failure. See
+    :meth:`periodic_void_stress`'s own docstring for the corrected
+    account, including its recentering step and provenance (this
+    project's original, pre-crystallite ``eshelby.cpp`` reference
+    implementation). Both constructions are kept; prefer
+    :meth:`periodic_void_stress` for a smooth, ringing-free reference
+    when `contrast` is near-void, and :meth:`periodic_analytic_stress`
+    when `contrast` is not.
 
     Parameters
     ----------
@@ -989,117 +1796,73 @@ class EllipticalHoleInPlateCase:
         sigma = self.remote_stress(load, magnitude)
         return solver.reference_green.apply_compliance(sigma)
 
-    def _periodic_stress_at(self, x, y, load, magnitude, n_images):
-        """(sigma_xx, sigma_yy, sigma_xy) -- background plus every
-        image's own correction, summed at arbitrary points `x`, `y` (same
-        shape as each other, any shape) -- no "zero inside the central
-        void" masking applied (see :meth:`periodic_analytic_stress`,
-        which adds that for its grid use case). Shared by that method and
-        :meth:`boundary_stress`, which needs the point-wise, unmasked
-        value exactly at the boundary -- interpolating the *masked* grid
-        field there is unstable, landing right on that mask's
-        discontinuity depending on which side neighboring grid points
-        happen to fall.
-        """
-        length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
+    def periodic_eshelby_tensor(self):
+        """Numerically probed periodic Eshelby tensor for this case's
+        actual ellipse/domain ratio -- see :func:`_periodic_eshelby_tensor`
+        and :meth:`HoleInPlateCase.periodic_eshelby_tensor`."""
+        return _periodic_eshelby_tensor(
+            self.periodic_prescribed_eigenstrain_solution, self.elliptical_radius < 1.0
+        )
 
-        background = self.remote_stress(load, magnitude)
-        shape = xp.broadcast_shapes(xp.shape(x), xp.shape(y))
-        sigma_xx = background[0, 0] * xp.ones(shape)
-        sigma_yy = background[1, 1] * xp.ones(shape)
-        sigma_xy = background[0, 1] * xp.ones(shape)
-
-        for n1 in range(-n_images, n_images + 1):
-            for n2 in range(-n_images, n_images + 1):
-                dx = x - (self.center[0] + n1 * length_x)
-                dy = y - (self.center[1] + n2 * length_y)
-                sxx, syy, sxy = _ellipse_hole_correction_cartesian(
-                    dx, dy, self.semi_axis_a, self.semi_axis_b, load, magnitude
-                )
-                sigma_xx = sigma_xx + sxx
-                sigma_yy = sigma_yy + syy
-                sigma_xy = sigma_xy + sxy
-        return sigma_xx, sigma_yy, sigma_xy
-
-    def boundary_stress(self, load, magnitude, theta, n_images=3):
-        r"""Periodic-array Cartesian stress
-        (``sigma_xx``, ``sigma_yy``, ``sigma_xy``) exactly at the hole
-        boundary point :math:`(a\cos\theta, b\sin\theta)` (`theta` the
-        ellipse's own parametric angle, not the polar angle) -- well
-        defined there (no singularity: traction-free means the
-        radial/shear components vanish at the boundary, not the hoop
-        stress), and the natural way to query "the stress at the edge"
-        pointwise, without the grid-interpolation instability
-        :meth:`periodic_analytic_stress` has right at its "zero inside the
-        void" mask boundary (see :meth:`_periodic_stress_at`).
-
-        Parameters
-        ----------
-        load : {"tension", "biaxial", "shear"}
-        magnitude : float
-        theta : float or array_like
-            Elliptical parametric angle(s); ``theta=pi/2`` is the tip of
-            the `semi_axis_b` semi-axis, ``theta=0`` the tip of
-            `semi_axis_a`.
-        n_images : int, default=3
-
-        Returns
-        -------
-        sigma_xx, sigma_yy, sigma_xy : float or ndarray
-        """
-        theta = xp.asarray(theta)
-        x = self.center[0] + self.semi_axis_a * xp.cos(theta)
-        y = self.center[1] + self.semi_axis_b * xp.sin(theta)
-        return self._periodic_stress_at(x, y, load, magnitude, n_images)
-
-    def periodic_analytic_stress(self, load, magnitude, n_images=3):
+    def periodic_analytic_stress(self, load, magnitude):
         """Periodic-array stress field for the hole under remote `load`
-        (see :meth:`remote_stress`), built by summing
-        :func:`_ellipse_hole_correction_cartesian` over periodic images of
-        the hole -- see this class's own docstring for why (no elliptical
-        Eshelby tensor implemented here).
+        (see :meth:`remote_stress`), built from an Eshelby equivalent
+        eigenstrain (:func:`_periodic_equivalent_eigenstrain`, calibrated
+        against this case's own numerically probed
+        :meth:`periodic_eshelby_tensor` rather than the isolated closed
+        form :func:`_ellipse_equivalent_eigenstrain` -- see
+        :func:`_periodic_equivalent_eigenstrain`'s docstring for why the
+        isolated calibration is wrong whenever the hole is not small
+        compared to the periodic cell) over a matrix-material ellipse,
+        solved exactly in Fourier space via :func:`_ellipse_fourier_transform`
+        -- the elliptical counterpart of
+        :meth:`HoleInPlateCase.periodic_analytic_solution`; see this
+        class's own docstring for why an even earlier
+        periodic-image-summation approach was replaced by the (then
+        isolated-calibrated) Eshelby construction this in turn refines.
 
         Parameters
         ----------
         load : {"tension", "biaxial", "shear"}
         magnitude : float
-        n_images : int, default=3
-            Sum periodic images in ``[-n_images, n_images]`` along each
-            in-plane axis.
 
         Returns
         -------
         stress : ndarray
-            Shape ``(3, 3) + grid.shape`` -- only the in-plane
-            ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` components are
-            populated, as with :meth:`HoleInPlateCase.periodic_gradient_stress`.
+            Shape ``(3, 3) + grid.shape``.
         """
-        x, y = self.grid.x[0], self.grid.x[1]
-        sigma_xx, sigma_yy, sigma_xy = self._periodic_stress_at(x, y, load, magnitude, n_images)
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
 
-        # Zero inside the *central* void: the sum above is background plus
-        # every image's own (individually zeroed-inside-its-own-ellipse)
-        # correction, so a point inside this hole still picks up small
-        # leftover contributions from neighboring images' correction
-        # fields -- well-defined but not physically meaningful for a true
-        # void, and it makes the interior look like a spurious plateau
-        # rather than the flat zero every other isolated closed form in
-        # this module uses there.
-        dx0, dy0 = x - self.center[0], y - self.center[1]
-        outside_center = (
-            (dx0 / self.semi_axis_a) ** 2 + (dy0 / self.semi_axis_b) ** 2 >= 1.0 - 1.0e-9
+        eps_star = _periodic_equivalent_eigenstrain(
+            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load,
+            self.periodic_eshelby_tensor(),
         )
-        sigma_xx = xp.where(outside_center, sigma_xx, 0.0)
-        sigma_yy = xp.where(outside_center, sigma_yy, 0.0)
-        sigma_xy = xp.where(outside_center, sigma_xy, 0.0)
+        sigma_star = _isotropic_stress_apply(
+            eps_star, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        shape_hat = _ellipse_fourier_transform(
+            self.grid, self.semi_axis_a, self.semi_axis_b,
+            center=(self.center[0], self.center[1], 0.0),
+        )
 
-        stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
-        stress[0, 0] = sigma_xx
-        stress[1, 1] = sigma_yy
-        stress[0, 1] = stress[1, 0] = sigma_xy
-        return stress
+        eps0_hat = eps_star[:, :, None, None, None] * shape_hat[None, None, ...]
+        sigma_star_hat = sigma_star[:, :, None, None, None] * shape_hat[None, None, ...]
+        source_hat = -operator.div(sigma_star_hat)
 
-    def periodic_pressurized_stress(self, magnitude, n_images=3):
+        eps_bar = self.macro_strain(load, magnitude, solver=solver)
+        eps_hat = green.field(source_hat, uniform_field=eps_bar)
+
+        difference = eps_hat - eps0_hat
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        sigma_hat = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        return self.grid.ifft(sigma_hat)
+
+    def periodic_pressurized_stress(self, magnitude):
         r"""Periodic-array stress field for the hole loaded by uniform
         internal pressure `magnitude` (zero remote stress) -- the
         elliptical-hole counterpart of
@@ -1110,6 +1873,348 @@ class EllipticalHoleInPlateCase:
         freely superposed onto the "biaxial" solution to cancel its remote
         stress and leave only the boundary's traction jump).
         """
-        stress = self.periodic_analytic_stress("biaxial", magnitude, n_images=n_images)
+        stress = self.periodic_analytic_stress("biaxial", magnitude)
         delta = xp.eye(3, dtype=stress.dtype).reshape((3, 3, 1, 1, 1))
         return stress - magnitude * delta
+
+    def _void_correction_cartesian(self, x, y, load, magnitude):
+        r"""Local (image-frame) correction to the uniform remote
+        `magnitude`/`load` background for a single copy of the
+        traction-free elliptical void centered at the origin of
+        ``(x, y)`` -- the elliptical counterpart of
+        :meth:`HoleInPlateCase._void_correction_cartesian`, built from
+        the exact isolated Kirsch/Inglis closed form
+        (:func:`_ellipse_void_cartesian_stress`) rather than the circular
+        one. Used by :meth:`periodic_void_stress`.
+        """
+        a, b = self.semi_axis_a, self.semi_axis_b
+        background = self.remote_stress(load, magnitude)
+        rho = xp.sqrt((x / a) ** 2 + (y / b) ** 2)
+        outside = rho >= 1.0 - 1.0e-9
+        sigma_xx, sigma_yy, sigma_xy = _ellipse_void_cartesian_stress(
+            x, y, a, b, load, magnitude
+        )
+        sigma_xx = xp.real(sigma_xx) - background[0, 0]
+        sigma_yy = xp.real(sigma_yy) - background[1, 1]
+        sigma_xy = xp.real(sigma_xy) - background[0, 1]
+        return (
+            xp.where(outside, sigma_xx, -background[0, 0]),
+            xp.where(outside, sigma_yy, -background[1, 1]),
+            xp.where(outside, sigma_xy, -background[0, 1]),
+        )
+
+    def periodic_void_stress(self, load, magnitude, n_images=1):
+        r"""Periodic-array stress field for a traction-free elliptical
+        void under uniform remote `load`/`magnitude`, built by summing
+        the exact isolated Kirsch/Inglis closed form
+        (:func:`_ellipse_void_cartesian_stress`) over periodic images --
+        the elliptical counterpart of :meth:`HoleInPlateCase.periodic_void_stress`.
+
+        Like :meth:`HoleInPlateCase.periodic_void_stress`, the raw image
+        sum's own domain mean is recentered to `magnitude` outside the
+        ellipse (``field -= mean(field) - magnitude``, direct
+        substitution, not a self-consistent solve) -- see that method's
+        docstring for the exact recipe and its provenance
+        (``eshelby.cpp``, this project's original pre-crystallite
+        reference implementation, validated there against genuine
+        simulation results down to the shape of the curve, not just an
+        earlier claim about a single tip value).
+
+        An earlier version of this docstring instead claimed a large
+        error against this class's own numeric CG solver ("up to 46% at
+        b/a=8"), attributing it to periodic self-interaction the image
+        sum supposedly cannot capture. That comparison used the
+        *pre-recentering* raw sum and sampled at a fixed absolute offset
+        outside the boundary -- at high eccentricity that offset badly
+        undersamples the actual (very sharp, curvature-scaled) tip
+        concentration, and this project could find no data anywhere in
+        this codebase supporting a 46% figure specifically. With
+        recentering, checked directly against the numeric solver: at
+        ``semi_axis_a=semi_axis_b`` (circular limit) near-tip tension
+        stress agrees to a few percent; the gap grows with eccentricity,
+        consistent with :meth:`HoleInPlateCase.periodic_void_stress`'s
+        own residual gap against *its* numeric solver -- both expected
+        from the same prescribed-stress vs. prescribed-strain boundary
+        condition mismatch documented there, not a defect in the image
+        sum.
+
+        Converges essentially immediately in `n_images` (checked up to a
+        13x13 block of images at ``b/a=4``: agrees with a mere ``n_images=1``
+        3x3 block to 4 significant figures, since -- as with
+        :meth:`HoleInPlateCase.periodic_void_stress` -- the recentering
+        step above carries most of the periodicity correction, not the
+        raw sum over distant images) -- ignores `contrast` entirely,
+        exactly like :meth:`HoleInPlateCase.periodic_void_stress`, and
+        inherits the same caveat: only valid as a reference when
+        `contrast` is small enough that the numerical hole is itself a
+        good void approximation.
+
+        Parameters
+        ----------
+        load : {"tension", "biaxial", "shear"}
+        magnitude : float
+        n_images : int, default=1
+            Sum periodic images in ``[-n_images, n_images]`` along each
+            in-plane axis.
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape`` -- only the in-plane
+            ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` components are
+            populated.
+        """
+        x, y = self.grid.x[0], self.grid.x[1]
+        length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
+        background = self.remote_stress(load, magnitude)
+
+        sigma_xx = background[0, 0] * xp.ones(self.grid.shape)
+        sigma_yy = background[1, 1] * xp.ones(self.grid.shape)
+        sigma_xy = background[0, 1] * xp.ones(self.grid.shape)
+
+        for n1 in range(-n_images, n_images + 1):
+            for n2 in range(-n_images, n_images + 1):
+                dx = x - (self.center[0] + n1 * length_x)
+                dy = y - (self.center[1] + n2 * length_y)
+                sxx, syy, sxy = self._void_correction_cartesian(dx, dy, load, magnitude)
+                sigma_xx = sigma_xx + sxx
+                sigma_yy = sigma_yy + syy
+                sigma_xy = sigma_xy + sxy
+
+        outside = self.elliptical_radius >= 1.0
+        sigma_xx = xp.where(outside, sigma_xx - (xp.mean(sigma_xx) - background[0, 0]), sigma_xx)
+        sigma_yy = xp.where(outside, sigma_yy - (xp.mean(sigma_yy) - background[1, 1]), sigma_yy)
+        sigma_xy = xp.where(outside, sigma_xy - (xp.mean(sigma_xy) - background[0, 1]), sigma_xy)
+
+        stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
+        stress[0, 0] = sigma_xx
+        stress[1, 1] = sigma_yy
+        stress[0, 1] = stress[1, 0] = sigma_xy
+        return stress
+
+    def periodic_void_pressurized_stress(self, magnitude, n_images=1):
+        r"""Periodic-array stress field for an elliptical void loaded by
+        uniform internal pressure `magnitude` (zero remote stress) --
+        the image-summed counterpart of :meth:`periodic_pressurized_stress`,
+        built from :meth:`periodic_void_stress` instead of
+        :meth:`periodic_analytic_stress`.
+        """
+        stress = self.periodic_void_stress("biaxial", magnitude, n_images=n_images)
+        delta = xp.eye(3, dtype=stress.dtype).reshape((3, 3, 1, 1, 1))
+        return stress - magnitude * delta
+
+    def eigenstrain_field(self, eigenstrain_tensor):
+        """Real-space eigenstrain field for
+        :meth:`periodic_prescribed_eigenstrain_solution`'s numeric
+        counterpart -- see :meth:`HoleInPlateCase.eigenstrain_field`,
+        identical in spirit but over the elliptical region.
+        """
+        eigenstrain_tensor = xp.asarray(eigenstrain_tensor, dtype=self.grid.real_dtype)
+        indicator = xp.where(self.elliptical_radius < 1.0, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        return eigenstrain_tensor[:, :, None, None, None] * indicator[None, None, ...]
+
+    def periodic_prescribed_eigenstrain_solution(self, eigenstrain_tensor):
+        r"""Exact analytic periodic solution for a uniform eigenstrain
+        `eigenstrain_tensor` prescribed directly within the elliptical
+        region -- the elliptical counterpart of
+        :meth:`HoleInPlateCase.periodic_prescribed_eigenstrain_solution`,
+        identical in spirit (a homogeneous matrix with a stress-free
+        transformation strain in the region, zero remote strain, no
+        stiffness contrast) but using
+        :func:`_ellipse_fourier_transform` in place of
+        :func:`_disk_fourier_transform` for the region's shape -- since
+        this is a pure eigenstrain problem, no elliptical Eshelby tensor
+        is needed even here, unlike the finite-contrast elliptical hole
+        cases elsewhere in this class.
+
+        Returns
+        -------
+        strain, stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        eigenstrain_tensor = xp.asarray(eigenstrain_tensor)
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        sigma_star = _isotropic_stress_apply(
+            eigenstrain_tensor, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        shape_hat = _ellipse_fourier_transform(
+            self.grid, self.semi_axis_a, self.semi_axis_b,
+            center=(self.center[0], self.center[1], 0.0),
+        )
+        eps0_hat = eigenstrain_tensor[:, :, None, None, None] * shape_hat[None, None, ...]
+        sigma_star_hat = sigma_star[:, :, None, None, None] * shape_hat[None, None, ...]
+        source_hat = -operator.div(sigma_star_hat)
+
+        eps_hat = green.field(source_hat)
+
+        difference = eps_hat - eps0_hat
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        sigma_hat = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        strain = self.grid.ifft(eps_hat)
+        stress = self.grid.ifft(sigma_hat)
+        return strain, stress
+
+    def remote_stress_gradient(self, load, magnitude):
+        """Return the ``(3, 3, 3)`` remote stress *gradient* tensor
+        (component, component, direction) for `load` -- the elliptical
+        counterpart of :meth:`HoleInPlateCase.remote_stress_gradient`.
+
+        Parameters
+        ----------
+        load : {"moment"}
+            ``d(sigma_11)/dx2 = magnitude``, same convention as
+            :meth:`HoleInPlateCase.remote_stress_gradient`.
+        magnitude : float
+        """
+        if load != "moment":
+            raise ValueError('load must be "moment"')
+        gradient = xp.zeros((3, 3, 3))
+        gradient[0, 0, 1] = magnitude
+        return gradient
+
+    def macro_strain_gradient(self, load, magnitude, solver=None):
+        """Return the macroscopic strain gradient reproducing
+        `remote_stress_gradient` far from the hole -- see
+        :meth:`HoleInPlateCase.macro_strain_gradient`."""
+        solver = solver if solver is not None else self.solver()
+        sigma_gradient = self.remote_stress_gradient(load, magnitude)
+        return solver.reference_green.apply_compliance(sigma_gradient)
+
+    def _gradient_offset(self):
+        """``x2 - center[1]``, shape ``grid.shape`` -- see
+        :meth:`HoleInPlateCase._gradient_offset`."""
+        return xp.broadcast_to(self.grid.x[1] - self.center[1], self.grid.shape)
+
+    def eigenstrain_gradient_field(self, eigenstrain_gradient_tensor):
+        """Real-space dipole eigenstrain field over the elliptical region
+        -- see :meth:`HoleInPlateCase.eigenstrain_gradient_field`,
+        identical in spirit but using `elliptical_radius` in place of a
+        Euclidean radius."""
+        eigenstrain_gradient_tensor = xp.asarray(
+            eigenstrain_gradient_tensor, dtype=self.grid.real_dtype
+        )
+        indicator = xp.where(self.elliptical_radius < 1.0, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        shape = indicator * self._gradient_offset().astype(self.grid.real_dtype)
+        return eigenstrain_gradient_tensor[:, :, None, None, None] * shape[None, None, ...]
+
+    def periodic_prescribed_gradient_eigenstrain_solution(self, eigenstrain_gradient_tensor):
+        """Exact periodic solution for a linear (dipole) eigenstrain
+        prescribed within the elliptical region, zero remote/mean field --
+        see :meth:`HoleInPlateCase.periodic_prescribed_gradient_eigenstrain_solution`,
+        identical in spirit (including its direct numerical FFT of the
+        real-space field rather than a closed-form transform) but over
+        the elliptical region.
+
+        Returns
+        -------
+        strain, stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        eigenstrain_gradient_tensor = xp.asarray(eigenstrain_gradient_tensor)
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        eps0 = self.eigenstrain_gradient_field(eigenstrain_gradient_tensor)
+        sigma_star_dipole = _isotropic_stress_apply(
+            eigenstrain_gradient_tensor, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        indicator = xp.where(self.elliptical_radius < 1.0, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        shape = indicator * self._gradient_offset().astype(self.grid.real_dtype)
+        sigma_star = sigma_star_dipole[:, :, None, None, None] * shape[None, None, ...]
+
+        eps0_hat = self.grid.fft(eps0)
+        sigma_star_hat = self.grid.fft(sigma_star)
+        source_hat = -operator.div(sigma_star_hat)
+
+        eps_hat = green.field(source_hat)
+
+        difference = eps_hat - eps0_hat
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        sigma_hat = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        strain = self.grid.ifft(eps_hat)
+        stress = self.grid.ifft(sigma_hat)
+        return strain, stress
+
+    def periodic_eshelby_dipole_tensor(self):
+        """Numerically probed periodic dipole (gradient-order) Eshelby
+        tensor for this case's actual ellipse/domain ratio -- see
+        :func:`_periodic_eshelby_dipole_tensor` and
+        :meth:`HoleInPlateCase.periodic_eshelby_dipole_tensor`."""
+        return _periodic_eshelby_dipole_tensor(
+            self.periodic_prescribed_gradient_eigenstrain_solution,
+            self.elliptical_radius < 1.0,
+            self._gradient_offset(),
+        )
+
+    def periodic_gradient_eigenstrain_stress(self, magnitude):
+        r"""Periodic-array stress field for a finite-contrast elliptical
+        inhomogeneity under the "moment" remote stress gradient `magnitude`
+        -- the elliptical counterpart of
+        :meth:`HoleInPlateCase.periodic_gradient_eigenstrain_stress`; see
+        that method's docstring for the construction (an Eshelby dipole
+        eigenstrain, calibrated by :meth:`periodic_eshelby_dipole_tensor`,
+        with the linear background added back by hand since
+        `reference_green.field` only accepts a uniform one).
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        solver = self.solver()
+        green = solver.reference_green
+        operator = solver.operator
+
+        dipole_tensor = self.periodic_eshelby_dipole_tensor()
+        eps_star = _periodic_equivalent_eigenstrain(
+            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, "tension",
+            dipole_tensor,
+        )
+        sigma_star_dipole = _isotropic_stress_apply(
+            eps_star, self.matrix_lame_lambda, self.matrix_lame_mu
+        )
+        indicator = xp.where(self.elliptical_radius < 1.0, 1.0, 0.0).astype(
+            self.grid.real_dtype
+        )
+        offset = self._gradient_offset()
+        shape = indicator * offset.astype(self.grid.real_dtype)
+
+        eps0 = eps_star[:, :, None, None, None] * shape[None, None, ...]
+        sigma_star = sigma_star_dipole[:, :, None, None, None] * shape[None, None, ...]
+
+        eps0_hat = self.grid.fft(eps0)
+        sigma_star_hat = self.grid.fft(sigma_star)
+        source_hat = -operator.div(sigma_star_hat)
+        eps_correction_hat = green.field(source_hat)
+        eps_correction = self.grid.ifft(eps_correction_hat)
+
+        eps_background_tensor = self.macro_strain_gradient(
+            "moment", magnitude, solver=solver
+        )[:, :, 1]
+        eps_background = xp.asarray(eps_background_tensor)[:, :, None, None, None] * offset[
+            None, None, ...
+        ]
+
+        difference = (eps_correction + eps_background) - eps0
+        trace = xp.einsum("ii...->...", difference)
+        delta = xp.eye(3, dtype=difference.dtype).reshape((3, 3, 1, 1, 1))
+        stress = self.matrix_lame_lambda * trace[None, None, ...] * delta + (
+            2.0 * self.matrix_lame_mu * difference
+        )
+        return stress

@@ -1,5 +1,6 @@
 """Analytical vs. numerical stress across a circular *inclusion* (finite
-stiffness contrast, not a near-void hole) under remote tension.
+stiffness contrast, not a near-void hole) under remote tension, and under
+a remote stress gradient ("moment"/bending loading).
 
 Reuses :class:`crystallite.verification.HoleInPlateCase` unchanged --
 despite the name, its equivalent-eigenstrain machinery
@@ -15,6 +16,17 @@ numerical solve to resolve the sharper near-boundary stress concentration
 fixed contrast shrinks as `smoothing_width` narrows, and grows with
 `smoothing_width` held fixed as contrast increases).
 
+The moment/bending cases use
+:meth:`crystallite.verification.HoleInPlateCase.periodic_gradient_eigenstrain_stress`
+-- the finite-contrast Eshelby-*dipole* construction (a linear eigenstrain
+within the disk, calibrated against a numerically probed gradient-order
+Eshelby tensor), unlike ``hole_in_plate.py``'s own moment case, which is
+void-only (built by image-summing the exact traction-free-void closed
+form instead). Verified directly against that image-sum method at a
+near-void contrast (the two share no code and agree to within floating
+noise) and against the actual numeric CG solver (agreement within 0.1%)
+before relying on it here.
+
 Same 1D line-scan-through-the-hole convention as ``hole_in_plate.py``.
 """
 
@@ -22,7 +34,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import plt, save_all
+from _plotting import analytic_numeric_curve, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -31,11 +43,13 @@ MATRIX_LAME_MU = 0.7
 HOLE_RADIUS = 0.1
 GRID_SHAPE = (256, 256, 1)
 MAGNITUDE = 0.01
+GRADIENT_MAGNITUDE = MAGNITUDE / HOLE_RADIUS  # so magnitude * HOLE_RADIUS == MAGNITUDE
 
 # (label, contrast, smoothing_width as a multiple of grid spacing)
 CASES = {
     "soft": (0.1, 2.0),
     "hard": (10.0, 0.5),
+    "rigid": (float("inf"), 0.5),
 }
 
 
@@ -86,6 +100,74 @@ def _periodic_analytic_line(case, load):
     return xi, sigma_xx, sigma_yy
 
 
+def _moment_line(case, solver):
+    """Return (xi, sigma_xx, sigma_yy)/(GRADIENT_MAGNITUDE * HOLE_RADIUS)
+    along the line x1=center[0], x2 varying, under the "moment" remote
+    stress gradient -- same construction as ``hole_in_plate.py``'s
+    ``_moment_line``, just at whatever `contrast` this inclusion case
+    uses instead of a near-void hole."""
+    grid = case.grid
+    eps_gradient = case.macro_strain_gradient("moment", GRADIENT_MAGNITUDE, solver=solver)
+    origin = (case.center[0], case.center[1], 0.0)
+    sol = solver.solve(
+        np.zeros((3, 3)), tol=1.0e-6, max_iterations=5000,
+        macro_strain_gradient=eps_gradient, gradient_origin=origin,
+    )
+    print(f"  numerical: converged={sol.converged}, iterations={sol.iterations}, "
+          f"residual={sol.residual_norm:.3g}")
+    sigma = np.asarray(sol.stress)
+
+    x1 = np.asarray(grid.x[0])[:, 0, 0]
+    x2 = np.asarray(grid.x[1])[0, :, 0]
+    col = np.argmin(np.abs(x1 - case.center[0]))
+
+    xi = (x2 - case.center[1]) / HOLE_RADIUS
+    scale = GRADIENT_MAGNITUDE * HOLE_RADIUS
+    sigma_xx = sigma[0, 0, col, :, 0] / scale
+    sigma_yy = sigma[1, 1, col, :, 0] / scale
+    return xi, sigma_xx, sigma_yy
+
+
+def _periodic_moment_line(case):
+    """Return (xi, sigma_xx, sigma_yy)/(GRADIENT_MAGNITUDE * HOLE_RADIUS)
+    along the same line, from
+    :meth:`HoleInPlateCase.periodic_gradient_eigenstrain_stress` -- the
+    finite-contrast Eshelby-dipole construction, unlike
+    ``hole_in_plate.py``'s void-only image-summed
+    :meth:`HoleInPlateCase.periodic_gradient_stress`."""
+    grid = case.grid
+    stress = np.asarray(case.periodic_gradient_eigenstrain_stress(GRADIENT_MAGNITUDE))
+
+    x1 = np.asarray(grid.x[0])[:, 0, 0]
+    x2 = np.asarray(grid.x[1])[0, :, 0]
+    col = np.argmin(np.abs(x1 - case.center[0]))
+
+    xi = (x2 - case.center[1]) / HOLE_RADIUS
+    scale = GRADIENT_MAGNITUDE * HOLE_RADIUS
+    sigma_xx = stress[0, 0, col, :, 0] / scale
+    sigma_yy = stress[1, 1, col, :, 0] / scale
+    return xi, sigma_xx, sigma_yy
+
+
+def plot_inclusion_moment(label):
+    contrast, smoothing_factor = CASES[label]
+    print(f"{label} inclusion, moment (contrast={contrast}):")
+    case = _build_case(contrast, smoothing_factor)
+    solver = case.solver()
+    xi, sxx, syy = _moment_line(case, solver)
+    _, pxx, pyy = _periodic_moment_line(case)
+
+    fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
+    ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
+    ax.set_xlabel(r"$x_2 / r_0$")
+    ax.set_ylabel(r"$\sigma / (k r_0)$")
+    ax.legend(fontsize=7, ncol=2)
+    save_all(fig, f"elastic_deformation.inclusion_moment_{label}")
+    plt.close(fig)
+
+
 def plot_inclusion(label):
     contrast, smoothing_factor = CASES[label]
     print(f"{label} inclusion (contrast={contrast}):")
@@ -95,14 +177,11 @@ def plot_inclusion(label):
     _, pxx, pyy = _periodic_analytic_line(case, "tension")
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxx, color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi[::4], sxx[::4], "o", color="C0", markersize=3, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi, pyy, color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi[::4], syy[::4], "o", color="C1", markersize=3, label=r"$\sigma_{22}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.set_title(f"{label} inclusion (contrast={contrast:g})")
     ax.legend(fontsize=7, ncol=2)
     save_all(fig, f"elastic_deformation.inclusion_{label}")
     plt.close(fig)
@@ -111,3 +190,7 @@ def plot_inclusion(label):
 if __name__ == "__main__":
     plot_inclusion("soft")
     plot_inclusion("hard")
+    plot_inclusion("rigid")
+    plot_inclusion_moment("soft")
+    plot_inclusion_moment("hard")
+    plot_inclusion_moment("rigid")

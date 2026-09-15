@@ -52,8 +52,10 @@ class ElasticDeformation:
     are each a scalar or a ``grid.shape`` field, applied pointwise via
     :math:`\sigma_{ij} = \lambda\,\mathrm{tr}(\varepsilon)\delta_{ij} +
     2\mu\varepsilon_{ij}` -- e.g. a soft circular inclusion approximating a
-    hole. This is deliberately *not* coupled to any eigenstrain or
-    phase-field driving force; it solves plain Hooke's law in isolation.
+    hole. This is deliberately *not* coupled to any phase-field driving
+    force; it solves plain Hooke's law in isolation, optionally with a
+    prescribed eigenstrain source (see :meth:`solve`'s `eigenstrain`
+    parameter) but nothing that feeds back from an evolving field.
 
     Substituting the strain decomposition into equilibrium gives a
     matrix-free linear system for :math:`u^*`,
@@ -199,7 +201,9 @@ class ElasticDeformation:
         u_hat = self.reference_green.potential(r_hat)
         return self.grid.ifft(u_hat)
 
-    def _body_force(self, macro_strain, macro_strain_gradient=None, gradient_origin=None):
+    def _body_force(
+        self, macro_strain, macro_strain_gradient=None, gradient_origin=None, eigenstrain=None
+    ):
         macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
         if macro_strain.shape != (3, 3):
             raise ValueError(f"macro_strain must have shape (3, 3), got {macro_strain.shape}")
@@ -239,6 +243,19 @@ class ElasticDeformation:
             sigma_bar = sigma_bar + (
                 delta_lambda * trace[None, None, ...] * delta + 2.0 * delta_mu * eps_grad
             )
+        if eigenstrain is not None:
+            # Hooke's law with an eigenstrain is sigma(x) = C(x):(eps(x) -
+            # eigenstrain(x)); substituting into div(sigma)=0 alongside
+            # the macro_strain/macro_strain_gradient background above
+            # adds a further -div(C(x):eigenstrain(x)) to A(u)'s target
+            # (same sign derivation as the docstring's "no leading minus"
+            # note, just with an extra term). Safe to use the full C(x)
+            # (not just deltaC) and FFT directly, unlike the gradient
+            # background above: eigenstrain(x) is itself already a
+            # prescribed, localized/periodic real-space field (e.g.
+            # nonzero only inside a disk), not an unbounded affine one.
+            eigenstrain = xp.asarray(eigenstrain, dtype=self.grid.real_dtype)
+            sigma_bar = sigma_bar - self.stress(eigenstrain)
         return self._divergence_of_stress(sigma_bar)
 
     def solve(
@@ -249,6 +266,7 @@ class ElasticDeformation:
         initial_displacement=None,
         macro_strain_gradient=None,
         gradient_origin=None,
+        eigenstrain=None,
     ):
         """Solve for the equilibrium displacement fluctuation.
 
@@ -278,13 +296,20 @@ class ElasticDeformation:
         gradient_origin : array_like of shape (3,), optional
             Reference point for `macro_strain_gradient`. Defaults to the
             grid's own origin (all zero).
+        eigenstrain : array_like, optional
+            Prescribed stress-free transformation strain
+            :math:`\\varepsilon^*(x)`, shape ``(3, 3) + grid.shape``,
+            entering Hooke's law as :math:`\\sigma(x) =
+            C(x):(\\varepsilon(x)-\\varepsilon^*(x))`. Meant for an
+            already-localized/periodic field (e.g. nonzero only inside a
+            disk) -- see :meth:`_body_force` for why that matters.
 
         Returns
         -------
         ElasticSolution
         """
         macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
-        b = self._body_force(macro_strain, macro_strain_gradient, gradient_origin)
+        b = self._body_force(macro_strain, macro_strain_gradient, gradient_origin, eigenstrain)
 
         if initial_displacement is None:
             u = xp.zeros((3,) + self.grid.shape, dtype=self.grid.real_dtype)
@@ -336,7 +361,10 @@ class ElasticDeformation:
         if macro_strain_gradient is not None:
             strain = strain + self._gradient_strain_field(macro_strain_gradient, gradient_origin)
         strain = xp.broadcast_to(strain, (3, 3) + self.grid.shape)
-        stress = self.stress(strain)
+        if eigenstrain is None:
+            stress = self.stress(strain)
+        else:
+            stress = self.stress(strain - xp.asarray(eigenstrain, dtype=self.grid.real_dtype))
 
         return ElasticSolution(
             displacement=u,

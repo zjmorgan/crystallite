@@ -12,12 +12,31 @@ angular sweep at fixed radius -- a much more direct way to see the
 concentration-then-decay profile and to place the numerical points right
 next to the analytic curve.
 
-The analytic curve shown against the numerical points is the exact solution
-to the actual periodic problem
-(:meth:`crystallite.verification.HoleInPlateCase.periodic_analytic_solution`),
-via an Eshelby equivalent eigenstrain and a closed-form
-Khachaturyan-Shatalov Fourier solve -- the numerical points should track it
-closely.
+The analytic curve shown against the numerical points is built by summing
+the isolated closed-form Kirsch solution
+(:meth:`crystallite.verification.HoleInPlateCase.periodic_void_stress`)
+over periodic images of the hole, up to an `N_IMAGES` cutoff, in place of
+:meth:`crystallite.verification.HoleInPlateCase.periodic_analytic_solution`'s
+Eshelby-eigenstrain FFT construction (still used by
+``cylindrical_inclusion.py`` for genuine finite-contrast inhomogeneities).
+The tradeoff is deliberate: the image sum never touches the grid's discrete
+Fourier machinery, so it is completely free of that construction's
+finite-grid Gibbs ringing -- but for the uniform loads here (``tension``,
+``compression``, ``biaxial``, ``shear``, the ``pressure`` case built from
+``biaxial``) it is only a dilute-limit *approximation*, not an exact
+periodic solution: it differs from the FFT reference/numeric solver by
+roughly 5-8% in this module's own geometry (``HOLE_RADIUS=0.1`` in a unit
+cell, ~3% hole area fraction), because it cannot capture the periodic
+array's hole-to-hole self-interaction -- see
+:meth:`~crystallite.verification.HoleInPlateCase.periodic_void_stress`'s
+docstring for why. The ``moment`` case
+(:meth:`crystallite.verification.HoleInPlateCase.periodic_gradient_stress`)
+has no such bias and is unaffected: its background has zero leading-order
+Eshelby response by symmetry, so there is no self-interaction for images to
+miss. In short: these curves favor a smooth, ringing-free view of the
+concentration/decay *shape* over tight quantitative agreement with the
+numerical points for the uniform-load cases; expect the numerical markers
+to sit visibly, not just noisily, off the analytic curve there.
 
 The hole is a soft circular inclusion
 (:class:`crystallite.verification.HoleInPlateCase`) with a diffuse (tanh)
@@ -29,7 +48,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import plt, save_all
+from _plotting import analytic_numeric_curve, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -40,6 +59,7 @@ CONTRAST = 1.0e-3
 GRID_SHAPE = (256, 256, 1)
 MAGNITUDE = 0.01
 GRADIENT_MAGNITUDE = MAGNITUDE / HOLE_RADIUS  # so magnitude * HOLE_RADIUS == MAGNITUDE
+N_IMAGES = 1  # periodic image cutoff for the analytic curves (already converged here)
 
 
 def _build_case():
@@ -76,12 +96,13 @@ def _line_through_hole(case, solver, load):
 
 def _periodic_analytic_line(case, load):
     """Return (xi, sigma_xx, sigma_yy, sigma_xy)/MAGNITUDE along the same
-    line, from the exact periodic (Eshelby equivalent-eigenstrain +
-    Khachaturyan-Shatalov Fourier) solution -- the solution to the actual
-    periodic problem this grid represents.
+    line, from image-summing the isolated Kirsch closed form up to
+    `N_IMAGES` -- a smooth, ringing-free dilute-limit *approximation* of
+    the actual periodic problem this grid represents (see this module's
+    own docstring for the ~5-8% bias this carries for uniform loads).
     """
     grid = case.grid
-    _, stress = case.periodic_analytic_solution(load, MAGNITUDE)
+    stress = case.periodic_void_stress(load, MAGNITUDE, n_images=N_IMAGES)
     stress = np.asarray(stress)
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
@@ -110,10 +131,10 @@ def _pressurized_line(case, solver):
 
 def _periodic_pressurized_line(case):
     """Return (xi, sigma_xx, sigma_yy)/MAGNITUDE along the same line, from
-    :meth:`crystallite.verification.HoleInPlateCase.periodic_pressurized_stress`.
+    :meth:`crystallite.verification.HoleInPlateCase.periodic_void_pressurized_stress`.
     """
     grid = case.grid
-    stress = np.asarray(case.periodic_pressurized_stress(MAGNITUDE))
+    stress = np.asarray(case.periodic_void_pressurized_stress(MAGNITUDE, n_images=N_IMAGES))
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
@@ -184,14 +205,11 @@ def plot_moment():
     _, pxx, pyy = _periodic_moment_line(case)
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxx, color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi[::4], sxx[::4], "o", color="C0", markersize=3, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi, pyy, color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi[::4], syy[::4], "o", color="C1", markersize=3, label=r"$\sigma_{22}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / (k r_0)$")
-    ax.set_title("moment")
     ax.legend(fontsize=7, ncol=2)
     save_all(fig, "elastic_deformation.hole_moment")
     plt.close(fig)
@@ -204,14 +222,11 @@ def plot_pressure():
     _, pxx, pyy = _periodic_pressurized_line(case)
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxx, color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi[::4], sxx[::4], "o", color="C0", markersize=3, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi, pyy, color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi[::4], syy[::4], "o", color="C1", markersize=3, label=r"$\sigma_{22}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / p_\infty$")
-    ax.set_title("pressure")
     ax.legend(fontsize=7, ncol=2)
     save_all(fig, "elastic_deformation.hole_pressure")
     plt.close(fig)
@@ -224,14 +239,11 @@ def plot_tension_or_compression(load):
     _, pxx, pyy, _ = _periodic_analytic_line(case, load)
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxx, color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi[::4], sxx[::4], "o", color="C0", markersize=3, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi, pyy, color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi[::4], syy[::4], "o", color="C1", markersize=3, label=r"$\sigma_{22}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.set_title(load)
     ax.legend(fontsize=7, ncol=2)
     save_all(fig, f"elastic_deformation.hole_{load}")
     plt.close(fig)
@@ -244,14 +256,11 @@ def plot_biaxial():
     _, pxx, pyy, _ = _periodic_analytic_line(case, "biaxial")
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxx, color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi[::4], sxx[::4], "o", color="C0", markersize=3, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi, pyy, color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi[::4], syy[::4], "o", color="C1", markersize=3, label=r"$\sigma_{22}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxx, sxx, r"$\sigma_{11}$", "C0")
+    analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.set_title("biaxial")
     ax.legend(fontsize=7, ncol=2)
     save_all(fig, "elastic_deformation.hole_biaxial")
     plt.close(fig)
@@ -264,13 +273,11 @@ def plot_shear():
     _, _, _, pxy = _periodic_analytic_line(case, "shear")
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
-    ax.plot(xi, pxy, color="C0", label=r"$\sigma_{12}$ analytical")
-    ax.plot(xi[::4], sxy[::4], "o", color="C0", markersize=3, label=r"$\sigma_{12}$ numerical")
     ax.set_xlim(-4, 4)
+    analytic_numeric_curve(ax, xi, pxy, sxy, r"$\sigma_{12}$", "C0")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.set_title("shear")
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=7, ncol=2)
     save_all(fig, "elastic_deformation.hole_shear")
     plt.close(fig)
 

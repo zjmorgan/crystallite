@@ -17,6 +17,17 @@ os.makedirs(FIGURES_DIR, exist_ok=True)
 plt = configure_pgf()
 
 
+def analytic_numeric_curve(ax, xi, analytic, numeric, label, color, downsample=4):
+    """Plot one stress/strain component: a solid analytic curve and
+    downsampled numerical markers, both in `color`, distinguished by a
+    legend entry each ("`label` analytical" / "`label` numerical")."""
+    ax.plot(xi, analytic, "-", color=color, label=f"{label} analytical")
+    ax.plot(
+        xi[::downsample], numeric[::downsample], "o", color=color, markersize=3,
+        label=f"{label} numerical",
+    )
+
+
 def save_all(fig, name):
     """Save ``fig`` as ``<name>.pgf``, ``.pdf``, and ``.png`` in figures/."""
     for ext in ("pgf", "pdf", "png"):

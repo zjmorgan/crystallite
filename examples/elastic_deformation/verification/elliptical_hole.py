@@ -1,44 +1,57 @@
 """Stress near the edge of an elliptical hole, under remote tension,
-shear, and internal pressure, as a function of the hole's aspect ratio --
-the classical Inglis-type verification (peak/edge stress vs. shape), not
-a spatial profile at one fixed shape.
+shear, internal pressure, and a remote stress gradient ("moment"/bending
+loading), as a function of the hole's aspect ratio -- the classical
+Inglis-type verification (peak/edge stress vs. shape), not a spatial
+profile at one fixed shape.
+
+The moment case uses
+:meth:`EllipticalHoleInPlateCase.periodic_gradient_eigenstrain_stress`
+(an Eshelby-*dipole* construction: a linear eigenstrain within the
+ellipse, calibrated against a numerically probed gradient-order Eshelby
+tensor) rather than the uniform-load cases' :meth:`periodic_analytic_stress`
+-- verified against the actual numeric CG solver (agreement within 2%
+across the contrasts and aspect ratios checked) before relying on it here.
 
 For each aspect ratio ``b/a`` (semi-axis `b` perpendicular to the tension
 load over semi-axis `a` parallel to it), the hole is a soft elliptical
 inclusion (:class:`crystallite.verification.EllipticalHoleInPlateCase`)
 with a diffuse (tanh) boundary, evolved to equilibrium by
-:class:`crystallite.elastic_deformation.ElasticDeformation`; the numeric
-stress is read off a small fixed physical distance
-(`NUMERIC_EDGE_OFFSET`) outside the boundary, along the true outward
-normal at a chosen boundary point -- an absolute distance, not one scaled
-by `b`, since the stress actually decays over a length set by the *local
-radius of curvature* there (varies with position and aspect ratio, e.g.
-a**2/b at the b-axis tip), not by `b` itself; a `b`-scaled offset
-overshoots that decay length for `b/a` >> 1 and undershoots it for
+:class:`crystallite.elastic_deformation.ElasticDeformation`; both the
+numeric and analytic stress are read off the same small fixed physical
+distance (`NUMERIC_EDGE_OFFSET`) outside the boundary, along the true
+outward normal at a chosen boundary point -- an absolute distance, not
+one scaled by `b`, since the stress actually decays over a length set by
+the *local radius of curvature* there (varies with position and aspect
+ratio, e.g. a**2/b at the b-axis tip), not by `b` itself; a `b`-scaled
+offset overshoots that decay length for `b/a` >> 1 and undershoots it for
 `b/a` << 1, producing a spurious non-monotonic curve unrelated to the
-physics (an earlier version of this script did exactly that). The
-analytic reference is
-:meth:`EllipticalHoleInPlateCase.boundary_stress`, evaluated directly at
-the boundary point (point-wise, not grid-interpolated -- interpolating
-the grid field there is unstable, landing right on its "zero inside the
-void" mask discontinuity depending on which side neighboring grid points
-happen to fall -- an earlier version of this script hit exactly that).
-Both close over the exact isolated Kirsch/Inglis closed form
-(:func:`crystallite.verification.elastic_deformation._ellipse_void_cartesian_stress`)
-summed over periodic images of the hole (this project has no elliptical
-Eshelby tensor implemented, so this -- not an eigenstrain construction --
-is how periodicity is handled here; see that method's docstring).
+physics (an earlier version of this script did exactly that).
 
-That image sum is only as good as the "sum of isolated single-hole
-fields" approximation itself, which misses real elastic interaction
-between periodic images -- confirmed by a controlled resolution sweep to
-be the dominant remaining error (not periodic-image truncation, not
-diffuse-boundary width, not the finite hole/matrix stiffness contrast):
-holding grid resolution and boundary sharpness fixed and varying only the
-hole-to-domain size ratio, numeric/analytic agreement went from ~94% at a
-semi-axis 15% of the domain to ~99% at 5%. `CHARACTERISTIC_SIZE` below is
-chosen accordingly, small enough that this stays a minor effect across
-the whole aspect-ratio sweep.
+The tension/shear/pressure analytic reference is
+:meth:`EllipticalHoleInPlateCase.periodic_void_stress` -- periodic-image
+summation of the isolated Kirsch/Inglis closed form
+(:func:`crystallite.verification.elastic_deformation._ellipse_void_cartesian_stress`),
+domain-mean-recentered to the target remote stress (see that method's
+docstring -- this is this project's original, pre-crystallite
+``eshelby.cpp`` reference construction, not a new approximation),
+bilinearly interpolated at the same near-edge point as the numeric solve,
+in the same spirit as ``hole_in_plate.py``'s line profiles. A previous
+version of this docstring claimed this image sum had "a large, strongly
+eccentricity-dependent error confirmed against genuine FEM ground-truth
+data (up to ~46% at b/a=8)" and switched to
+:meth:`EllipticalHoleInPlateCase.periodic_analytic_stress` (an Eshelby
+equivalent-eigenstrain FFT construction) instead. That claim did not hold
+up: no FEM data or tool backing it exists anywhere in this repository,
+and the 46% figure traced back to a fixed-offset sample point that badly
+undersamples the true, curvature-scaled tip concentration at high
+eccentricity, not a real modeling failure -- see
+:meth:`crystallite.verification.EllipticalHoleInPlateCase.periodic_void_stress`'s
+docstring for the corrected account. A genuine residual gap against this
+script's own numeric solver remains and grows with eccentricity, but it
+is the same prescribed-stress vs. prescribed-strain boundary-condition
+mismatch documented for the circular case
+(:meth:`crystallite.verification.HoleInPlateCase.periodic_void_stress`),
+not evidence against the image sum itself.
 
 Tension and pressure are sampled at the tip of the b semi-axis
 (theta=pi/2), where their concentration peaks by symmetry. Shear has no
@@ -68,7 +81,13 @@ CHARACTERISTIC_SIZE = 0.035
 CONTRAST = 1.0e-3
 GRID_SHAPE = (512, 512, 1)
 MAGNITUDE = 0.01
+# CHARACTERISTIC_SIZE is fixed across the sweep, so
+# GRADIENT_MAGNITUDE * CHARACTERISTIC_SIZE == MAGNITUDE exactly -- the
+# "moment" sweep then normalizes its stress by the same MAGNITUDE as the
+# tension/shear/pressure sweeps rather than a separate scale.
+GRADIENT_MAGNITUDE = MAGNITUDE / CHARACTERISTIC_SIZE
 ASPECT_RATIOS = np.array([0.25, 0.5, 1.0, 2.0, 4.0])  # b/a
+N_IMAGES = 1  # periodic image cutoff for the analytic curves (already converged here)
 
 # How far outside the boundary to read the *numerical* stress, as an
 # absolute physical distance -- see the module docstring for why this is
@@ -132,12 +151,27 @@ def _near_edge_numeric(case, solver, load, theta):
 
 
 def _edge_analytic(case, load, theta):
-    """Analytic (sigma_xx, sigma_yy, sigma_xy)/MAGNITUDE exactly at the
-    boundary point `theta`, from
-    :meth:`EllipticalHoleInPlateCase.boundary_stress` (point-wise, not
-    grid-interpolated -- see the module docstring)."""
-    sigma_xx, sigma_yy, sigma_xy = case.boundary_stress(load, MAGNITUDE, theta=theta)
-    return float(sigma_xx) / MAGNITUDE, float(sigma_yy) / MAGNITUDE, float(sigma_xy) / MAGNITUDE
+    """Analytic (sigma_xx, sigma_yy, sigma_xy)/MAGNITUDE at
+    NUMERIC_EDGE_OFFSET beyond the boundary point at `theta`, along its
+    true outward normal, from
+    :meth:`EllipticalHoleInPlateCase.periodic_void_stress`
+    (bilinearly interpolated off the grid, same point as
+    :func:`_near_edge_numeric` -- see the module docstring for why not
+    exactly at the boundary)."""
+    grid = case.grid
+    stress = np.asarray(case.periodic_void_stress(load, MAGNITUDE, n_images=N_IMAGES))
+    x1 = np.asarray(grid.x[0])[:, 0, 0]
+    x2 = np.asarray(grid.x[1])[0, :, 0]
+    xb, yb, nx, ny = _boundary_point_and_normal(case, theta)
+    point = np.array([[xb + NUMERIC_EDGE_OFFSET * nx, yb + NUMERIC_EDGE_OFFSET * ny]])
+
+    interp_xx = RegularGridInterpolator((x1, x2), stress[0, 0, :, :, 0])
+    interp_yy = RegularGridInterpolator((x1, x2), stress[1, 1, :, :, 0])
+    interp_xy = RegularGridInterpolator((x1, x2), stress[0, 1, :, :, 0])
+    sigma_xx = float(interp_xx(point)[0]) / MAGNITUDE
+    sigma_yy = float(interp_yy(point)[0]) / MAGNITUDE
+    sigma_xy = float(interp_xy(point)[0]) / MAGNITUDE
+    return sigma_xx, sigma_yy, sigma_xy
 
 
 def _pressure_numeric(case, solver, theta):
@@ -152,6 +186,55 @@ def _pressure_numeric(case, solver, theta):
 def _pressure_analytic(case, theta):
     sxx, syy, _ = _edge_analytic(case, "biaxial", theta)
     return sxx - 1.0, syy - 1.0
+
+
+def _moment_numeric(case, solver, theta):
+    """Numeric (sigma_xx, sigma_yy)/MAGNITUDE at NUMERIC_EDGE_OFFSET
+    beyond the boundary point at `theta`, under the "moment" remote
+    stress gradient -- same near-edge sampling as
+    :func:`_near_edge_numeric`, but via `macro_strain_gradient` /
+    `gradient_origin` (a spatially varying background, not a uniform
+    remote strain) like ``hole_in_plate.py``'s and
+    ``cylindrical_inclusion.py``'s moment cases."""
+    eps_gradient = case.macro_strain_gradient("moment", GRADIENT_MAGNITUDE, solver=solver)
+    origin = (case.center[0], case.center[1], 0.0)
+    sol = solver.solve(
+        np.zeros((3, 3)), tol=1.0e-6, max_iterations=8000,
+        macro_strain_gradient=eps_gradient, gradient_origin=origin,
+    )
+    sigma = np.asarray(sol.stress)
+
+    grid = case.grid
+    x1 = np.asarray(grid.x[0])[:, 0, 0]
+    x2 = np.asarray(grid.x[1])[0, :, 0]
+    xb, yb, nx, ny = _boundary_point_and_normal(case, theta)
+    point = np.array([[xb + NUMERIC_EDGE_OFFSET * nx, yb + NUMERIC_EDGE_OFFSET * ny]])
+
+    interp_xx = RegularGridInterpolator((x1, x2), sigma[0, 0, :, :, 0])
+    interp_yy = RegularGridInterpolator((x1, x2), sigma[1, 1, :, :, 0])
+    sigma_xx = float(interp_xx(point)[0]) / MAGNITUDE
+    sigma_yy = float(interp_yy(point)[0]) / MAGNITUDE
+    return sigma_xx, sigma_yy, sol.converged, sol.iterations
+
+
+def _moment_analytic(case, theta):
+    """Analytic (sigma_xx, sigma_yy)/MAGNITUDE at NUMERIC_EDGE_OFFSET
+    beyond the boundary point at `theta`, from
+    :meth:`EllipticalHoleInPlateCase.periodic_gradient_eigenstrain_stress`
+    (the finite-contrast Eshelby-dipole construction -- see that
+    method)."""
+    grid = case.grid
+    stress = np.asarray(case.periodic_gradient_eigenstrain_stress(GRADIENT_MAGNITUDE))
+    x1 = np.asarray(grid.x[0])[:, 0, 0]
+    x2 = np.asarray(grid.x[1])[0, :, 0]
+    xb, yb, nx, ny = _boundary_point_and_normal(case, theta)
+    point = np.array([[xb + NUMERIC_EDGE_OFFSET * nx, yb + NUMERIC_EDGE_OFFSET * ny]])
+
+    interp_xx = RegularGridInterpolator((x1, x2), stress[0, 0, :, :, 0])
+    interp_yy = RegularGridInterpolator((x1, x2), stress[1, 1, :, :, 0])
+    sigma_xx = float(interp_xx(point)[0]) / MAGNITUDE
+    sigma_yy = float(interp_yy(point)[0]) / MAGNITUDE
+    return sigma_xx, sigma_yy
 
 
 def _sweep(load, theta, extract_numeric, extract_analytic, labels, title, filename):
@@ -173,7 +256,7 @@ def _sweep(load, theta, extract_numeric, extract_analytic, labels, title, filena
         analytic_a.append(pa)
         analytic_b.append(pb)
 
-    fine_ratios = np.geomspace(ASPECT_RATIOS.min(), ASPECT_RATIOS.max(), 100)
+    fine_ratios = np.linspace(ASPECT_RATIOS.min(), ASPECT_RATIOS.max(), 100)
     fine_a, fine_b = [], []
     for ratio in fine_ratios:
         a, b = _semi_axes(ratio)
@@ -187,7 +270,6 @@ def _sweep(load, theta, extract_numeric, extract_analytic, labels, title, filena
     ax.plot(ASPECT_RATIOS, numeric_a, "o", color="C0", markersize=6, label=f"{labels[0]} numerical")
     ax.plot(fine_ratios, fine_b, color="C1", label=f"{labels[1]} analytical (at boundary)")
     ax.plot(ASPECT_RATIOS, numeric_b, "o", color="C1", markersize=6, label=f"{labels[1]} numerical")
-    ax.set_xscale("log")
     ax.set_xlabel(r"$b / a$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
     ax.set_title(title)
@@ -243,7 +325,17 @@ def plot_pressure():
     )
 
 
+def plot_moment():
+    _sweep(
+        "moment", np.pi / 2, _moment_numeric, _moment_analytic,
+        (r"$\sigma_{11}$", r"$\sigma_{22}$"),
+        "elliptical hole, moment: edge stress vs. aspect ratio",
+        "elastic_deformation.elliptical_hole_aspect_ratio_moment",
+    )
+
+
 if __name__ == "__main__":
     plot_tension()
     plot_shear()
     plot_pressure()
+    plot_moment()
