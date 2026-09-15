@@ -95,6 +95,25 @@ class ElasticDeformation:
     target remote stress into the macroscopic strain this solver takes as
     input.
 
+    `preconditioner_green` (optional, distinct from `reference_green`) is
+    the Green's operator CG actually preconditions with in
+    :meth:`_precondition`. It defaults to `reference_green` (the original,
+    single-reference-medium behavior), but a caller with an extreme,
+    one-directional stiffness contrast (e.g. a small stiff/rigid inclusion
+    in a much softer matrix) can pass a *different* homogeneous medium here
+    -- e.g. the geometric mean of the two phases' stiffnesses, the standard
+    heuristic for balancing a Lippmann-Schwinger-type scheme's convergence
+    across both phases (Moulinec & Suquet 1998; Eyre & Milton 1999) --
+    without disturbing `reference_lame_lambda`/`reference_lame_mu`/
+    `reference_green` themselves, which other call sites rely on for exact
+    results (e.g. :meth:`crystallite.verification.HoleInPlateCase.macro_strain`
+    computing the macro strain that reproduces a target remote stress
+    *in the true matrix material* -- that identity would break if the
+    "reference" fed to it silently became some fictitious blend). CG's
+    correctness (the value it converges to) never depends on which SPD
+    preconditioner is used, only how fast it gets there, so this is purely
+    a convergence-rate knob, safe to change independently.
+
     Parameters
     ----------
     grid : Grid
@@ -103,12 +122,19 @@ class ElasticDeformation:
         scalar or a ``grid.shape`` real field.
     reference_lame_lambda, reference_lame_mu : float
         Lame parameters of the homogeneous reference medium used to build
-        the preconditioner.
+        `reference_green` (see :meth:`_body_force`'s
+        `macro_strain_gradient` handling and
+        :meth:`crystallite.verification.HoleInPlateCase.macro_strain` for
+        why this must be the *true* matrix material, not a preconditioning
+        convenience).
     operator : object, optional
         Defaults to :class:`DifferentialOperators(grid)`.
     reference_green : object, optional
         Defaults to ``GreenOperator(grid, isotropic_stiffness(
         reference_lame_lambda, reference_lame_mu))``.
+    preconditioner_green : object, optional
+        The Green's operator :meth:`_precondition` actually uses. Defaults
+        to `reference_green`.
     """
 
     grid: object
@@ -118,6 +144,7 @@ class ElasticDeformation:
     reference_lame_mu: float
     operator: object = None
     reference_green: object = None
+    preconditioner_green: object = None
 
     def __post_init__(self):
         if self.operator is None:
@@ -129,6 +156,8 @@ class ElasticDeformation:
             object.__setattr__(
                 self, "reference_green", GreenOperator(self.grid, reference_stiffness)
             )
+        if self.preconditioner_green is None:
+            object.__setattr__(self, "preconditioner_green", self.reference_green)
 
     def _gradient_strain_field(self, macro_strain_gradient, origin):
         r"""Return the pure (offset-free) affine strain field
@@ -198,7 +227,7 @@ class ElasticDeformation:
 
     def _precondition(self, r):
         r_hat = self.grid.fft(r)
-        u_hat = self.reference_green.potential(r_hat)
+        u_hat = self.preconditioner_green.potential(r_hat)
         return self.grid.ifft(u_hat)
 
     def _body_force(

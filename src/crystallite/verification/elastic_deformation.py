@@ -92,6 +92,34 @@ def _inhomogeneity_polar_stress(r, theta, hole_radius, magnitude, contrast, nu):
     return sigma_rr, sigma_theta_theta, sigma_r_theta
 
 
+def _dispatch_tension_polar_stress(formula, r, theta, hole_radius, magnitude, load):
+    r"""Combine an isolated uniaxial-tension polar stress solution
+    ``formula(r, theta, hole_radius, magnitude)`` into any of the four
+    uniform load cases via the standard tension-superposition trick
+    (rotate/negate and add: pure shear is +/-tension at +/-45 degrees,
+    biaxial tension is tension at 0 and 90 degrees) -- shared by
+    :func:`_tension_polar_stress`-based
+    :meth:`HoleInPlateCase.analytic_stress` (the void limit) and
+    :func:`_inhomogeneity_polar_stress`-based
+    :meth:`HoleInPlateCase.inhomogeneity_analytic_stress` (any finite
+    `contrast`), so the dispatch logic itself is written once.
+    """
+    if load == "tension":
+        return formula(r, theta, hole_radius, magnitude)
+    if load == "compression":
+        return formula(r, theta, hole_radius, -magnitude)
+    if load == "shear":
+        quarter_pi = xp.pi / 4.0
+        rr1, tt1, rt1 = formula(r, theta - quarter_pi, hole_radius, magnitude)
+        rr2, tt2, rt2 = formula(r, theta + quarter_pi, hole_radius, -magnitude)
+        return rr1 + rr2, tt1 + tt2, rt1 + rt2
+    if load == "biaxial":
+        rr1, tt1, rt1 = formula(r, theta, hole_radius, magnitude)
+        rr2, tt2, rt2 = formula(r, theta - xp.pi / 2.0, hole_radius, magnitude)
+        return rr1 + rr2, tt1 + tt2, rt1 + rt2
+    raise ValueError('load must be "tension", "compression", "shear", or "biaxial"')
+
+
 def _inhomogeneity_interior_stress(magnitude, contrast, nu):
     r"""Uniform interior Cartesian stress inside a circular inhomogeneity
     under remote uniaxial tension `magnitude` (tension-aligned frame) --
@@ -148,6 +176,48 @@ def _rotate_tensor_2d(tensor, angle):
     return rotation @ tensor @ rotation.T
 
 
+def _inhomogeneity_interior_cartesian(magnitude, contrast, nu, load):
+    r"""Uniform interior Cartesian stress tensor inside a circular
+    inhomogeneity under `load`/`magnitude`, from
+    :func:`_inhomogeneity_interior_stress` (the tension-aligned closed
+    form) combined via the same tension-superposition trick as
+    :func:`_dispatch_tension_polar_stress` -- shared by
+    :func:`_equivalent_eigenstrain` and
+    :func:`_inhomogeneity_correction_cartesian`'s interior term.
+
+    Rotating/negating and summing the *stress* tensor this way, rather
+    than solving each load case's equivalent-inclusion problem directly,
+    is valid because the tension-to-eigenstrain map an isotropic
+    compliance defines is linear and rotationally equivariant -- exactly
+    why :func:`_equivalent_eigenstrain` used to build this same
+    combination out of *eigenstrains* instead and got an identical
+    answer; this function just does the combining one step earlier, on
+    the interior stress the eigenstrain is derived from.
+    """
+
+    def tension_sigma_in(signed_magnitude):
+        sigma_xx, sigma_yy, sigma_zz = _inhomogeneity_interior_stress(
+            signed_magnitude, contrast, nu
+        )
+        return xp.array(
+            [[sigma_xx, 0.0, 0.0], [0.0, sigma_yy, 0.0], [0.0, 0.0, sigma_zz]]
+        )
+
+    if load == "tension":
+        return tension_sigma_in(magnitude)
+    if load == "compression":
+        return tension_sigma_in(-magnitude)
+    if load == "shear":
+        quarter_pi = xp.pi / 4.0
+        return _rotate_tensor_2d(
+            tension_sigma_in(magnitude), quarter_pi
+        ) + _rotate_tensor_2d(tension_sigma_in(-magnitude), -quarter_pi)
+    if load == "biaxial":
+        sigma_x = tension_sigma_in(magnitude)
+        return sigma_x + _rotate_tensor_2d(sigma_x, xp.pi / 2.0)
+    raise ValueError('load must be "tension", "compression", "shear", or "biaxial"')
+
+
 def _equivalent_eigenstrain(magnitude, contrast, matrix_lame_lambda, matrix_lame_mu, load):
     r"""Eshelby equivalent eigenstrain for a circular inhomogeneity: the
     uniform eigenstrain :math:`\varepsilon^*` a *matrix-material* disk
@@ -159,46 +229,25 @@ def _equivalent_eigenstrain(magnitude, contrast, matrix_lame_lambda, matrix_lame
     \varepsilon^*)`: :math:`\varepsilon^* = \varepsilon_{\mathrm{in}} -
     S_0:\sigma_{\mathrm{in}}`, using the *true* interior strain (from the
     inhomogeneity's own compliance) and the matrix's compliance ``S_0``
-    applied to that same (closed-form, uniform) interior stress.
+    applied to that same (closed-form, uniform) interior stress
+    (:func:`_inhomogeneity_interior_cartesian`, already combined for
+    `load`).
     """
     nu = matrix_lame_lambda / (2.0 * (matrix_lame_lambda + matrix_lame_mu))
-
-    def tension_eigenstrain(signed_magnitude):
-        sigma_xx, sigma_yy, sigma_zz = _inhomogeneity_interior_stress(
-            signed_magnitude, contrast, nu
+    sigma_in = _inhomogeneity_interior_cartesian(magnitude, contrast, nu, load)
+    if contrast == float("inf"):
+        # A rigid inclusion has zero strain under any finite stress -- the
+        # eps_in/S0:sigma_in limit directly (substituting a literal inf
+        # into the compliance below hits inf/inf).
+        true_strain = xp.zeros((3, 3))
+    else:
+        true_strain = _isotropic_compliance_apply(
+            sigma_in, contrast * matrix_lame_lambda, contrast * matrix_lame_mu
         )
-        sigma_in = xp.array(
-            [[sigma_xx, 0.0, 0.0], [0.0, sigma_yy, 0.0], [0.0, 0.0, sigma_zz]]
-        )
-        if contrast == float("inf"):
-            # A rigid inclusion has zero strain under any finite stress --
-            # the eps_in/S0:sigma_in limit directly (substituting a
-            # literal inf into the compliance below hits inf/inf).
-            true_strain = xp.zeros((3, 3))
-        else:
-            true_strain = _isotropic_compliance_apply(
-                sigma_in, contrast * matrix_lame_lambda, contrast * matrix_lame_mu
-            )
-        matrix_strain = _isotropic_compliance_apply(
-            sigma_in, matrix_lame_lambda, matrix_lame_mu
-        )
-        return true_strain - matrix_strain
-
-    if load == "tension":
-        return tension_eigenstrain(magnitude)
-    if load == "compression":
-        return tension_eigenstrain(-magnitude)
-    if load == "shear":
-        quarter_pi = xp.pi / 4.0
-        eps_plus = tension_eigenstrain(magnitude)
-        eps_minus = tension_eigenstrain(-magnitude)
-        return _rotate_tensor_2d(eps_plus, quarter_pi) + _rotate_tensor_2d(
-            eps_minus, -quarter_pi
-        )
-    if load == "biaxial":
-        eps_x = tension_eigenstrain(magnitude)
-        return eps_x + _rotate_tensor_2d(eps_x, xp.pi / 2.0)
-    raise ValueError('load must be "tension", "compression", "shear", or "biaxial"')
+    matrix_strain = _isotropic_compliance_apply(
+        sigma_in, matrix_lame_lambda, matrix_lame_mu
+    )
+    return true_strain - matrix_strain
 
 
 def _ellipse_equivalent_eigenstrain(
@@ -1009,35 +1058,32 @@ class HoleInPlateCase:
 
     def analytic_stress(self, r, theta, load, magnitude):
         """Return the analytic ``(sigma_rr, sigma_theta_theta,
-        sigma_r_theta)`` at polar position ``(r, theta)`` (center-relative).
-
-        ``load="shear"`` is obtained by superposing two rotated tension
-        solutions (magnitude ``+/-magnitude`` at +/-45 degrees) -- the
-        standard construction, since pure shear is biaxial tension and
-        compression of equal magnitude at 45 degrees to the shear axes.
-        ``load="biaxial"`` superposes two tension solutions at 0 and 90
-        degrees instead (equal tension along both axes).
+        sigma_r_theta)`` at polar position ``(r, theta)`` (center-relative)
+        -- the void (``contrast=0``) limit, via
+        :func:`_dispatch_tension_polar_stress` combining
+        :func:`_tension_polar_stress`. See :meth:`inhomogeneity_analytic_stress`
+        for this case's actual, finite-`contrast` counterpart.
         """
-        if load == "tension":
-            return _tension_polar_stress(r, theta, self.hole_radius, magnitude)
-        if load == "compression":
-            return _tension_polar_stress(r, theta, self.hole_radius, -magnitude)
-        if load == "shear":
-            quarter_pi = xp.pi / 4.0
-            rr1, tt1, rt1 = _tension_polar_stress(
-                r, theta - quarter_pi, self.hole_radius, magnitude
-            )
-            rr2, tt2, rt2 = _tension_polar_stress(
-                r, theta + quarter_pi, self.hole_radius, -magnitude
-            )
-            return rr1 + rr2, tt1 + tt2, rt1 + rt2
-        if load == "biaxial":
-            rr1, tt1, rt1 = _tension_polar_stress(r, theta, self.hole_radius, magnitude)
-            rr2, tt2, rt2 = _tension_polar_stress(
-                r, theta - xp.pi / 2.0, self.hole_radius, magnitude
-            )
-            return rr1 + rr2, tt1 + tt2, rt1 + rt2
-        raise ValueError('load must be "tension", "compression", "shear", or "biaxial"')
+        return _dispatch_tension_polar_stress(
+            _tension_polar_stress, r, theta, self.hole_radius, magnitude, load
+        )
+
+    def inhomogeneity_analytic_stress(self, r, theta, load, magnitude):
+        r"""Contrast-aware analog of :meth:`analytic_stress`: the exact
+        isolated closed form for this case's actual, finite `contrast`
+        (:func:`_inhomogeneity_polar_stress`) rather than the void-only
+        :func:`_tension_polar_stress` -- reduces to :meth:`analytic_stress`
+        exactly at ``contrast=0`` (already verified directly by
+        ``test_inhomogeneity_formula_reduces_to_the_void_formula_at_zero_contrast``).
+        """
+        nu = self.matrix_lame_lambda / (2.0 * (self.matrix_lame_lambda + self.matrix_lame_mu))
+
+        def formula(r, theta, hole_radius, magnitude):
+            return _inhomogeneity_polar_stress(r, theta, hole_radius, magnitude, self.contrast, nu)
+
+        return _dispatch_tension_polar_stress(
+            formula, r, theta, self.hole_radius, magnitude, load
+        )
 
     def hoop_stress_at_hole(self, theta, load, magnitude):
         """Analytic hoop stress ``sigma_theta_theta`` at ``r=hole_radius``."""
@@ -1226,11 +1272,13 @@ class HoleInPlateCase:
         :func:`_gradient_void_hole_correction_cartesian`, built from
         :meth:`analytic_stress` (the exact isolated Kirsch closed form)
         rather than that function's "moment" one. Used by
-        :meth:`periodic_void_stress` to image-sum the isolated solution
-        as an approximate, Gibbs-ringing-free alternative to
-        :meth:`periodic_analytic_solution`'s Eshelby-eigenstrain FFT
-        construction -- see that method's docstring for why it is only
-        approximate, not exact, unlike the "moment" case.
+        :meth:`periodic_void_stress` (via :meth:`_periodic_image_sum`) to
+        image-sum the isolated solution as an approximate, Gibbs-ringing-
+        free alternative to :meth:`periodic_analytic_solution`'s Eshelby-
+        eigenstrain FFT construction -- see that method's docstring for
+        why it is only approximate, not exact, unlike the "moment" case.
+        See :meth:`_inhomogeneity_correction_cartesian` for the
+        finite-`contrast` counterpart.
 
         Zero net stress inside the void (``-background``, so
         ``background + correction == 0`` there): unlike the "moment"
@@ -1254,32 +1302,56 @@ class HoleInPlateCase:
             xp.where(outside, sigma_xy, -background[0, 1]),
         )
 
-    def periodic_void_stress(self, load, magnitude, n_images=1):
-        r"""Periodic-array stress field for a traction-free void under
-        uniform remote `load`/`magnitude`, built by summing the exact
-        isolated closed form (:meth:`analytic_stress`) over periodic
-        images -- the uniform-load counterpart of
-        :meth:`periodic_gradient_stress`, and an image-sum alternative to
-        :meth:`periodic_analytic_solution` for the near-void `contrast`
-        this class defaults to.
+    def _inhomogeneity_correction_cartesian(self, x, y, load, magnitude):
+        r"""Contrast-aware analog of :meth:`_void_correction_cartesian`:
+        local correction for a single isolated copy of this case's
+        *actual*, finite-`contrast` inhomogeneity, not the void limit --
+        exterior from :meth:`inhomogeneity_analytic_stress`, interior from
+        the uniform :func:`_inhomogeneity_interior_cartesian` tensor
+        (which is generally nonzero, unlike the void case's exactly-zero
+        interior). Used by :meth:`periodic_inhomogeneity_stress` (via
+        :meth:`_periodic_image_sum`) -- this project's original
+        (pre-crystallite) ``eshelby.cpp`` reference implementation's own
+        recipe (its ``e()``/``f()``/``g()`` functions image-summed over a
+        lattice), generalized here from that reference's void-only worked
+        example to this case's actual `contrast`.
+        """
+        nu = self.matrix_lame_lambda / (2.0 * (self.matrix_lame_lambda + self.matrix_lame_mu))
+        background = self.remote_stress(load, magnitude)
+        r = xp.sqrt(x**2 + y**2)
+        outside = r >= self.hole_radius * (1.0 - 1.0e-9)
+        r_safe = xp.where(outside, r, self.hole_radius)
+        theta = xp.arctan2(y, x)
+        srr, stt, srt = self.inhomogeneity_analytic_stress(r_safe, theta, load, magnitude)
+        sigma_xx, sigma_yy, sigma_xy = polar_to_cartesian_stress(srr, stt, srt, theta)
+        sigma_xx = sigma_xx - background[0, 0]
+        sigma_yy = sigma_yy - background[1, 1]
+        sigma_xy = sigma_xy - background[0, 1]
 
-        Ignores `contrast` entirely: :meth:`analytic_stress` is the exact
-        ``contrast=0`` void solution regardless of what `contrast` this
-        case's diffuse numerical boundary actually uses. Valid as a
-        reference only when `contrast` is small enough that the numerical
-        hole is itself a good void approximation (as
-        ``hole_in_plate.py``'s ``1e-3`` is) -- for a genuine
-        finite-contrast inhomogeneity, use
-        :meth:`periodic_analytic_solution` instead (see
-        ``cylindrical_inclusion.py``).
+        interior = _inhomogeneity_interior_cartesian(magnitude, self.contrast, nu, load)
+        interior_xx = interior[0, 0] - background[0, 0]
+        interior_yy = interior[1, 1] - background[1, 1]
+        interior_xy = interior[0, 1] - background[0, 1]
+        return (
+            xp.where(outside, sigma_xx, interior_xx),
+            xp.where(outside, sigma_yy, interior_yy),
+            xp.where(outside, sigma_xy, interior_xy),
+        )
+
+    def _periodic_image_sum(self, correction, load, magnitude, n_images):
+        r"""Shared image-summation machinery for
+        :meth:`periodic_void_stress` and
+        :meth:`periodic_inhomogeneity_stress`: sum `correction`
+        (:meth:`_void_correction_cartesian` or
+        :meth:`_inhomogeneity_correction_cartesian`) over periodic images,
+        then recenter the result outside every hole back to `magnitude`.
 
         The raw image sum's own domain mean is not exactly `magnitude`
         (each hole's presence measurably perturbs its neighbors'
         effective loading -- a real periodic self-interaction, not a
-        bug), so, outside every hole, this method recenters it back to
-        `magnitude` by construction: ``field -= mean(field) - magnitude``,
-        applied only where :attr:`radius` :math:`\ge` `hole_radius`
-        (left untouched inside, where the true stress is exactly zero).
+        bug), so, outside every hole, this recenters it by construction:
+        ``field -= mean(field) - magnitude``, applied only where
+        :attr:`radius` :math:`\ge` `hole_radius` (left untouched inside).
         This is not a self-consistent local-field solve -- it is a direct
         substitution, exactly the recipe this project's own original
         (pre-crystallite) reference implementation used
@@ -1314,11 +1386,24 @@ class HoleInPlateCase:
         response is exactly zero by symmetry, so its own domain mean is
         already exact.
 
+        Neither `correction` option is a self-consistent periodic solve
+        (see :meth:`periodic_void_stress`/:meth:`periodic_inhomogeneity_stress`
+        for what each one does and does not fix relative to
+        :meth:`periodic_analytic_solution`): image-summing an isolated
+        closed form, even the correct finite-contrast one, cannot
+        recalibrate the inhomogeneity's own equivalent response for how
+        densely packed the periodic array actually is -- only
+        :meth:`periodic_analytic_solution`, calibrated against the
+        numerically probed *periodic* Eshelby tensor
+        (:meth:`periodic_eshelby_tensor`), does that.
+
         Parameters
         ----------
+        correction : callable
+            ``correction(dx, dy, load, magnitude) -> (sigma_xx, sigma_yy, sigma_xy)``
         load : {"tension", "compression", "shear", "biaxial"}
         magnitude : float
-        n_images : int, default=1
+        n_images : int
             Sum periodic images in ``[-n_images, n_images]`` along each
             in-plane axis -- checked directly (against `n_images` up to
             6) to already agree with the converged answer to 4+
@@ -1345,7 +1430,7 @@ class HoleInPlateCase:
             for n2 in range(-n_images, n_images + 1):
                 dx = x - (self.center[0] + n1 * length_x)
                 dy = y - (self.center[1] + n2 * length_y)
-                sxx, syy, sxy = self._void_correction_cartesian(dx, dy, load, magnitude)
+                sxx, syy, sxy = correction(dx, dy, load, magnitude)
                 sigma_xx = sigma_xx + sxx
                 sigma_yy = sigma_yy + syy
                 sigma_xy = sigma_xy + sxy
@@ -1360,6 +1445,84 @@ class HoleInPlateCase:
         stress[1, 1] = sigma_yy
         stress[0, 1] = stress[1, 0] = sigma_xy
         return stress
+
+    def periodic_void_stress(self, load, magnitude, n_images=1):
+        r"""Periodic-array stress field for a traction-free void under
+        uniform remote `load`/`magnitude`, built by summing the exact
+        isolated closed form (:meth:`analytic_stress`) over periodic
+        images -- see :meth:`_periodic_image_sum` for the mechanics
+        (image summation and recentering) shared with
+        :meth:`periodic_inhomogeneity_stress`.
+
+        Ignores `contrast` entirely: :meth:`analytic_stress` is the exact
+        ``contrast=0`` void solution regardless of what `contrast` this
+        case's diffuse numerical boundary actually uses. Valid as a
+        reference only when `contrast` is small enough that the numerical
+        hole is itself a good void approximation -- when `contrast` is
+        not negligible, prefer :meth:`periodic_inhomogeneity_stress`
+        (exact isolated field, still only dilute-limit periodicity) or
+        :meth:`periodic_analytic_solution` (exact periodicity too, at the
+        cost of Gibbs ringing -- see ``cylindrical_inclusion.py``).
+
+        Parameters
+        ----------
+        load : {"tension", "compression", "shear", "biaxial"}
+        magnitude : float
+        n_images : int, default=1
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        return self._periodic_image_sum(self._void_correction_cartesian, load, magnitude, n_images)
+
+    def periodic_inhomogeneity_stress(self, load, magnitude, n_images=1):
+        r"""Periodic-array stress field for this case's actual, finite-
+        `contrast` circular inhomogeneity under uniform remote
+        `load`/`magnitude`, built by summing the exact isolated closed
+        form (:meth:`inhomogeneity_analytic_stress` outside,
+        :func:`_inhomogeneity_interior_cartesian` inside) over periodic
+        images -- see :meth:`_periodic_image_sum` for the shared
+        mechanics.
+
+        The contrast-aware generalization of :meth:`periodic_void_stress`,
+        matching this project's original (pre-crystallite) ``eshelby.cpp``
+        reference implementation's own recipe more closely than that
+        method does: ``eshelby.cpp``'s ``e()``/``f()``/``g()`` functions
+        already solve for and image-sum the *finite-contrast* Eshelby
+        field (its worked example happened to set the inhomogeneity's
+        modulus to zero, a literal void, but the underlying construction
+        is general) -- this method is that same construction, using
+        :func:`_inhomogeneity_polar_stress`/:func:`_inhomogeneity_interior_stress`
+        in place of ``eshelby.cpp``'s own closed-form ``H``-tensor
+        (equivalent content, this project's own independent derivation).
+
+        Fixes, relative to :meth:`periodic_void_stress`, only the
+        void-vs-actual-`contrast` mismatch (this case's own diffuse
+        numerical boundary is never a literal void) -- *not* the
+        periodicity approximation itself: image-summing the isolated
+        field, even the correct finite-contrast one, does not
+        recalibrate the inhomogeneity's own equivalent response for how
+        densely packed the array actually is (see
+        :meth:`_periodic_image_sum`'s docstring). For that,
+        :meth:`periodic_analytic_solution` remains the exact-periodicity
+        reference (at the cost of Gibbs ringing).
+
+        Parameters
+        ----------
+        load : {"tension", "compression", "shear", "biaxial"}
+        magnitude : float
+        n_images : int, default=1
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape``.
+        """
+        return self._periodic_image_sum(
+            self._inhomogeneity_correction_cartesian, load, magnitude, n_images
+        )
 
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
         r"""Periodic-array stress field for a void loaded by uniform

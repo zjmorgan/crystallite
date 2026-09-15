@@ -13,23 +13,39 @@ concentration-then-decay profile and to place the numerical points right
 next to the analytic curve.
 
 The analytic curve shown against the numerical points is built by summing
-the isolated closed-form Kirsch solution
-(:meth:`crystallite.verification.HoleInPlateCase.periodic_void_stress`)
+the isolated closed-form, finite-contrast inhomogeneity solution
+(:meth:`crystallite.verification.HoleInPlateCase.periodic_inhomogeneity_stress`)
 over periodic images of the hole, up to an `N_IMAGES` cutoff, in place of
 :meth:`crystallite.verification.HoleInPlateCase.periodic_analytic_solution`'s
 Eshelby-eigenstrain FFT construction (still used by
 ``cylindrical_inclusion.py`` for genuine finite-contrast inhomogeneities).
+This is this project's own generalization of the original (pre-crystallite)
+``eshelby.cpp`` reference implementation's own recipe -- that file's
+``e()``/``f()``/``g()`` functions already solve for and image-sum the
+*finite-contrast* Eshelby field in general; its own worked ``main()``
+example just happens to set the inhomogeneity's modulus to zero (a literal
+void). :meth:`~crystallite.verification.HoleInPlateCase.periodic_void_stress`
+(the void-only predecessor of `periodic_inhomogeneity_stress` used here
+until this module was generalized to match `CONTRAST`) remains available
+for a literal void.
+
 The tradeoff is deliberate: the image sum never touches the grid's discrete
 Fourier machinery, so it is completely free of that construction's
 finite-grid Gibbs ringing -- but for the uniform loads here (``tension``,
 ``compression``, ``biaxial``, ``shear``, the ``pressure`` case built from
 ``biaxial``) it is only a dilute-limit *approximation*, not an exact
-periodic solution: it differs from the FFT reference/numeric solver by
-roughly 5-8% in this module's own geometry (``HOLE_RADIUS=0.1`` in a unit
-cell, ~3% hole area fraction), because it cannot capture the periodic
+periodic solution: it still differs from the FFT reference/numeric solver
+by roughly 5-8% in this module's own geometry (``HOLE_RADIUS=0.1`` in a
+unit cell, ~3% hole area fraction), because it cannot capture the periodic
 array's hole-to-hole self-interaction -- see
-:meth:`~crystallite.verification.HoleInPlateCase.periodic_void_stress`'s
-docstring for why. The ``moment`` case
+:meth:`~crystallite.verification.HoleInPlateCase._periodic_image_sum`'s
+docstring for why. Using the finite-contrast field here instead of the
+void-only one only fixes the (here, negligible, since `CONTRAST` is
+already near-void) void-vs-actual-`contrast` mismatch -- it does *not*
+reduce this periodicity bias, which dominates the residual gap; verified
+directly by comparing both curves against this module's own numeric
+solve, which come out within floating noise of each other. The ``moment``
+case
 (:meth:`crystallite.verification.HoleInPlateCase.periodic_gradient_stress`)
 has no such bias and is unaffected: its background has zero leading-order
 Eshelby response by symmetry, so there is no self-interaction for images to
@@ -64,11 +80,10 @@ N_IMAGES = 1  # periodic image cutoff for the analytic curves (already converged
 
 def _build_case():
     grid = Grid(shape=GRID_SHAPE, lengths=(1.0, 1.0, 1.0))
-    smoothing_width = 2.0 * grid.spacing[0]
     return HoleInPlateCase(
         grid, matrix_lame_lambda=MATRIX_LAME_LAMBDA, matrix_lame_mu=MATRIX_LAME_MU,
         hole_radius=HOLE_RADIUS, contrast=CONTRAST, center=(0.5, 0.5),
-        smoothing_width=smoothing_width,
+        dealias=True,
     )
 
 
@@ -96,13 +111,17 @@ def _line_through_hole(case, solver, load):
 
 def _periodic_analytic_line(case, load):
     """Return (xi, sigma_xx, sigma_yy, sigma_xy)/MAGNITUDE along the same
-    line, from image-summing the isolated Kirsch closed form up to
-    `N_IMAGES` -- a smooth, ringing-free dilute-limit *approximation* of
-    the actual periodic problem this grid represents (see this module's
-    own docstring for the ~5-8% bias this carries for uniform loads).
+    line, from image-summing the isolated, finite-contrast closed form
+    (:meth:`~crystallite.verification.HoleInPlateCase.periodic_inhomogeneity_stress`,
+    this project's own generalization of the ``eshelby.cpp`` reference's
+    image-sum recipe to a real `CONTRAST`, not just its void-limit worked
+    example) up to `N_IMAGES` -- a smooth, ringing-free dilute-limit
+    *approximation* of the actual periodic problem this grid represents
+    (see this module's own docstring for the residual bias this carries
+    for uniform loads).
     """
     grid = case.grid
-    stress = case.periodic_void_stress(load, MAGNITUDE, n_images=N_IMAGES)
+    stress = case.periodic_inhomogeneity_stress(load, MAGNITUDE, n_images=N_IMAGES)
     stress = np.asarray(stress)
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
