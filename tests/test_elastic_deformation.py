@@ -3,6 +3,8 @@ import pytest
 
 from crystallite.elastic_deformation import ElasticDeformation
 from crystallite.grid import Grid
+from crystallite.material.properties import isotropic_stiffness
+from crystallite.spectral.long_range import GreenOperator
 
 
 def test_homogeneous_material_gives_zero_displacement_and_exact_strain():
@@ -182,3 +184,54 @@ def test_solve_reproduces_uniform_stress_state_near_a_soft_inclusion():
     # a real stress concentration, not a relief.
     sigma_xx_near_hole = sigma[0, 0, col, row_near_hole, 0]
     assert sigma_xx_near_hole > 1.3 * magnitude
+
+
+# -- preconditioner_green (decoupled from reference_green/reference_lame_*) --
+
+
+def test_preconditioner_green_defaults_to_reference_green():
+    grid = Grid(shape=(8, 8, 8), lengths=(1.0, 1.0, 1.0))
+    solver = ElasticDeformation(
+        grid, lame_lambda=1.0, lame_mu=0.7, reference_lame_lambda=1.0, reference_lame_mu=0.7,
+    )
+    assert solver.preconditioner_green is solver.reference_green
+
+
+def test_custom_preconditioner_green_does_not_change_the_converged_solution():
+    # CG's correctness never depends on which SPD preconditioner is used,
+    # only how fast it gets there -- a genuinely different (not just
+    # rescaled) preconditioner should still converge to the same answer.
+    grid = Grid(shape=(32, 32, 32), lengths=(1.0, 1.0, 1.0))
+    lam0, mu0 = 1.0, 0.7
+    x, y, z = (np.asarray(grid.x[i]) for i in range(3))
+    r = np.sqrt((x - 0.5) ** 2 + (y - 0.5) ** 2 + (z - 0.5) ** 2)
+    inside = r < 0.15
+    lam_field = np.broadcast_to(
+        np.where(inside, lam0 * 5.0, lam0).astype(np.float32), grid.shape
+    )
+    mu_field = np.broadcast_to(
+        np.where(inside, mu0 * 5.0, mu0).astype(np.float32), grid.shape
+    )
+    macro_strain = np.array([[0.01, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+
+    solver_default = ElasticDeformation(
+        grid, lame_lambda=lam_field, lame_mu=mu_field,
+        reference_lame_lambda=lam0, reference_lame_mu=mu0,
+    )
+    sol_default = solver_default.solve(macro_strain, tol=1e-6, max_iterations=500)
+    assert sol_default.converged
+
+    # A different-*shape* (not just rescaled) preconditioner: a different
+    # Poisson ratio than the matrix's own.
+    precond_stiffness = isotropic_stiffness(lam0 * 0.1, mu0)
+    solver_custom = ElasticDeformation(
+        grid, lame_lambda=lam_field, lame_mu=mu_field,
+        reference_lame_lambda=lam0, reference_lame_mu=mu0,
+        preconditioner_green=GreenOperator(grid, precond_stiffness),
+    )
+    sol_custom = solver_custom.solve(macro_strain, tol=1e-6, max_iterations=1000)
+    assert sol_custom.converged
+
+    np.testing.assert_allclose(
+        np.asarray(sol_custom.displacement), np.asarray(sol_default.displacement), atol=1e-5
+    )

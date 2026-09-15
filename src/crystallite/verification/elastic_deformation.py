@@ -1338,53 +1338,100 @@ class HoleInPlateCase:
             xp.where(outside, sigma_xy, interior_xy),
         )
 
-    def _periodic_image_sum(self, correction, load, magnitude, n_images):
+    def _periodic_image_sum(self, correction, load, magnitude, n_images, recenter_target=None):
         r"""Shared image-summation machinery for
         :meth:`periodic_void_stress` and
         :meth:`periodic_inhomogeneity_stress`: sum `correction`
         (:meth:`_void_correction_cartesian` or
         :meth:`_inhomogeneity_correction_cartesian`) over periodic images,
-        then recenter the result outside every hole back to `magnitude`.
+        then (outside every hole) recenter the result to `recenter_target`
+        (default: `magnitude` itself, via `remote_stress`), and (inside
+        every hole) replace it with the uncontaminated home-image-only
+        value -- ``eshelby.cpp``'s own exact two-pass recipe, not a
+        single pass doing both at once (see below for why that distinction
+        matters and was originally missed here).
 
-        The raw image sum's own domain mean is not exactly `magnitude`
+        The raw image sum's own domain mean is not exactly the target
         (each hole's presence measurably perturbs its neighbors'
         effective loading -- a real periodic self-interaction, not a
         bug), so, outside every hole, this recenters it by construction:
-        ``field -= mean(field) - magnitude``, applied only where
-        :attr:`radius` :math:`\ge` `hole_radius` (left untouched inside).
-        This is not a self-consistent local-field solve -- it is a direct
-        substitution, exactly the recipe this project's own original
-        (pre-crystallite) reference implementation used
-        (``eshelby.cpp``'s ``sigma[i][j] -= s0_-s0xt`` after averaging
-        over the whole domain, `s0xt` its remote-stress target) and
-        validated against genuine finite-difference simulation results
-        (the original ``hooke.tex`` presentation's own
-        ``cylindrical.hole.pdf``/``elliptical.hole.pdf`` figures): dashed
-        (this construction) and solid (numeric) curves there agree
-        closely everywhere, including the *periodicity-elevated*
-        far-field level away from a dilute limit (~1.1x the nominal
-        remote stress at their hole-radius/domain ratio, not 1.0) --
-        both curves track that elevation, not just the near-hole peak.
+        ``field -= mean(field) - target``. This is not a self-consistent
+        local-field solve -- it is a direct substitution, exactly the
+        recipe this project's own original (pre-crystallite) reference
+        implementation used (``eshelby.cpp``'s ``sigma[i][j] -=
+        s0_-s0xt`` after averaging over the whole domain, `s0xt` its
+        remote-stress target).
 
-        That original comparison was against a spectral heterogeneous-
-        stiffness solver driven by a prescribed remote stress. This
-        project's own :class:`crystallite.elastic_deformation.ElasticDeformation`
-        is driven by a prescribed macro *strain* (:meth:`macro_strain`)
-        instead -- a genuinely different boundary condition for a cell
-        with a real hole in it (the softer composite carries less mean
-        stress for the same mean strain), not equivalent even in
-        principle, so a residual few-percent-to-double-digit gap against
-        *this* solver's own numeric output (as opposed to against the
-        original stress-controlled reference) is expected and is not
-        evidence of an error in this construction.
+        Inside every hole, `correction` is instead evaluated *only* for
+        the home image (``n1=n2=0``) and used as-is, discarding whatever
+        the raw sum over every image produced there. This matters because
+        `correction` itself is piecewise: for a non-home image, a point
+        inside the *true* (home) hole is generally *outside* that other
+        image's own, far-away hole, so it hits `correction`'s exterior
+        branch and contributes a small but nonzero perturbation there --
+        exactly the same way a home image's own field decays into
+        neighboring cells. Left in place, this leaks neighbor-image
+        perturbations into the home hole's interior, which should stay
+        exactly uniform by the isolated-inhomogeneity closed form
+        (Eshelby's uniformity theorem) `correction`'s own interior branch
+        already returns. An earlier version of this method summed every
+        image's `correction` unconditionally and left interior points
+        untouched by the outside-only recentering, silently keeping that
+        leakage in the final result -- confirmed directly to be a real
+        (if numerically small at this module's own dilute hole/domain
+        ratio) effect, not a hypothetical one: at ``n_images=1`` the
+        interior stress came out non-uniform and even *sign-flipped*
+        relative to the true closed-form value, whereas ``n_images=0``
+        (home image only, nothing to leak) matched it exactly. This is
+        exactly why ``eshelby.cpp`` itself unconditionally overwrites
+        every interior pixel with a single fixed value (its own
+        ``sigma0_``/etc. from ``e()``) in a *second* pass, entirely
+        independent of the neighbor-image sum its *first* pass built --
+        it never blends the two the way summing `correction` over every
+        image and only recentering outside would.
+
+        What `recenter_target` *should* be depends on the boundary
+        condition the comparison is actually against. ``eshelby.cpp``'s
+        own ``s0xt`` is exactly `magnitude` (the default here) because it
+        was validated against a spectral solver driven by a *prescribed
+        remote stress*: for that boundary condition, the periodic cell's
+        domain-mean stress trivially *equals* the applied stress by
+        definition, so recentering to `magnitude` is not an approximation
+        at all there. This project's own
+        :class:`crystallite.elastic_deformation.ElasticDeformation` is
+        driven by a prescribed macro *strain* instead (:meth:`macro_strain`,
+        via the *matrix's own* compliance) -- a genuinely different
+        boundary condition for a cell that actually contains a hole: the
+        softer composite carries measurably *less* mean stress than a
+        pure-matrix cell would for that same imposed strain, so `magnitude`
+        is the wrong recentering target there, not just an approximate
+        one. Confirmed directly, two independent ways, for this module's
+        own hole geometry (``HOLE_RADIUS=0.1``, ``CONTRAST=1e-3``,
+        tension): the true numeric CG solve's own domain-mean stress comes
+        out to ``0.9101 x magnitude``, and :meth:`periodic_analytic_solution`
+        (the exact-periodicity FFT/Eshelby-tensor construction, itself
+        built from the same strain-controlled `macro_strain`) independently
+        gives ``0.9114 x magnitude`` -- agreeing with the numeric solve to
+        0.14%, not with the naive ``1.0 x magnitude`` this method defaults
+        to. :meth:`periodic_inhomogeneity_stress` passes
+        :meth:`periodic_analytic_solution`'s own domain mean as
+        `recenter_target` for exactly this reason;
+        :meth:`periodic_void_stress` still defaults to `magnitude` itself
+        (matching ``eshelby.cpp`` literally, and its own long-standing
+        documented expectation of a residual gap against this solver's
+        strain-controlled numeric output).
 
         Converges quickly in `n_images` (a handful of images already
         stabilizes the domain mean to 4+ significant figures at this
-        module's own example geometry). `load="moment"`
+        module's own example geometry -- checked directly against
+        ``eshelby.cpp``'s own ``n=16``, not just larger values of
+        `n_images` within this project: ``n_images=1`` already agrees with
+        ``n_images=16`` to within 0.002, far smaller than the boundary-
+        condition gap above). `load="moment"`
         (:meth:`periodic_gradient_stress`) needs no such recentering:
         that background's leading-order (uniform) equivalent-eigenstrain
         response is exactly zero by symmetry, so its own domain mean is
-        already exact.
+        already exact regardless of boundary condition.
 
         Neither `correction` option is a self-consistent periodic solve
         (see :meth:`periodic_void_stress`/:meth:`periodic_inhomogeneity_stress`
@@ -1395,7 +1442,12 @@ class HoleInPlateCase:
         densely packed the periodic array actually is -- only
         :meth:`periodic_analytic_solution`, calibrated against the
         numerically probed *periodic* Eshelby tensor
-        (:meth:`periodic_eshelby_tensor`), does that.
+        (:meth:`periodic_eshelby_tensor`), does that. Passing that same
+        method's domain mean as `recenter_target` (as
+        :meth:`periodic_inhomogeneity_stress` does) fixes the *overall
+        level* to match it exactly, but not the near-hole *shape* --
+        image-summing the isolated field still leaves a genuine, smaller
+        residual gap there.
 
         Parameters
         ----------
@@ -1405,11 +1457,10 @@ class HoleInPlateCase:
         magnitude : float
         n_images : int
             Sum periodic images in ``[-n_images, n_images]`` along each
-            in-plane axis -- checked directly (against `n_images` up to
-            6) to already agree with the converged answer to 4+
-            significant figures at ``n_images=1``, since the recentering
-            step above carries most of the periodicity correction, not
-            the raw sum over distant images.
+            in-plane axis.
+        recenter_target : ndarray of shape (3, 3), optional
+            Domain-mean stress to recenter the exterior field to. Defaults
+            to ``remote_stress(load, magnitude)`` (`magnitude` itself).
 
         Returns
         -------
@@ -1421,10 +1472,15 @@ class HoleInPlateCase:
         x, y = self.grid.x[0], self.grid.x[1]
         length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
         background = self.remote_stress(load, magnitude)
+        target = background if recenter_target is None else recenter_target
 
         sigma_xx = background[0, 0] * xp.ones(self.grid.shape)
         sigma_yy = background[1, 1] * xp.ones(self.grid.shape)
         sigma_xy = background[0, 1] * xp.ones(self.grid.shape)
+
+        home_dx = x - self.center[0]
+        home_dy = y - self.center[1]
+        home_xx, home_yy, home_xy = correction(home_dx, home_dy, load, magnitude)
 
         for n1 in range(-n_images, n_images + 1):
             for n2 in range(-n_images, n_images + 1):
@@ -1436,9 +1492,23 @@ class HoleInPlateCase:
                 sigma_xy = sigma_xy + sxy
 
         outside = self.radius >= self.hole_radius
-        sigma_xx = xp.where(outside, sigma_xx - (xp.mean(sigma_xx) - background[0, 0]), sigma_xx)
-        sigma_yy = xp.where(outside, sigma_yy - (xp.mean(sigma_yy) - background[1, 1]), sigma_yy)
-        sigma_xy = xp.where(outside, sigma_xy - (xp.mean(sigma_xy) - background[0, 1]), sigma_xy)
+        # The domain mean feeding the recentering below uses this raw sum
+        # as-is (neighbor images' exterior field leaking into the home
+        # hole's own interior included) -- matching eshelby.cpp's own
+        # domain-mean accumulation, which likewise sums the *raw*,
+        # not-yet-corrected per-pixel array (see this method's docstring).
+        # Only *after* that mean is taken do interior points get replaced
+        # below with the uncontaminated home-image-only value -- exactly
+        # eshelby.cpp's own two-pass structure (accumulate the mean over
+        # the raw array first, overwrite the interior unconditionally
+        # after), not simultaneous with the outside-only recentering.
+        recentered_xx = sigma_xx - (xp.mean(sigma_xx) - target[0, 0])
+        recentered_yy = sigma_yy - (xp.mean(sigma_yy) - target[1, 1])
+        recentered_xy = sigma_xy - (xp.mean(sigma_xy) - target[0, 1])
+
+        sigma_xx = xp.where(outside, recentered_xx, background[0, 0] + home_xx)
+        sigma_yy = xp.where(outside, recentered_yy, background[1, 1] + home_yy)
+        sigma_xy = xp.where(outside, recentered_xy, background[0, 1] + home_xy)
 
         stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
         stress[0, 0] = sigma_xx
@@ -1498,16 +1568,22 @@ class HoleInPlateCase:
         in place of ``eshelby.cpp``'s own closed-form ``H``-tensor
         (equivalent content, this project's own independent derivation).
 
-        Fixes, relative to :meth:`periodic_void_stress`, only the
+        Fixes, relative to :meth:`periodic_void_stress`, *two* things: the
         void-vs-actual-`contrast` mismatch (this case's own diffuse
-        numerical boundary is never a literal void) -- *not* the
-        periodicity approximation itself: image-summing the isolated
-        field, even the correct finite-contrast one, does not
-        recalibrate the inhomogeneity's own equivalent response for how
-        densely packed the array actually is (see
-        :meth:`_periodic_image_sum`'s docstring). For that,
-        :meth:`periodic_analytic_solution` remains the exact-periodicity
-        reference (at the cost of Gibbs ringing).
+        numerical boundary is never a literal void), and -- unlike that
+        method -- the recentering target itself: rather than forcing the
+        far field to the nominal `magnitude` (correct only under a
+        stress-controlled boundary condition ``eshelby.cpp`` was written
+        against), this recenters to :meth:`periodic_analytic_solution`'s
+        own domain-mean stress, which matches this solver's actual
+        strain-controlled boundary condition (see
+        :meth:`_periodic_image_sum`'s docstring for the direct numeric
+        confirmation this closes most of the level mismatch, though a
+        smaller shape-level gap remains -- image-summing the isolated
+        field still does not recalibrate the inhomogeneity's own
+        equivalent response for how densely packed the array actually is,
+        only :meth:`periodic_analytic_solution` itself does that, at the
+        cost of Gibbs ringing).
 
         Parameters
         ----------
@@ -1520,8 +1596,13 @@ class HoleInPlateCase:
         stress : ndarray
             Shape ``(3, 3) + grid.shape``.
         """
+        _, stress_fft = self.periodic_analytic_solution(load, magnitude)
+        recenter_target = xp.mean(
+            xp.asarray(stress_fft), axis=tuple(range(2, xp.asarray(stress_fft).ndim))
+        )
         return self._periodic_image_sum(
-            self._inhomogeneity_correction_cartesian, load, magnitude, n_images
+            self._inhomogeneity_correction_cartesian, load, magnitude, n_images,
+            recenter_target=recenter_target,
         )
 
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):

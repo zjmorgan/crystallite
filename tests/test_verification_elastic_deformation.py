@@ -8,6 +8,7 @@ from crystallite.verification.elastic_deformation import (
     _tension_polar_stress,
     _inhomogeneity_polar_stress,
     _inhomogeneity_interior_stress,
+    _inhomogeneity_interior_cartesian,
     _isotropic_compliance_apply,
     _isotropic_stress_apply,
     _equivalent_eigenstrain,
@@ -243,3 +244,149 @@ def test_periodic_analytic_solution_matches_numeric_solver():
         periodic_sigma = np.asarray(periodic_stress)[:, :, col, row, 0]
         scale = max(np.max(np.abs(periodic_sigma)), magnitude)
         np.testing.assert_allclose(numeric_sigma, periodic_sigma, atol=0.1 * scale)
+
+
+# -- periodic_inhomogeneity_stress / periodic_void_stress (real-space image sum) --
+
+
+def _dilute_hole_case(contrast=1.0e-3, dealias=True):
+    grid = Grid(shape=(64, 64, 1), lengths=(1.0, 1.0, 1.0))
+    return HoleInPlateCase(
+        grid, matrix_lame_lambda=1.0, matrix_lame_mu=0.7, hole_radius=0.1,
+        contrast=contrast, center=(0.5, 0.5), dealias=dealias,
+    )
+
+
+def test_inhomogeneity_analytic_stress_reduces_to_analytic_stress_at_zero_contrast():
+    # Method-level counterpart of test_inhomogeneity_formula_reduces_to_the_
+    # void_formula_at_zero_contrast, exercised through the full load
+    # dispatch (_dispatch_tension_polar_stress), not just the bare formula.
+    case = _dilute_hole_case(contrast=0.0)
+    r = np.linspace(0.15, 0.5, 10)
+    theta = np.linspace(0.0, 2.0 * np.pi, 10)
+    for load, magnitude in (
+        ("tension", 2.0), ("compression", 2.0), ("shear", 2.0), ("biaxial", 2.0),
+    ):
+        got = case.inhomogeneity_analytic_stress(r[:, None], theta[None, :], load, magnitude)
+        want = case.analytic_stress(r[:, None], theta[None, :], load, magnitude)
+        for g, w in zip(got, want):
+            np.testing.assert_allclose(np.asarray(g), np.asarray(w), atol=1e-10)
+
+
+@pytest.mark.parametrize("n_images", [0, 2])
+def test_periodic_inhomogeneity_stress_interior_is_uniform_regardless_of_n_images(n_images):
+    # Regression test for a real bug: an earlier version left interior
+    # points as the raw (uncorrected) image sum, which -- unlike
+    # eshelby.cpp's own recipe -- lets neighboring images' exterior field
+    # leak into the home hole's interior once n_images > 0, breaking the
+    # exact uniformity Eshelby's theorem guarantees for an isolated
+    # inhomogeneity (observed directly: the interior stress came out
+    # non-uniform and even sign-flipped relative to the true closed-form
+    # value at n_images=1, before the fix).
+    case = _dilute_hole_case(contrast=0.3)
+    magnitude = 0.01
+    stress = np.asarray(
+        case.periodic_inhomogeneity_stress("tension", magnitude, n_images=n_images)
+    )
+    inside = np.asarray(case.radius) < case.hole_radius
+    interior_xx = stress[0, 0][inside]
+
+    nu = case.matrix_lame_lambda / (2.0 * (case.matrix_lame_lambda + case.matrix_lame_mu))
+    expected = _inhomogeneity_interior_cartesian(magnitude, case.contrast, nu, "tension")
+
+    np.testing.assert_allclose(interior_xx, float(expected[0, 0]), atol=1e-12)
+
+
+@pytest.mark.parametrize("n_images", [0, 2])
+def test_periodic_void_stress_interior_is_exactly_zero_regardless_of_n_images(n_images):
+    case = _dilute_hole_case(contrast=1.0e-3)
+    magnitude = 0.01
+    stress = np.asarray(case.periodic_void_stress("tension", magnitude, n_images=n_images))
+    inside = np.asarray(case.radius) < case.hole_radius
+    np.testing.assert_allclose(stress[0, 0][inside], 0.0, atol=1e-12)
+    np.testing.assert_allclose(stress[1, 1][inside], 0.0, atol=1e-12)
+    np.testing.assert_allclose(stress[0, 1][inside], 0.0, atol=1e-12)
+
+
+def test_correction_functions_match_at_zero_contrast():
+    # _void_correction_cartesian and _inhomogeneity_correction_cartesian
+    # should agree exactly at contrast=0 -- called directly through
+    # _periodic_image_sum (both with the *same* default recenter_target),
+    # not through the public periodic_void_stress/periodic_inhomogeneity_
+    # stress wrappers, which intentionally use different recentering
+    # targets now (see test_periodic_inhomogeneity_stress_far_field_
+    # matches_periodic_analytic_solution_domain_mean below) -- comparing
+    # those directly would conflate that deliberate difference with this
+    # test's actual question (do the two correction formulas themselves
+    # still agree at the void limit).
+    case = _dilute_hole_case(contrast=0.0)
+    magnitude = 0.01
+    for load in ("tension", "compression", "shear", "biaxial"):
+        void = np.asarray(
+            case._periodic_image_sum(case._void_correction_cartesian, load, magnitude, 1)
+        )
+        inhom = np.asarray(
+            case._periodic_image_sum(case._inhomogeneity_correction_cartesian, load, magnitude, 1)
+        )
+        np.testing.assert_allclose(void, inhom, atol=1e-12)
+
+
+def test_periodic_image_sum_honors_a_custom_recenter_target():
+    # Isolates the recentering-target mechanism itself, with a trivial,
+    # by-hand-verifiable correction function -- independent of both the
+    # physical inhomogeneity formulas and the interior-overwrite behavior
+    # (a spatially constant correction is unaffected by which points
+    # count as "inside").
+    case = _dilute_hole_case(contrast=1.0e-3)
+    magnitude = 0.01
+
+    def constant_correction(dx, dy, load, mag):
+        return 0.5 * mag, 0.0, 0.0
+
+    outside = np.asarray(case.radius) >= case.hole_radius
+
+    default = np.asarray(
+        case._periodic_image_sum(constant_correction, "tension", magnitude, n_images=0)
+    )
+    assert np.mean(default[0, 0][outside]) == pytest.approx(magnitude, rel=1e-6)
+
+    custom_target = np.zeros((3, 3))
+    custom_target[0, 0] = 3.0 * magnitude
+    targeted = np.asarray(
+        case._periodic_image_sum(
+            constant_correction, "tension", magnitude, n_images=0,
+            recenter_target=custom_target,
+        )
+    )
+    assert np.mean(targeted[0, 0][outside]) == pytest.approx(3.0 * magnitude, rel=1e-6)
+
+
+def test_periodic_inhomogeneity_stress_far_field_matches_periodic_analytic_solution_domain_mean():
+    # The recentering target fix: periodic_inhomogeneity_stress recenters
+    # its *whole-domain* mean to periodic_analytic_solution's own
+    # whole-domain mean (the correct target for this solver's strain-
+    # controlled boundary condition), not the naive nominal `magnitude`
+    # periodic_void_stress still uses (eshelby.cpp's own target, correct
+    # only for a stress-controlled boundary condition). Deliberately a
+    # whole-domain mean on both sides, not an outside-only one: the
+    # interior region (near-zero stress here) pulls a whole-domain mean
+    # down relative to an outside-only mean, so comparing an outside-only
+    # mean against a whole-domain target would be comparing two different
+    # quantities, not testing the recentering guarantee itself.
+    case = _dilute_hole_case(contrast=1.0e-3)
+    magnitude = 0.01
+    stress = np.asarray(case.periodic_inhomogeneity_stress("tension", magnitude, n_images=1))
+    domain_mean = np.mean(stress[0, 0])
+
+    _, stress_fft = case.periodic_analytic_solution("tension", magnitude)
+    expected_mean = np.mean(np.asarray(stress_fft)[0, 0])
+
+    # Not exact: overwriting the interior with the uncontaminated
+    # home-only value (see the interior-uniformity tests above) shifts
+    # the whole-domain mean slightly relative to the raw sum the
+    # recentering step itself was computed from -- small here since the
+    # hole is a small area fraction of the domain, but not exactly zero.
+    assert domain_mean == pytest.approx(expected_mean, rel=0.02)
+    # And *not* close to the naive nominal target, confirming this isn't
+    # a vacuous check (the two targets genuinely differ here).
+    assert domain_mean != pytest.approx(magnitude, rel=0.02)

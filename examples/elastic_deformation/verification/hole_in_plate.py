@@ -75,7 +75,7 @@ CONTRAST = 1.0e-3
 GRID_SHAPE = (256, 256, 1)
 MAGNITUDE = 0.01
 GRADIENT_MAGNITUDE = MAGNITUDE / HOLE_RADIUS  # so magnitude * HOLE_RADIUS == MAGNITUDE
-N_IMAGES = 1  # periodic image cutoff for the analytic curves (already converged here)
+N_IMAGES = 3  # periodic image cutoff for the analytic curves (already converged here)
 
 
 def _build_case():
