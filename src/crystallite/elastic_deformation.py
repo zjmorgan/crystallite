@@ -43,13 +43,15 @@ class ElasticSolution:
 class ElasticDeformation:
     r"""Static mechanical equilibrium in a heterogeneous isotropic solid.
 
-    Solves periodic equilibrium :math:`\nabla\cdot\sigma(x) = 0` with
+    Solves periodic equilibrium :math:`\nabla\cdot\sigma(x) + f(x) = 0` with
     :math:`\sigma(x) = C(x):\varepsilon(x)`,
     :math:`\varepsilon(x) = \bar\varepsilon + \mathrm{sym}(\nabla u^*(x))`
     for a periodic displacement fluctuation :math:`u^*` (zero mean) under a
-    prescribed macroscopic strain :math:`\bar\varepsilon`. The material is
-    isotropic but may vary in space -- :math:`\lambda(x)`, :math:`\mu(x)`
-    are each a scalar or a ``grid.shape`` field, applied pointwise via
+    prescribed macroscopic strain :math:`\bar\varepsilon`, and :math:`f(x)`
+    an optional applied body force (see :meth:`solve`'s `body_force`
+    parameter; zero unless given). The material is isotropic but may vary
+    in space -- :math:`\lambda(x)`, :math:`\mu(x)` are each a scalar or a
+    ``grid.shape`` field, applied pointwise via
     :math:`\sigma_{ij} = \lambda\,\mathrm{tr}(\varepsilon)\delta_{ij} +
     2\mu\varepsilon_{ij}` -- e.g. a soft circular inclusion approximating a
     hole. This is deliberately *not* coupled to any phase-field driving
@@ -296,6 +298,7 @@ class ElasticDeformation:
         macro_strain_gradient=None,
         gradient_origin=None,
         eigenstrain=None,
+        body_force=None,
     ):
         """Solve for the equilibrium displacement fluctuation.
 
@@ -332,6 +335,25 @@ class ElasticDeformation:
             C(x):(\\varepsilon(x)-\\varepsilon^*(x))`. Meant for an
             already-localized/periodic field (e.g. nonzero only inside a
             disk) -- see :meth:`_body_force` for why that matters.
+        body_force : array_like, optional
+            Genuinely applied external force density :math:`f(x)`, shape
+            ``(3,) + grid.shape``, entering equilibrium directly as
+            :math:`\\nabla\\cdot\\sigma(x) + f(x) = 0` (unlike `eigenstrain`,
+            which enters through Hooke's law instead). Adds straight onto
+            this method's own right-hand side, with no extra divergence
+            needed -- rearranging equilibrium with `f` present shows the
+            two extra terms this and `eigenstrain` contribute enter with
+            the same sign, one as :math:`-\\nabla\\cdot(C(x):\\varepsilon^*)`,
+            the other as :math:`+f(x)` directly.
+
+            A spatially uniform (nonzero-mean) `body_force` has no periodic
+            solution at all (a periodic operator can never balance a net
+            force) -- its own mean is silently dropped (zero contribution
+            at the k=0 Fourier mode, the same way a uniform `eigenstrain`
+            or an unmatched `macro_strain_gradient` would be), not an
+            error, so only give this a *localized*, already-near-zero-mean
+            force (e.g. an excess/deficit force confined to a disk) if the
+            mean being discarded is not what you intended to model.
 
         Returns
         -------
@@ -339,6 +361,16 @@ class ElasticDeformation:
         """
         macro_strain = xp.asarray(macro_strain, dtype=self.grid.real_dtype)
         b = self._body_force(macro_strain, macro_strain_gradient, gradient_origin, eigenstrain)
+        if body_force is not None:
+            body_force = xp.asarray(body_force, dtype=self.grid.real_dtype)
+            spatial_axes = tuple(range(1, body_force.ndim))
+            # A has no k=0 response (a periodic operator cannot balance a
+            # net force), so a nonzero-mean body_force makes A(u)=b
+            # inconsistent -- CG then has no solution to converge to and
+            # diverges outright, rather than failing gracefully. Drop the
+            # mean explicitly here, matching what GreenOperator.field's
+            # own k=0 branch already does silently for an FFT-based solve.
+            b = b + (body_force - xp.mean(body_force, axis=spatial_axes, keepdims=True))
 
         if initial_displacement is None:
             u = xp.zeros((3,) + self.grid.shape, dtype=self.grid.real_dtype)
@@ -367,22 +399,67 @@ class ElasticDeformation:
             rz_old = xp.sum(r * z)
             residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
             converged = residual_norm < tol
+            # Best iterate seen so far, and its residual -- see the loop's
+            # own stagnation guard below for why this is tracked rather
+            # than just returning whatever `u` the loop ends on.
+            best_u, best_residual_norm = u, residual_norm
 
             while not converged and iterations < max_iterations:
                 iterations += 1
                 a_p = self._matvec(p)
-                alpha = rz_old / xp.sum(p * a_p)
+                pAp = xp.sum(p * a_p)
+                alpha = rz_old / pAp
                 u = u + alpha * p
                 r = r - alpha * a_p
                 residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
                 if residual_norm < tol:
                     converged = True
+                    best_u, best_residual_norm = u, residual_norm
+                    break
+                if residual_norm < best_residual_norm:
+                    best_u, best_residual_norm = u, residual_norm
+                elif residual_norm > 100.0 * best_residual_norm:
+                    # CG has started diverging rather than merely
+                    # stalling: `p^T A p` collapsing toward zero (round-
+                    # off leaking into a near-null-eigenvalue sector of A
+                    # -- e.g. the out-of-plane DOF on a pseudo-2D grid,
+                    # shape[2]==1, has a whole continuum of vanishingly
+                    # small eigenvalues at low in-plane wavenumber, easily
+                    # excited by round-off alone when nothing actually
+                    # forces that sector) makes `alpha` blow up, and once
+                    # that happens further iteration only amplifies the
+                    # error, never recovers. Stop here and report the best
+                    # iterate found rather than whatever `u` this runaway
+                    # step produced -- checked directly against a `body_force`
+                    # RHS (a compact force with nothing forcing the
+                    # out-of-plane sector) that reproduces this exact
+                    # failure mode: `p^T A p` collapsing to ~1e-12 by the
+                    # second iteration and `alpha` swinging between ~3 and
+                    # ~20, versus a sane `alpha~1` on the first step.
+                    #
+                    # 100x, not a tighter multiple: ordinary CG on a
+                    # genuinely heterogeneous problem (a real stiffness
+                    # contrast, not this pathology) can have its own benign
+                    # residual blips well above a small multiple of its
+                    # best-so-far before recovering and converging
+                    # normally -- checked directly against a converging
+                    # case (a soft elliptical inclusion under tension) that
+                    # blips to ~2.5x its best at iteration ~25 and still
+                    # goes on to converge cleanly at iteration 135; an
+                    # earlier version of this guard used 2x and cut that
+                    # solve off at iteration 25, a real regression this
+                    # threshold is sized to avoid while still catching the
+                    # true divergence case well before it reaches its own
+                    # eventual >1e15 residual.
                     break
                 z = self._precondition(r)
                 rz_new = xp.sum(r * z)
                 beta = rz_new / rz_old
                 p = z + beta * p
                 rz_old = rz_new
+
+            u = best_u
+            residual_norm = best_residual_norm
 
         strain = macro_strain.reshape((3, 3) + (1,) * len(self.grid.shape)) + (
             self._strain_from_displacement(u)

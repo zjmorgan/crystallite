@@ -150,10 +150,19 @@ def _pressurized_line(case, solver):
 
 def _periodic_pressurized_line(case):
     """Return (xi, sigma_xx, sigma_yy)/MAGNITUDE along the same line, from
-    :meth:`crystallite.verification.HoleInPlateCase.periodic_void_pressurized_stress`.
+    :meth:`crystallite.verification.HoleInPlateCase.periodic_inhomogeneity_pressurized_stress`
+    -- the finite-`contrast` generalization of
+    :meth:`~crystallite.verification.HoleInPlateCase.periodic_void_pressurized_stress`,
+    matching the other load cases in this module (see
+    :func:`_periodic_analytic_line`): this case's numeric solve uses the
+    same soft (``CONTRAST=1.0e-3``), not literally void, hole those cases
+    do, so the void-only closed form left the same void-vs-actual-contrast
+    mismatch here.
     """
     grid = case.grid
-    stress = np.asarray(case.periodic_void_pressurized_stress(MAGNITUDE, n_images=N_IMAGES))
+    stress = np.asarray(
+        case.periodic_inhomogeneity_pressurized_stress(MAGNITUDE, n_images=N_IMAGES)
+    )
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]

@@ -235,3 +235,98 @@ def test_custom_preconditioner_green_does_not_change_the_converged_solution():
     np.testing.assert_allclose(
         np.asarray(sol_custom.displacement), np.asarray(sol_default.displacement), atol=1e-5
     )
+
+
+# -- solve()'s `body_force` parameter, and the CG stagnation guard building
+# it surfaced the need for --
+
+
+def _localized_disk_force(grid, radius, force_vector, center=(0.5, 0.5)):
+    x = np.asarray(grid.x[0]) - center[0]
+    y = np.asarray(grid.x[1]) - center[1]
+    inside = (x**2 + y**2) < radius**2
+    force = np.zeros((3,) + grid.shape, dtype=np.float32)
+    for i, f in enumerate(force_vector):
+        if f != 0.0:
+            force[i] = np.broadcast_to(np.where(inside, f, 0.0), grid.shape)
+    return force
+
+
+def test_body_force_matches_the_exact_reference_green_solution_for_a_homogeneous_material():
+    # For a homogeneous material (no stiffness contrast), reference_green
+    # is already the exact Green's function for the true medium, not just
+    # a preconditioner -- so a direct (non-iterative) evaluation of it
+    # against the same force is the exact answer to compare the iterative
+    # solve() path against, independent of solve()'s own CG machinery.
+    grid = Grid(shape=(256, 256, 1), lengths=(1.0, 1.0, 1.0))
+    lam0, mu0 = 1.0, 0.7
+    solver = ElasticDeformation(
+        grid, lame_lambda=lam0, lame_mu=mu0,
+        reference_lame_lambda=lam0, reference_lame_mu=mu0,
+    )
+    force_field = _localized_disk_force(grid, 0.1, (0.0, -0.01, 0.0))
+
+    solution = solver.solve(
+        np.zeros((3, 3)), body_force=force_field, tol=1e-6, max_iterations=3000
+    )
+    sigma_num = np.asarray(solution.stress)
+
+    force_hat = grid.fft(force_field)
+    eps_ref = np.asarray(grid.ifft(solver.reference_green.field(force_hat)))
+    sigma_ref = np.asarray(solver.stress(eps_ref))
+
+    np.testing.assert_allclose(sigma_num, sigma_ref, atol=1e-6, rtol=1e-3)
+
+
+def test_body_force_with_nonzero_mean_has_its_mean_dropped_not_left_to_diverge():
+    # A uniform (nonzero-mean) body force has no periodic solution (a
+    # periodic operator cannot balance a net force) -- solve() must drop
+    # the mean itself (matching GreenOperator.field's own k=0 handling)
+    # rather than handing CG an inconsistent right-hand side, which would
+    # have no solution to converge to at all.
+    grid = Grid(shape=(32, 32, 32), lengths=(1.0, 1.0, 1.0))
+    lam0, mu0 = 1.0, 0.7
+    solver = ElasticDeformation(
+        grid, lame_lambda=lam0, lame_mu=mu0,
+        reference_lame_lambda=lam0, reference_lame_mu=mu0,
+    )
+    uniform_force = np.zeros((3,) + grid.shape, dtype=np.float32)
+    uniform_force[1] = 0.01
+
+    solution = solver.solve(
+        np.zeros((3, 3)), body_force=uniform_force, tol=1e-6, max_iterations=200
+    )
+    assert solution.converged
+    np.testing.assert_allclose(np.asarray(solution.displacement), 0.0, atol=1e-5)
+
+
+def test_solve_does_not_diverge_for_a_body_force_that_does_not_excite_the_out_of_plane_sector():
+    # Regression test for a real, solve()-wide CG fragility this
+    # `body_force` feature surfaced (not specific to body forces): on a
+    # pseudo-2D grid (grid.shape[2] == 1), a right-hand side that forces
+    # only the in-plane directions leaves the out-of-plane sector's own
+    # near-zero-eigenvalue (low in-plane wavenumber) modes completely
+    # unforced; round-off alone is enough to excite them, and once excited
+    # `p^T A p` collapses toward zero, sending `alpha` (and the iterate)
+    # to increasingly wild values within a handful of iterations if CG is
+    # simply left to run. Checked directly: before the stagnation guard in
+    # solve() (tracking the best iterate, stopping once the residual grows
+    # past 2x its best value), this diverged to a residual > 1e15 by
+    # iteration ~500 on exactly this setup; now it stays bounded and close
+    # to the true (exact, for this homogeneous case) answer regardless of
+    # how many iterations are requested.
+    grid = Grid(shape=(256, 256, 1), lengths=(1.0, 1.0, 1.0))
+    lam0, mu0 = 1.0, 0.7
+    solver = ElasticDeformation(
+        grid, lame_lambda=lam0, lame_mu=mu0,
+        reference_lame_lambda=lam0, reference_lame_mu=mu0,
+    )
+    force_field = _localized_disk_force(grid, 0.1, (0.0, -0.01, 0.0))
+
+    solution = solver.solve(
+        np.zeros((3, 3)), body_force=force_field, tol=1e-12, max_iterations=3000
+    )
+
+    assert solution.residual_norm < 0.1
+    assert np.all(np.isfinite(np.asarray(solution.stress)))
+    assert np.max(np.abs(np.asarray(solution.stress))) < 1.0

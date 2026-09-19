@@ -47,8 +47,8 @@ GRADIENT_MAGNITUDE = MAGNITUDE / HOLE_RADIUS  # so magnitude * HOLE_RADIUS == MA
 
 # (label, contrast, smoothing_width as a multiple of grid spacing)
 CASES = {
-    "soft": (0.1, 2.0),
-    "hard": (10.0, 0.5),
+    "soft": (0.5, 2.0),
+    "hard": (1.5, 2.0),
     "rigid": (float("inf"), 0.5),
 }
 

@@ -7,14 +7,32 @@ no stiffness contrast at all here (that's the *other* already-completed
 group, ``cylindrical_inclusion.py``'s soft/hard/rigid) -- the region is
 literally the same material as the matrix, just carrying an eigenstrain.
 
-Four eigenstrain components, matching the reference material's own
+Five eigenstrain components, matching the reference material's own
 breakdown: a single in-plane normal component (``eta0``, eps_11), the
 out-of-plane normal component (``eta2``, eps_33 -- nonzero even on this
 project's pseudo-2D grid, since it is a prescribed *material* strain, not
 a kinematic one, and plane strain only forces the *kinematic* eps_33
-fluctuation to vanish), an in-plane shear component (``eta5``, eps_12),
-and full hydrostatic dilatation (``dilation``, eps_11=eps_22=eps_33 all
-equal).
+fluctuation to vanish), an out-of-plane/antiplane shear component
+(``eta4``, eps_13 -- ported directly from
+``elliptical_inhomogeneity.py``'s already-working ``eta4`` case, since it
+exercises exactly the same generic eigenstrain machinery this module
+already relies on for ``eta0``/``eta2``/``eta5``; the reference
+material's own "Cubic matrix"/"Transversely isotropic matrix" sub-variants
+of this case -- ``zener``, ``zener.angle``, ``principal``/``secondary`` --
+are deliberately *not* ported here, since they require genuinely
+anisotropic elasticity, which this project's isotropic-only
+:meth:`crystallite.elastic_deformation.ElasticDeformation.stress` does not
+support at all -- a much larger undertaking than filling in this module's
+missing isotropic component), an in-plane shear component (``eta5``,
+eps_12), that same shear expressed as a pure deviatoric pair instead
+(``eta5_alt``, eps_11=-eps_22=eta0>0 -- the reference material's own
+``eigenstrain.5.alt``: physically the *same* shear misfit as ``eta5``,
+just described in a frame rotated 45 degrees, where a pure eps_12
+becomes a pure eps_11=-eps_22 -- see
+:func:`crystallite.verification.elastic_deformation._ellipse_inhomogeneity_exterior_stress`'s
+own docstring, whose shear-coupling fix was independently checked
+against exactly this rotated-diagonal equivalence), and full hydrostatic
+dilatation (``dilation``, eps_11=eps_22=eps_33 all equal).
 
 The analytic reference is
 :meth:`crystallite.verification.HoleInPlateCase.periodic_prescribed_eigenstrain_solution`,
@@ -55,8 +73,13 @@ def _eigenstrain_tensor(label):
         e[0, 0] = EIGENSTRAIN_MAGNITUDE
     elif label == "eta2":
         e[2, 2] = EIGENSTRAIN_MAGNITUDE
+    elif label == "eta4":
+        e[0, 2] = e[2, 0] = EIGENSTRAIN_MAGNITUDE
     elif label == "eta5":
         e[0, 1] = e[1, 0] = EIGENSTRAIN_MAGNITUDE
+    elif label == "eta5_alt":
+        e[0, 0] = EIGENSTRAIN_MAGNITUDE
+        e[1, 1] = -EIGENSTRAIN_MAGNITUDE
     elif label == "dilation":
         e[0, 0] = e[1, 1] = e[2, 2] = EIGENSTRAIN_MAGNITUDE
     else:
@@ -78,11 +101,18 @@ def _build_case():
 # that shear *loading* does elsewhere in this module: sigma_11 and
 # sigma_22 vanish there exactly (checked directly), so plotting them is
 # just floating-point noise around zero, not signal -- sigma_12 is the
-# nonzero component to compare instead.
+# nonzero component to compare instead. eta4 (antiplane eps_13) has the
+# same node there too, same reasoning as elliptical_inhomogeneity.py's
+# own eta4 case -- sigma_13 is the nonzero component. eta5_alt (the same
+# shear, as eps_11=-eps_22) instead has sigma_11/sigma_22 as its nonzero
+# pair along this line -- matching the reference material's own
+# eigenstrain.5.alt figure, which plots exactly those two.
 _COMPONENTS = {
     "eta0": ((0, 0), (1, 1)),
     "eta2": ((0, 0), (1, 1)),
+    "eta4": ((0, 2), None),
     "eta5": ((0, 1), None),
+    "eta5_alt": ((0, 0), (1, 1)),
     "dilation": ((0, 0), (1, 1)),
 }
 
@@ -132,7 +162,10 @@ def _periodic_analytic_line(case, eigenstrain_tensor, components):
     return xi, value_a, value_b
 
 
-_LABELS = {(0, 0): r"$\sigma_{11}$", (1, 1): r"$\sigma_{22}$", (0, 1): r"$\sigma_{12}$"}
+_LABELS = {
+    (0, 0): r"$\sigma_{11}$", (1, 1): r"$\sigma_{22}$",
+    (0, 1): r"$\sigma_{12}$", (0, 2): r"$\sigma_{13}$",
+}
 
 
 def plot_eigenstrain(label):
@@ -159,5 +192,7 @@ def plot_eigenstrain(label):
 if __name__ == "__main__":
     plot_eigenstrain("eta0")
     plot_eigenstrain("eta2")
+    plot_eigenstrain("eta4")
     plot_eigenstrain("eta5")
+    plot_eigenstrain("eta5_alt")
     plot_eigenstrain("dilation")
