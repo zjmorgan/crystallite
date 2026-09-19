@@ -29,6 +29,7 @@ from crystallite.verification.elastic_deformation import (
     _gradient_void_hole_correction_cartesian,
     _ellipse_gradient_inhomogeneity_solution,
     _ellipse_gradient_inhomogeneity_correction_cartesian,
+    _lattice_eshelby_tensor,
 )
 
 
@@ -483,7 +484,12 @@ def test_periodic_inhomogeneity_stress_interior_is_uniform_regardless_of_n_image
     nu = case.matrix_lame_lambda / (2.0 * (case.matrix_lame_lambda + case.matrix_lame_mu))
     expected = _inhomogeneity_interior_cartesian(magnitude, case.contrast, nu, "tension")
 
-    np.testing.assert_allclose(interior_xx, float(expected[0, 0]), atol=1e-12)
+    # exact periodic interior (lattice-sum Eshelby tensor), uniform and
+    # independent of n_images; it differs from the isolated closed form
+    # only at O(area fraction)
+    exact = float(np.asarray(case.periodic_interior_stress("tension", magnitude))[0, 0])
+    np.testing.assert_allclose(interior_xx, exact, atol=1e-12)
+    assert exact == pytest.approx(float(expected[0, 0]), rel=2.0 * np.pi * case.hole_radius**2)
 
 
 @pytest.mark.parametrize("n_images", [0, 2])
@@ -608,8 +614,13 @@ def test_periodic_inhomogeneity_pressurized_stress_interior_is_uniform(contrast)
     # omission periodic_void_stress/periodic_inhomogeneity_stress already
     # have (their own Returns docstrings promise a (3,3)-shaped array, not
     # that every component is physically populated).
+    exact = np.asarray(case.periodic_interior_stress("biaxial", magnitude)) - magnitude * np.eye(3)
     for i, j in ((0, 0), (1, 1), (0, 1)):
-        np.testing.assert_allclose(stress[i, j][inside], expected[i, j], atol=1e-10)
+        np.testing.assert_allclose(stress[i, j][inside], exact[i, j], atol=1e-10)
+        # the isolated closed form is the O(area fraction) limit of the exact value
+        assert exact[i, j] == pytest.approx(
+            expected[i, j], abs=3.0 * np.pi * case.hole_radius**2 * magnitude
+        )
 
 
 def test_periodic_inhomogeneity_pressurized_stress_matches_periodic_pressurized_stress_domain_mean():
@@ -628,11 +639,15 @@ def test_periodic_inhomogeneity_pressurized_stress_matches_periodic_pressurized_
     expected_stress = np.asarray(case.periodic_pressurized_stress(magnitude))
     expected_mean = np.mean(expected_stress[0, 0])
 
-    # Looser than the analogous tension-case check (rel=0.02): the
-    # pressurized construction's signal is mostly cancelled background, so
-    # the same absolute image-sum residual is a larger fraction of this
-    # much smaller mean.
-    assert domain_mean == pytest.approx(expected_mean, rel=0.05)
+    # By construction the field's domain mean is the exact lattice-sum
+    # target for "biaxial", minus the uniform background.
+    exact_mean = float(np.asarray(case.periodic_mean_stress("biaxial", magnitude))[0, 0]) - magnitude
+    assert domain_mean == pytest.approx(exact_mean, abs=1e-6 * magnitude)
+
+    # Cross-check against the FFT construction. Its own grid error (this is
+    # a 64^2 grid, ~0.7% of the load) is the limit here, and the pressurized
+    # signal is mostly cancelled background, so compare on the load scale.
+    assert domain_mean == pytest.approx(expected_mean, abs=1.5e-2 * magnitude)
 
 
 # -- periodic_antiplane_inhomogeneity_stress / periodic_antiplane_void_stress
@@ -658,7 +673,9 @@ def test_periodic_antiplane_inhomogeneity_stress_interior_is_uniform_regardless_
     interior_13 = stress[0, 2][inside]
 
     expected_13, _ = _antiplane_inhomogeneity_interior_stress(magnitude, case.contrast)
-    np.testing.assert_allclose(interior_13, expected_13, atol=1e-12)
+    exact = float(np.asarray(case.periodic_antiplane_interior_stress(magnitude))[0, 2])
+    np.testing.assert_allclose(interior_13, exact, atol=1e-12)
+    assert exact == pytest.approx(expected_13, rel=2.0 * np.pi * case.hole_radius**2)
 
 
 @pytest.mark.parametrize("n_images", [0, 2])
@@ -901,11 +918,16 @@ def test_ellipse_periodic_inhomogeneity_stress_interior_is_uniform(contrast):
         eps_star, case.semi_axis_a, case.semi_axis_b, case.matrix_lame_mu, nu
     )
     background = case.remote_stress("tension", magnitude)
-    np.testing.assert_allclose(
-        stress[0, 0][inside], float(expected_xx + background[0, 0]), atol=1e-10
-    )
-    np.testing.assert_allclose(
-        stress[1, 1][inside], float(expected_yy + background[1, 1]), atol=1e-10
+    isolated_xx = float(expected_xx + background[0, 0])
+    exact_xx = float(np.asarray(case.periodic_interior_stress("tension", magnitude))[0, 0])
+    np.testing.assert_allclose(stress[0, 0][inside], exact_xx, atol=1e-10)
+    area_fraction = np.pi * case.semi_axis_a * case.semi_axis_b
+    assert exact_xx == pytest.approx(isolated_xx, rel=2.0 * area_fraction)
+    exact_yy = float(np.asarray(case.periodic_interior_stress("tension", magnitude))[1, 1])
+    np.testing.assert_allclose(stress[1, 1][inside], exact_yy, atol=1e-10)
+    # sigma_yy is small (transverse to the load): bound against the load, not itself
+    assert exact_yy == pytest.approx(
+        float(expected_yy + background[1, 1]), abs=3.0 * area_fraction * magnitude
     )
 
 
@@ -925,12 +947,13 @@ def test_ellipse_periodic_inhomogeneity_pressurized_stress_interior_is_uniform(c
         eps_star, case.semi_axis_a, case.semi_axis_b, case.matrix_lame_mu, nu
     )
     background = case.remote_stress("biaxial", magnitude)
-    np.testing.assert_allclose(
-        stress[0, 0][inside], float(expected_xx + background[0, 0] - magnitude), atol=1e-10
-    )
-    np.testing.assert_allclose(
-        stress[1, 1][inside], float(expected_yy + background[1, 1] - magnitude), atol=1e-10
-    )
+    exact = np.asarray(case.periodic_interior_stress("biaxial", magnitude)) - magnitude * np.eye(3)
+    np.testing.assert_allclose(stress[0, 0][inside], exact[0, 0], atol=1e-10)
+    np.testing.assert_allclose(stress[1, 1][inside], exact[1, 1], atol=1e-10)
+    # the isolated closed form is the O(area fraction) limit of the exact value
+    tol = 3.0 * np.pi * case.semi_axis_a * case.semi_axis_b * magnitude
+    assert exact[0, 0] == pytest.approx(float(expected_xx + background[0, 0] - magnitude), abs=tol)
+    assert exact[1, 1] == pytest.approx(float(expected_yy + background[1, 1] - magnitude), abs=tol)
 
 
 def test_ellipse_periodic_inhomogeneity_stress_far_field_matches_periodic_analytic_stress_domain_mean():
@@ -1256,9 +1279,12 @@ def test_ellipse_periodic_antiplane_inhomogeneity_stress_interior_matches_closed
     inside = np.asarray(case.elliptical_radius) < 1.0
 
     a, b = case.semi_axis_a, case.semi_axis_b
-    expected = magnitude * contrast * (a + b) / (a + contrast * b)
-    np.testing.assert_allclose(stress[0, 2][inside], expected, atol=1e-12)
+    isolated = magnitude * contrast * (a + b) / (a + contrast * b)
+    exact = float(np.asarray(case.periodic_antiplane_interior_stress(magnitude))[0, 2])
+    np.testing.assert_allclose(stress[0, 2][inside], exact, atol=1e-12)
     np.testing.assert_allclose(stress[1, 2][inside], 0.0, atol=1e-12)
+    # the periodic value differs from the isolated closed form only at O(area fraction)
+    assert exact == pytest.approx(isolated, rel=2.0 * np.pi * a * b)
 
 
 def test_ellipse_periodic_antiplane_inhomogeneity_stress_far_field_matches_periodic_antiplane_analytic_stress_domain_mean():
@@ -1342,3 +1368,152 @@ def test_ellipse_gradient_inhomogeneity_field_is_in_equilibrium():
         div_y = (s(h, 0)[2] - s(-h, 0)[2] + s(0, h)[1] - s(0, -h)[1]) / (2 * h)
         np.testing.assert_allclose(div_x, 0.0, atol=1e-8)
         np.testing.assert_allclose(div_y, 0.0, atol=1e-8)
+
+
+# -- Lattice-sum periodic Eshelby tensor and the exact periodic mean stress
+# (replaces the FFT domain mean the image-sum recentering used to need) --
+
+
+def _isolated_eshelby(a, b, nu):
+    d = 2.0 * (1.0 - nu)
+    return {
+        "s1111": ((b**2 + 2 * a * b) / (a + b) ** 2 + (1 - 2 * nu) * b / (a + b)) / d,
+        "s2222": ((a**2 + 2 * a * b) / (a + b) ** 2 + (1 - 2 * nu) * a / (a + b)) / d,
+        "s1122": (b**2 / (a + b) ** 2 - (1 - 2 * nu) * b / (a + b)) / d,
+        "s2211": (a**2 / (a + b) ** 2 - (1 - 2 * nu) * a / (a + b)) / d,
+        "s1212": ((a**2 + b**2) / (2 * (a + b) ** 2) + (1 - 2 * nu) / 2) / d,
+    }
+
+
+@pytest.mark.parametrize("a, b", [(0.004, 0.004), (0.003, 0.006), (0.006, 0.003)])
+def test_lattice_eshelby_tensor_approaches_the_isolated_closed_form_as_the_area_fraction_vanishes(a, b):
+    lam, mu = 1.0, 0.7
+    nu = lam / (2.0 * (lam + mu))
+    lattice = _lattice_eshelby_tensor(a, b, 1.0, 1.0, lam, mu)
+    isolated = _isolated_eshelby(a, b, nu)
+    # The periodic correction is O(area fraction) ~ 1e-4 here; the residual
+    # is the lattice sum's own truncation error, which for ellipses this
+    # small (transition mode ~ L/(2 pi a) ~ 50) is a few 1e-4 at 1024 modes.
+    for key, value in isolated.items():
+        assert lattice[key] == pytest.approx(value, abs=6e-4)
+    # antiplane: S1313 = b / (2 (a + b))
+    assert lattice["s1313"] == pytest.approx(b / (2.0 * (a + b)), abs=6e-4)
+
+
+def test_lattice_eshelby_tensor_is_converged_in_the_number_of_modes():
+    lam, mu = 1.0, 0.7
+    coarse = _lattice_eshelby_tensor(0.07, 0.14, 1.0, 1.0, lam, mu, n_modes=512)
+    fine = _lattice_eshelby_tensor(0.07, 0.14, 1.0, 1.0, lam, mu, n_modes=1024)
+    for key in coarse:
+        assert coarse[key] == pytest.approx(fine[key], abs=2e-4)
+
+
+def test_lattice_eshelby_tensor_of_a_circle_in_a_square_cell_has_the_cubic_symmetry():
+    lattice = _lattice_eshelby_tensor(0.1, 0.1, 1.0, 1.0, 1.0, 0.7)
+    assert lattice["s1111"] == pytest.approx(lattice["s2222"], rel=1e-10)
+    assert lattice["s1122"] == pytest.approx(lattice["s2211"], rel=1e-10)
+
+
+@pytest.mark.parametrize("load", ["tension", "biaxial", "shear"])
+def test_periodic_mean_stress_is_the_remote_stress_at_unit_contrast(load):
+    case = _dilute_ellipse_case(contrast=1.0)
+    magnitude = 0.01
+    np.testing.assert_allclose(
+        np.asarray(case.periodic_mean_stress(load, magnitude))[:2, :2],
+        np.asarray(case.remote_stress(load, magnitude))[:2, :2],
+        atol=1e-12,
+    )
+
+
+def test_periodic_antiplane_mean_stress_is_the_remote_stress_at_unit_contrast():
+    case = _dilute_ellipse_case(contrast=1.0)
+    assert float(np.asarray(case.periodic_antiplane_mean_stress(0.01))[0, 2]) == pytest.approx(0.01, rel=1e-10)
+
+
+def _fine_ellipse_case(contrast, semi_axis_a=0.14, semi_axis_b=0.28):
+    # 128^2: fine enough that the FFT reference is accurate to ~0.5% of the load
+    grid = Grid(shape=(128, 128, 1), lengths=(1.0, 1.0, 1.0))
+    return EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=1.0, matrix_lame_mu=0.7,
+        semi_axis_a=semi_axis_a, semi_axis_b=semi_axis_b,
+        contrast=contrast, center=(0.5, 0.5), dealias=True,
+    )
+
+
+@pytest.mark.parametrize("contrast", [1.0e-3, 3.0])
+@pytest.mark.parametrize("load", ["tension", "shear"])
+def test_periodic_mean_stress_agrees_with_the_fft_domain_mean(load, contrast):
+    # the FFT mean is itself only grid-accurate, so this cross-checks the
+    # lattice sum (which matched a converged CG solve to ~0.2% of the load)
+    case = _fine_ellipse_case(contrast)
+    magnitude = 0.01
+    comp = (0, 0) if load == "tension" else (0, 1)
+    lattice = float(np.asarray(case.periodic_mean_stress(load, magnitude))[comp])
+    fft_mean = float(np.mean(np.asarray(case.periodic_analytic_stress(load, magnitude))[comp]))
+    assert lattice == pytest.approx(fft_mean, abs=1e-2 * magnitude)
+
+
+def test_periodic_antiplane_mean_stress_agrees_with_the_fft_domain_mean():
+    case = _fine_ellipse_case(contrast=0.5)
+    magnitude = 0.01
+    lattice = float(np.asarray(case.periodic_antiplane_mean_stress(magnitude))[0, 2])
+    fft_mean = float(np.mean(np.asarray(case.periodic_antiplane_analytic_stress(magnitude))[0, 2]))
+    assert lattice == pytest.approx(fft_mean, abs=1e-2 * magnitude)
+
+
+def test_circular_and_equal_axis_elliptical_periodic_mean_stress_agree():
+    circle = _dilute_hole_case(contrast=0.5)
+    ellipse = _dilute_ellipse_case(
+        contrast=0.5, semi_axis_a=circle.hole_radius, semi_axis_b=circle.hole_radius
+    )
+    np.testing.assert_allclose(
+        np.asarray(circle.periodic_mean_stress("tension", 0.01)),
+        np.asarray(ellipse.periodic_mean_stress("tension", 0.01)),
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize("load", ["tension", "biaxial", "shear"])
+def test_periodic_interior_stress_is_the_remote_stress_at_unit_contrast(load):
+    case = _dilute_ellipse_case(contrast=1.0)
+    magnitude = 0.01
+    np.testing.assert_allclose(
+        np.asarray(case.periodic_interior_stress(load, magnitude))[:2, :2],
+        np.asarray(case.remote_stress(load, magnitude))[:2, :2],
+        atol=1e-12,
+    )
+
+
+@pytest.mark.parametrize("load", ["tension", "biaxial", "shear"])
+def test_periodic_interior_stress_of_a_void_is_zero(load):
+    case = _dilute_ellipse_case(contrast=0.0)
+    np.testing.assert_allclose(
+        np.asarray(case.periodic_interior_stress(load, 0.01))[:2, :2], 0.0, atol=1e-12
+    )
+    np.testing.assert_allclose(
+        np.asarray(case.periodic_antiplane_interior_stress(0.01)), 0.0, atol=1e-12
+    )
+
+
+@pytest.mark.parametrize("contrast", [0.3, 3.0])
+def test_periodic_interior_stress_approaches_the_isolated_value_for_a_tiny_ellipse(contrast):
+    # area fraction ~ 1e-4: the periodic correction is negligible, so the
+    # lattice-sum interior must reproduce the classical isolated closed form
+    a, b = 0.005, 0.01
+    grid = Grid(shape=(64, 64, 1), lengths=(1.0, 1.0, 1.0))
+    case = EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=1.0, matrix_lame_mu=0.7, semi_axis_a=a, semi_axis_b=b,
+        contrast=contrast, center=(0.5, 0.5),
+    )
+    magnitude = 0.01
+    nu = 1.0 / (2.0 * (1.0 + 0.7))
+    eps_star = _ellipse_equivalent_eigenstrain(magnitude, contrast, 1.0, 0.7, "tension", a, b)
+    isolated_xx = float(
+        _ellipse_inhomogeneity_interior_stress(eps_star, a, b, 0.7, nu)[0]
+        + case.remote_stress("tension", magnitude)[0, 0]
+    )
+    exact_xx = float(np.asarray(case.periodic_interior_stress("tension", magnitude))[0, 0])
+    assert exact_xx == pytest.approx(isolated_xx, rel=5e-3)
+    # antiplane: sigma_13 = tau*beta*(a+b)/(a+beta*b)
+    antiplane = float(np.asarray(case.periodic_antiplane_interior_stress(magnitude))[0, 2])
+    assert antiplane == pytest.approx(magnitude * contrast * (a + b) / (a + contrast * b), rel=5e-3)

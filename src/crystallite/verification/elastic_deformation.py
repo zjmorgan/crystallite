@@ -1,7 +1,9 @@
 """Verification case for heterogeneous elasticity: the Kirsch problem."""
 
+import functools
 from dataclasses import dataclass
 
+import numpy as np
 from scipy.special import j1
 
 from crystallite.backend import xp
@@ -734,6 +736,249 @@ def _ellipse_fourier_transform(grid, semi_axis_a, semi_axis_b, center=(0.0, 0.0,
     for length in grid.lengths:
         volume *= length
     return (n_points / volume) * continuum * phase
+
+
+def _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes, chunk=64):
+    r"""Periodic Eshelby tensor of an elliptical region (semi-axes `a`, `b`)
+    in a `length_x` by `length_y` cell, as the truncated analytic k-space
+    lattice sum over reciprocal vectors :math:`k=2\pi(m/L_x, n/L_y)`,
+    :math:`0<\max(|m|,|n|)\le` `n_modes`:
+
+    .. math::
+
+        S^{\mathrm{per}}_{ijkl}=\frac{1}{A\,|\Omega|}\sum_{k\ne 0}
+        \hat s(k)^2\,\hat\varepsilon_{ij}(k)\big[\varepsilon^*=e_{kl}\big],
+
+    with :math:`\hat s=2\pi ab\,J_1(q)/q`, :math:`q=\sqrt{(ak_x)^2+(bk_y)^2}`
+    the exact Fourier transform of the ellipse, and :math:`\hat\varepsilon`
+    the plane-strain isotropic Green operator response to a unit
+    eigenstrain. Every term is analytic: no grid, no pixelated mask, no
+    numerical probing. Returns the in-plane components in the same
+    convention as :func:`_periodic_eshelby_tensor` (``s1212`` is half the
+    tensor-shear response) plus the antiplane ``s1313``.
+
+    The truncation error falls like ``1/n_modes``; see
+    :func:`_lattice_eshelby_tensor` for the extrapolated version.
+    """
+    c = (lam + mu) / (lam + 2.0 * mu)
+    cell_area, region_area = length_x * length_y, np.pi * a * b
+    ky = (2.0 * np.pi * np.arange(-n_modes, n_modes + 1) / length_y)[None, :]
+    unit = {
+        "11": (1.0, 0.0, 0.0),
+        "22": (0.0, 1.0, 0.0),
+        "12": (0.0, 0.0, 1.0),
+    }
+    acc = {name: np.zeros(3) for name in unit}
+    acc_13 = 0.0
+    for start in range(-n_modes, n_modes + 1, chunk):
+        m = np.arange(start, min(start + chunk, n_modes + 1))
+        kx = (2.0 * np.pi * m / length_x)[:, None]
+        k2 = kx**2 + ky**2
+        origin = k2 == 0
+        k2_safe = np.where(origin, 1.0, k2)
+        q = np.sqrt((a * kx) ** 2 + (b * ky) ** 2)
+        q_safe = np.where(q == 0, 1.0, q)
+        shape2 = np.where(origin, 0.0, (2.0 * np.pi * a * b * j1(q_safe) / q_safe) ** 2)
+        for name, (e11, e22, e12) in unit.items():
+            trace = e11 + e22
+            sxx = lam * trace + 2.0 * mu * e11
+            syy = lam * trace + 2.0 * mu * e22
+            sxy = 2.0 * mu * e12
+            tx, ty = sxx * kx + sxy * ky, sxy * kx + syy * ky
+            kt = (kx * tx + ky * ty) / k2_safe
+            gx = (tx - c * kx * kt) / (mu * k2_safe)
+            gy = (ty - c * ky * kt) / (mu * k2_safe)
+            acc[name] += np.array(
+                [
+                    np.sum(shape2 * kx * gx),
+                    np.sum(shape2 * ky * gy),
+                    np.sum(shape2 * 0.5 * (kx * gy + ky * gx)),
+                ]
+            )
+        acc_13 += np.sum(shape2 * kx**2 / k2_safe)
+    scale = 1.0 / (cell_area * region_area)
+    return {
+        "s1111": acc["11"][0] * scale,
+        "s2211": acc["11"][1] * scale,
+        "s1122": acc["22"][0] * scale,
+        "s2222": acc["22"][1] * scale,
+        "s1212": acc["12"][2] * scale / 2.0,
+        "s1313": acc_13 * scale / 2.0,
+    }
+
+
+@functools.lru_cache(maxsize=128)
+def _lattice_eshelby_items(a, b, length_x, length_y, lam, mu, n_modes):
+    coarse = _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes // 2)
+    fine = _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes)
+    # error ~ 1/n_modes: one Richardson step removes the leading term
+    return tuple((k, 2.0 * fine[k] - coarse[k]) for k in fine)
+
+
+def _lattice_eshelby_tensor(a, b, length_x, length_y, lam, mu, n_modes=1024):
+    r"""Exact periodic Eshelby tensor of an ellipse in a rectangular cell by
+    the analytic lattice sum :func:`_lattice_eshelby_sum`, Richardson-
+    extrapolated from `n_modes/2` and `n_modes` (the truncation error
+    falls like ``1/n_modes``; extrapolated values agree between
+    ``(256, 512)`` and ``(512, 1024)`` to ~1e-5). Independent of any grid:
+    unlike :func:`_periodic_eshelby_tensor`, which probes an FFT solve and
+    inherits its mask pixelization (measured 3% off at an ellipse ~6 grid
+    cells across), this approaches the closed-form isolated tensor as the
+    area fraction goes to zero. Returns a dict with keys ``s1111, s2211,
+    s1122, s2222, s1212`` (the convention
+    :func:`_periodic_equivalent_eigenstrain` takes) and ``s1313``.
+    """
+    return dict(
+        _lattice_eshelby_items(
+            float(a), float(b), float(length_x), float(length_y), float(lam), float(mu),
+            int(n_modes),
+        )
+    )
+
+
+def _load_macro_strain(load, magnitude, lam, mu):
+    """Plane-strain macroscopic strain a uniform remote `load` produces in
+    the matrix (``eps_33 = 0``), the same convention
+    :func:`_periodic_equivalent_eigenstrain` uses internally."""
+    nu = lam / (2.0 * (lam + mu))
+    young = 2.0 * mu * (1.0 + nu)
+    eps = np.zeros((3, 3))
+    if load == "shear":
+        eps[0, 1] = eps[1, 0] = magnitude / (2.0 * mu)
+        return eps
+    sign = {"tension": (1.0, 0.0), "compression": (-1.0, 0.0), "biaxial": (1.0, 1.0)}
+    if load not in sign:
+        raise ValueError('load must be "tension", "compression", "biaxial", or "shear"')
+    s11, s22 = (sign[load][0] * magnitude, sign[load][1] * sign[load][0] * magnitude)
+    s33 = nu * (s11 + s22)
+    eps[0, 0] = (s11 - nu * s22 - nu * s33) / young
+    eps[1, 1] = (s22 - nu * s11 - nu * s33) / young
+    return eps
+
+
+def _periodic_mean_stress(load, magnitude, contrast, lam, mu, a, b, length_x, length_y):
+    r"""Exact domain-mean stress of a periodic array of elliptical
+    inhomogeneities (`contrast`, semi-axes `a`, `b`, cell `length_x` by
+    `length_y`) under macroscopic strain control -- the boundary condition
+    this project's solver uses -- as the ``(3, 3)`` tensor
+    :math:`\bar\sigma=C_0:(\bar\varepsilon-f\,\varepsilon^*)`, with
+    :math:`f=\pi ab/(L_xL_y)` and :math:`\varepsilon^*` the periodic
+    equivalent eigenstrain from the lattice-sum Eshelby tensor
+    (:func:`_lattice_eshelby_tensor`). No FFT and no grid. This is the
+    constant an image sum of isolated fields cannot determine on its own
+    (the sum of the ~:math:`r^{-2}` corrections is only conditionally
+    convergent), so it is what the periodic image-sum constructions
+    recenter to.
+    """
+    s = _lattice_eshelby_tensor(a, b, length_x, length_y, lam, mu)
+    eps_star = np.asarray(_periodic_equivalent_eigenstrain(magnitude, contrast, lam, mu, load, s))
+    eps_bar = _load_macro_strain(load, magnitude, lam, mu)
+    difference = eps_bar - (np.pi * a * b / (length_x * length_y)) * eps_star
+    trace = difference[0, 0] + difference[1, 1] + difference[2, 2]
+    return lam * trace * np.eye(3) + 2.0 * mu * difference
+
+
+def _periodic_antiplane_mean_stress(magnitude, contrast, mu, a, b, length_x, length_y):
+    r"""Antiplane counterpart of :func:`_periodic_mean_stress`: the domain-
+    mean ``(3, 3)`` stress (only ``[0, 2]``/``[2, 0]`` populated) of a
+    periodic array under remote antiplane shear `magnitude`, from the
+    lattice-sum ``s1313``."""
+    s1313 = _lattice_eshelby_tensor(a, b, length_x, length_y, 1.0, mu)["s1313"]
+    eps_star = np.asarray(_antiplane_periodic_equivalent_eigenstrain(magnitude, contrast, mu, s1313))
+    eps_bar_13 = magnitude / (2.0 * mu)
+    mean_13 = 2.0 * mu * (eps_bar_13 - (np.pi * a * b / (length_x * length_y)) * eps_star[0, 2])
+    stress = np.zeros((3, 3))
+    stress[0, 2] = stress[2, 0] = mean_13
+    return stress
+
+
+def _periodic_interior_stress(load, magnitude, contrast, lam, mu, a, b, length_x, length_y):
+    r"""Exact uniform interior stress ``(3, 3)`` of the elliptical
+    inhomogeneities in the periodic array under strain control:
+    :math:`\sigma_{\mathrm{in}}=C_0:(\bar\varepsilon+S^{\mathrm{per}}:\varepsilon^*-\varepsilon^*)`
+    (the matrix-material equivalent-inclusion form, which also covers
+    ``contrast=inf``), with the lattice-sum tensor
+    (:func:`_lattice_eshelby_tensor`). Eshelby's uniformity theorem holds
+    for the periodic array, so this is the exact stress everywhere inside
+    each region, not just its mean -- it differs from the isolated
+    (home-image) interior by O(area fraction). Checked against the
+    interior mean of a converged CG solve (within ~0.5% of the load, where
+    the isolated value is up to 11% off at 12% area fraction).
+    """
+    s = _lattice_eshelby_tensor(a, b, length_x, length_y, lam, mu)
+    eps_star = np.asarray(_periodic_equivalent_eigenstrain(magnitude, contrast, lam, mu, load, s))
+    eps_bar = _load_macro_strain(load, magnitude, lam, mu)
+    eps_in = eps_bar.copy()
+    eps_in[0, 0] += s["s1111"] * eps_star[0, 0] + s["s1122"] * eps_star[1, 1]
+    eps_in[1, 1] += s["s2211"] * eps_star[0, 0] + s["s2222"] * eps_star[1, 1]
+    eps_in[0, 1] = eps_in[1, 0] = eps_bar[0, 1] + 2.0 * s["s1212"] * eps_star[0, 1]
+    difference = eps_in - eps_star
+    trace = difference[0, 0] + difference[1, 1] + difference[2, 2]
+    return lam * trace * np.eye(3) + 2.0 * mu * difference
+
+
+def _periodic_antiplane_interior_stress(magnitude, contrast, mu, a, b, length_x, length_y):
+    """Antiplane counterpart of :func:`_periodic_interior_stress`
+    (``sigma_13`` only; ``sigma_23`` vanishes by symmetry)."""
+    s1313 = _lattice_eshelby_tensor(a, b, length_x, length_y, 1.0, mu)["s1313"]
+    eps_star = np.asarray(_antiplane_periodic_equivalent_eigenstrain(magnitude, contrast, mu, s1313))
+    eps_in_13 = magnitude / (2.0 * mu) + 2.0 * s1313 * eps_star[0, 2]
+    stress = np.zeros((3, 3))
+    stress[0, 2] = stress[2, 0] = 2.0 * mu * (eps_in_13 - eps_star[0, 2])
+    return stress
+
+
+def _inplane_eigenstrain_correction(x, y, eps_star, a, b, mu, nu):
+    r"""In-plane stress ``(sigma_xx, sigma_yy, sigma_xy)`` of a single
+    isolated ellipse carrying the uniform eigenstrain `eps_star` in a
+    homogeneous matrix -- exterior from
+    :func:`_ellipse_inhomogeneity_exterior_stress`, interior from
+    :func:`_ellipse_inhomogeneity_interior_stress` -- at coordinates
+    `x`, `y` relative to the ellipse center. Pure perturbation (no
+    background). Valid at every point: interior points are projected onto
+    the boundary before the exterior formula is evaluated (its value there
+    is discarded), and the exact center, which has no radial direction to
+    project along, uses an arbitrary boundary point.
+    """
+    rho = xp.sqrt((x / a) ** 2 + (y / b) ** 2)
+    outside = rho >= 1.0 - 1.0e-9
+    rho_safe = xp.where(rho == 0, 1.0, rho)
+    x_scaled = xp.where(outside, x, x / rho_safe)
+    y_scaled = xp.where(outside, y, y / rho_safe)
+    x_safe = xp.where(rho == 0, a, x_scaled)
+    y_safe = xp.where(rho == 0, 0.0, y_scaled)
+    ext = _ellipse_inhomogeneity_exterior_stress(x_safe, y_safe, eps_star, a, b, mu, nu)
+    inn = _ellipse_inhomogeneity_interior_stress(eps_star, a, b, mu, nu)
+    return tuple(xp.where(outside, e, i) for e, i in zip(ext, inn))
+
+
+def _exterior_shift(raw, outside, interior_value, target):
+    """Constant to subtract from the exterior of the raw image sum so the
+    *final* field (exterior shifted, interior set to the exact
+    `interior_value`) has domain mean exactly `target`:
+    ``mean(where(outside, raw - shift, interior_value)) == target``."""
+    n_total = raw.size
+    n_outside = xp.sum(outside.astype(raw.dtype))
+    n_inside = n_total - n_outside
+    exterior_total = xp.sum(xp.where(outside, raw, 0.0))
+    return (exterior_total + n_inside * interior_value - n_total * target) / n_outside
+
+
+def _antiplane_eigenstrain_correction(x, y, eps_star, a, b, mu):
+    """Antiplane counterpart of :func:`_inplane_eigenstrain_correction`:
+    ``(sigma_13, sigma_23)`` of a single isolated ellipse carrying the
+    uniform antiplane eigenstrain `eps_star` (``[0, 2]``/``[1, 2]``),
+    exterior and interior, at coordinates relative to its center."""
+    rho = xp.sqrt((x / a) ** 2 + (y / b) ** 2)
+    outside = rho >= 1.0 - 1.0e-9
+    rho_safe = xp.where(rho == 0, 1.0, rho)
+    x_scaled = xp.where(outside, x, x / rho_safe)
+    y_scaled = xp.where(outside, y, y / rho_safe)
+    x_safe = xp.where(rho == 0, a, x_scaled)
+    y_safe = xp.where(rho == 0, 0.0, y_scaled)
+    ext = _ellipse_inhomogeneity_antiplane_exterior_stress(x_safe, y_safe, eps_star, a, b, mu)
+    inn = _ellipse_inhomogeneity_antiplane_interior_stress(eps_star, a, b, mu)
+    return tuple(xp.where(outside, e, i) for e, i in zip(ext, inn))
 
 
 def cartesian_to_polar_stress(sigma_xx, sigma_yy, sigma_xy, theta):
@@ -1974,7 +2219,7 @@ class HoleInPlateCase:
         stress[1, 2] = stress[2, 1] = sigma_23
         return stress
 
-    def _antiplane_inhomogeneity_correction_cartesian(self, x, y, magnitude):
+    def _antiplane_inhomogeneity_correction_cartesian(self, x, y, magnitude, eps_star=None):
         r"""Contrast-aware analog of
         :meth:`_antiplane_void_correction_cartesian`: local correction for
         a single isolated copy of this case's *actual*, finite-`contrast`
@@ -1991,6 +2236,10 @@ class HoleInPlateCase:
         `contrast`, same as :meth:`_inhomogeneity_correction_cartesian`
         already does for the in-plane loads.
         """
+        if eps_star is not None:
+            return _antiplane_eigenstrain_correction(
+                x, y, eps_star, self.hole_radius, self.hole_radius, self.matrix_lame_mu
+            )
         background = self.remote_antiplane_stress(magnitude)
         r = xp.sqrt(x**2 + y**2)
         outside = r >= self.hole_radius * (1.0 - 1.0e-9)
@@ -2056,34 +2305,31 @@ class HoleInPlateCase:
         length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
         background = self.remote_antiplane_stress(magnitude)
 
-        _, stress_fft = self.periodic_antiplane_analytic_solution(magnitude)
-        stress_fft = xp.asarray(stress_fft)
-        target_13 = xp.mean(stress_fft[0, 2])
-        target_23 = xp.mean(stress_fft[1, 2])
+        mean_stress = self.periodic_antiplane_mean_stress(magnitude)
+        eps_star = self.periodic_antiplane_equivalent_eigenstrain(magnitude)
+        target_13 = mean_stress[0, 2]
+        target_23 = mean_stress[1, 2]
 
         sigma_13 = background[0, 2] * xp.ones(self.grid.shape)
         sigma_23 = background[1, 2] * xp.ones(self.grid.shape)
 
-        home_dx = x - self.center[0]
-        home_dy = y - self.center[1]
-        home_13, home_23 = self._antiplane_inhomogeneity_correction_cartesian(
-            home_dx, home_dy, magnitude
-        )
 
         for n1 in range(-n_images, n_images + 1):
             for n2 in range(-n_images, n_images + 1):
                 dx = x - (self.center[0] + n1 * length_x)
                 dy = y - (self.center[1] + n2 * length_y)
-                s13, s23 = self._antiplane_inhomogeneity_correction_cartesian(dx, dy, magnitude)
+                s13, s23 = self._antiplane_inhomogeneity_correction_cartesian(
+                    dx, dy, magnitude, eps_star=eps_star
+                )
                 sigma_13 = sigma_13 + s13
                 sigma_23 = sigma_23 + s23
 
         outside = self.radius >= self.hole_radius
-        recentered_13 = sigma_13 - (xp.mean(sigma_13) - target_13)
-        recentered_23 = sigma_23 - (xp.mean(sigma_23) - target_23)
-
-        sigma_13 = xp.where(outside, recentered_13, background[0, 2] + home_13)
-        sigma_23 = xp.where(outside, recentered_23, background[1, 2] + home_23)
+        interior = self.periodic_antiplane_interior_stress(magnitude)
+        recentered_13 = sigma_13 - _exterior_shift(sigma_13, outside, interior[0, 2], target_13)
+        recentered_23 = sigma_23 - _exterior_shift(sigma_23, outside, interior[1, 2], target_23)
+        sigma_13 = xp.where(outside, recentered_13, interior[0, 2])
+        sigma_23 = xp.where(outside, recentered_23, interior[1, 2])
 
         stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_13.dtype)
         stress[0, 2] = stress[2, 0] = sigma_13
@@ -2499,7 +2745,7 @@ class HoleInPlateCase:
             xp.where(outside, sigma_xy, -background[0, 1]),
         )
 
-    def _inhomogeneity_correction_cartesian(self, x, y, load, magnitude):
+    def _inhomogeneity_correction_cartesian(self, x, y, load, magnitude, eps_star=None):
         r"""Contrast-aware analog of :meth:`_void_correction_cartesian`:
         local correction for a single isolated copy of this case's
         *actual*, finite-`contrast` inhomogeneity, not the void limit --
@@ -2512,8 +2758,17 @@ class HoleInPlateCase:
         recipe (its ``e()``/``f()``/``g()`` functions image-summed over a
         lattice), generalized here from that reference's void-only worked
         example to this case's actual `contrast`.
+
+        With `eps_star` given, the isolated equivalent eigenstrain is
+        replaced by that one (e.g. :meth:`periodic_equivalent_eigenstrain`)
+        and the field is the equivalent-inclusion H/T-tensor field at
+        ``a == b`` instead of the polar closed form.
         """
         nu = self.matrix_lame_lambda / (2.0 * (self.matrix_lame_lambda + self.matrix_lame_mu))
+        if eps_star is not None:
+            return _inplane_eigenstrain_correction(
+                x, y, eps_star, self.hole_radius, self.hole_radius, self.matrix_lame_mu, nu
+            )
         background = self.remote_stress(load, magnitude)
         r = xp.sqrt(x**2 + y**2)
         outside = r >= self.hole_radius * (1.0 - 1.0e-9)
@@ -2535,7 +2790,9 @@ class HoleInPlateCase:
             xp.where(outside, sigma_xy, interior_xy),
         )
 
-    def _periodic_image_sum(self, correction, load, magnitude, n_images, recenter_target=None):
+    def _periodic_image_sum(
+        self, correction, load, magnitude, n_images, recenter_target=None, interior_target=None
+    ):
         r"""Shared image-summation machinery for
         :meth:`periodic_void_stress` and
         :meth:`periodic_inhomogeneity_stress`: sum `correction`
@@ -2658,6 +2915,11 @@ class HoleInPlateCase:
         recenter_target : ndarray of shape (3, 3), optional
             Domain-mean stress to recenter the exterior field to. Defaults
             to ``remote_stress(load, magnitude)`` (`magnitude` itself).
+        interior_target : ndarray of shape (3, 3), optional
+            Uniform stress to assign inside the hole. Defaults to the
+            home-image value (``background`` plus the isolated
+            correction); :meth:`periodic_inhomogeneity_stress` passes the
+            exact periodic interior (:meth:`periodic_interior_stress`).
 
         Returns
         -------
@@ -2699,13 +2961,25 @@ class HoleInPlateCase:
         # eshelby.cpp's own two-pass structure (accumulate the mean over
         # the raw array first, overwrite the interior unconditionally
         # after), not simultaneous with the outside-only recentering.
-        recentered_xx = sigma_xx - (xp.mean(sigma_xx) - target[0, 0])
-        recentered_yy = sigma_yy - (xp.mean(sigma_yy) - target[1, 1])
-        recentered_xy = sigma_xy - (xp.mean(sigma_xy) - target[0, 1])
-
-        sigma_xx = xp.where(outside, recentered_xx, background[0, 0] + home_xx)
-        sigma_yy = xp.where(outside, recentered_yy, background[1, 1] + home_yy)
-        sigma_xy = xp.where(outside, recentered_xy, background[0, 1] + home_xy)
+        if interior_target is None:
+            interior_xx = background[0, 0] + home_xx
+            interior_yy = background[1, 1] + home_yy
+            interior_xy = background[0, 1] + home_xy
+            recentered_xx = sigma_xx - (xp.mean(sigma_xx) - target[0, 0])
+            recentered_yy = sigma_yy - (xp.mean(sigma_yy) - target[1, 1])
+            recentered_xy = sigma_xy - (xp.mean(sigma_xy) - target[0, 1])
+        else:
+            # exact interior: shift the exterior so the final field's own
+            # domain mean is exactly the target
+            interior_xx = interior_target[0, 0]
+            interior_yy = interior_target[1, 1]
+            interior_xy = interior_target[0, 1]
+            recentered_xx = sigma_xx - _exterior_shift(sigma_xx, outside, interior_xx, target[0, 0])
+            recentered_yy = sigma_yy - _exterior_shift(sigma_yy, outside, interior_yy, target[1, 1])
+            recentered_xy = sigma_xy - _exterior_shift(sigma_xy, outside, interior_xy, target[0, 1])
+        sigma_xx = xp.where(outside, recentered_xx, interior_xx)
+        sigma_yy = xp.where(outside, recentered_yy, interior_yy)
+        sigma_xy = xp.where(outside, recentered_xy, interior_xy)
 
         stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
         stress[0, 0] = sigma_xx
@@ -2793,13 +3067,92 @@ class HoleInPlateCase:
         stress : ndarray
             Shape ``(3, 3) + grid.shape``.
         """
-        _, stress_fft = self.periodic_analytic_solution(load, magnitude)
-        recenter_target = xp.mean(
-            xp.asarray(stress_fft), axis=tuple(range(2, xp.asarray(stress_fft).ndim))
-        )
+        recenter_target = self.periodic_mean_stress(load, magnitude)
+        eps_star = self.periodic_equivalent_eigenstrain(load, magnitude)
+
+        def correction(dx, dy, load_, magnitude_):
+            return self._inhomogeneity_correction_cartesian(
+                dx, dy, load_, magnitude_, eps_star=eps_star
+            )
+
         return self._periodic_image_sum(
-            self._inhomogeneity_correction_cartesian, load, magnitude, n_images,
+            correction, load, magnitude, n_images,
             recenter_target=recenter_target,
+            interior_target=self.periodic_interior_stress(load, magnitude),
+        )
+
+    def periodic_mean_stress(self, load, magnitude):
+        """Exact domain-mean ``(3, 3)`` stress of the periodic array under
+        strain control, by the lattice-sum Eshelby tensor -- see
+        :func:`_periodic_mean_stress`. FFT- and grid-free."""
+        return xp.asarray(
+            _periodic_mean_stress(
+                load, magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu,
+                self.hole_radius, self.hole_radius,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_antiplane_mean_stress(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_mean_stress`."""
+        return xp.asarray(
+            _periodic_antiplane_mean_stress(
+                magnitude, self.contrast, self.matrix_lame_mu,
+                self.hole_radius, self.hole_radius,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_interior_stress(self, load, magnitude):
+        """Exact uniform interior ``(3, 3)`` stress of the periodic array
+        under strain control -- see :func:`_periodic_interior_stress`."""
+        return xp.asarray(
+            _periodic_interior_stress(
+                load, magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu,
+                self.hole_radius, self.hole_radius,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_antiplane_interior_stress(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_interior_stress`."""
+        return xp.asarray(
+            _periodic_antiplane_interior_stress(
+                magnitude, self.contrast, self.matrix_lame_mu,
+                self.hole_radius, self.hole_radius,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_equivalent_eigenstrain(self, load, magnitude):
+        """Periodic-array equivalent eigenstrain ``(3, 3)`` of the
+        inhomogeneity, calibrated with the exact lattice-sum Eshelby tensor
+        (:func:`_lattice_eshelby_tensor`) rather than the isolated closed
+        form: the strength each image must carry so that the image sum
+        reproduces the periodic solution."""
+        s = _lattice_eshelby_tensor(
+            self.hole_radius, self.hole_radius,
+            float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            self.matrix_lame_lambda, self.matrix_lame_mu,
+        )
+        return xp.asarray(
+            _periodic_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load, s
+            )
+        )
+
+    def periodic_antiplane_equivalent_eigenstrain(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_equivalent_eigenstrain`,
+        calibrated with the lattice-sum ``s1313``."""
+        s = _lattice_eshelby_tensor(
+            self.hole_radius, self.hole_radius,
+            float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            self.matrix_lame_lambda, self.matrix_lame_mu,
+        )
+        return xp.asarray(
+            _antiplane_periodic_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_mu, s["s1313"]
+            )
         )
 
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
@@ -3581,6 +3934,80 @@ class EllipticalHoleInPlateCase:
         stress[1, 2] = stress[2, 1] = sigma_23
         return stress
 
+    def periodic_mean_stress(self, load, magnitude):
+        """Exact domain-mean ``(3, 3)`` stress of the periodic array under
+        strain control, by the lattice-sum Eshelby tensor -- see
+        :func:`_periodic_mean_stress`. FFT- and grid-free."""
+        return xp.asarray(
+            _periodic_mean_stress(
+                load, magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu,
+                self.semi_axis_a, self.semi_axis_b,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_antiplane_mean_stress(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_mean_stress`."""
+        return xp.asarray(
+            _periodic_antiplane_mean_stress(
+                magnitude, self.contrast, self.matrix_lame_mu,
+                self.semi_axis_a, self.semi_axis_b,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_interior_stress(self, load, magnitude):
+        """Exact uniform interior ``(3, 3)`` stress of the periodic array
+        under strain control -- see :func:`_periodic_interior_stress`."""
+        return xp.asarray(
+            _periodic_interior_stress(
+                load, magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu,
+                self.semi_axis_a, self.semi_axis_b,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_antiplane_interior_stress(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_interior_stress`."""
+        return xp.asarray(
+            _periodic_antiplane_interior_stress(
+                magnitude, self.contrast, self.matrix_lame_mu,
+                self.semi_axis_a, self.semi_axis_b,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
+
+    def periodic_equivalent_eigenstrain(self, load, magnitude):
+        """Periodic-array equivalent eigenstrain ``(3, 3)`` of the
+        inhomogeneity, calibrated with the exact lattice-sum Eshelby tensor
+        (:func:`_lattice_eshelby_tensor`) rather than the isolated closed
+        form: the strength each image must carry so that the image sum
+        reproduces the periodic solution."""
+        s = _lattice_eshelby_tensor(
+            self.semi_axis_a, self.semi_axis_b,
+            float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            self.matrix_lame_lambda, self.matrix_lame_mu,
+        )
+        return xp.asarray(
+            _periodic_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load, s
+            )
+        )
+
+    def periodic_antiplane_equivalent_eigenstrain(self, magnitude):
+        """Antiplane counterpart of :meth:`periodic_equivalent_eigenstrain`,
+        calibrated with the lattice-sum ``s1313``."""
+        s = _lattice_eshelby_tensor(
+            self.semi_axis_a, self.semi_axis_b,
+            float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            self.matrix_lame_lambda, self.matrix_lame_mu,
+        )
+        return xp.asarray(
+            _antiplane_periodic_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_mu, s["s1313"]
+            )
+        )
+
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
         r"""Periodic-array stress field for an elliptical void loaded by
         uniform internal pressure `magnitude` (zero remote stress) --
@@ -3762,7 +4189,7 @@ class EllipticalHoleInPlateCase:
         stress[1, 2] = stress[2, 1] = sigma_23
         return stress
 
-    def _inhomogeneity_correction_cartesian(self, x, y, load, magnitude):
+    def _inhomogeneity_correction_cartesian(self, x, y, load, magnitude, eps_star=None):
         r"""Contrast-aware analog of :meth:`_void_correction_cartesian`:
         local correction for a single isolated copy of this case's
         *actual*, finite-`contrast` elliptical inhomogeneity, not the void
@@ -3797,40 +4224,11 @@ class EllipticalHoleInPlateCase:
         """
         a, b = self.semi_axis_a, self.semi_axis_b
         nu = self.matrix_lame_lambda / (2.0 * (self.matrix_lame_lambda + self.matrix_lame_mu))
-        eps_star = _ellipse_equivalent_eigenstrain(
-            magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load, a, b
-        )
-
-        rho = xp.sqrt((x / a) ** 2 + (y / b) ** 2)
-        outside = rho >= 1.0 - 1.0e-9
-        # A point strictly inside is never actually evaluated (xp.where
-        # below picks the interior branch instead) but must still be a
-        # *valid* input to the exterior formula -- project it radially
-        # onto the boundary itself (rho=1), the same role
-        # HoleInPlateCase._inhomogeneity_correction_cartesian's
-        # ``r_safe = xp.where(outside, r, self.hole_radius)`` plays there.
-        rho_safe = xp.where(rho == 0, 1.0, rho)
-        x_scaled = xp.where(outside, x, x / rho_safe)
-        y_scaled = xp.where(outside, y, y / rho_safe)
-        # rho==0 (the ellipse's own center) has no radial direction to
-        # project onto the boundary along -- substitute an arbitrary valid
-        # boundary point instead (its value is discarded by the interior
-        # branch below regardless; this purely avoids a noisy NaN from
-        # _ellipse_confocal_lambda's own division at x=y=0).
-        x_safe = xp.where(rho == 0, a, x_scaled)
-        y_safe = xp.where(rho == 0, 0.0, y_scaled)
-
-        sigma_xx_ext, sigma_yy_ext, sigma_xy_ext = _ellipse_inhomogeneity_exterior_stress(
-            x_safe, y_safe, eps_star, a, b, self.matrix_lame_mu, nu
-        )
-        sigma_xx_int, sigma_yy_int, sigma_xy_int = _ellipse_inhomogeneity_interior_stress(
-            eps_star, a, b, self.matrix_lame_mu, nu
-        )
-        return (
-            xp.where(outside, sigma_xx_ext, sigma_xx_int),
-            xp.where(outside, sigma_yy_ext, sigma_yy_int),
-            xp.where(outside, sigma_xy_ext, sigma_xy_int),
-        )
+        if eps_star is None:
+            eps_star = _ellipse_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_lambda, self.matrix_lame_mu, load, a, b
+            )
+        return _inplane_eigenstrain_correction(x, y, eps_star, a, b, self.matrix_lame_mu, nu)
 
     def periodic_inhomogeneity_stress(self, load, magnitude, n_images=1):
         r"""Periodic-array stress field for this case's actual, finite-
@@ -3868,36 +4266,33 @@ class EllipticalHoleInPlateCase:
         length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
         background = self.remote_stress(load, magnitude)
 
-        stress_fft = xp.asarray(self.periodic_analytic_stress(load, magnitude))
-        recenter_target = xp.mean(stress_fft, axis=tuple(range(2, stress_fft.ndim)))
+        recenter_target = self.periodic_mean_stress(load, magnitude)
 
         sigma_xx = background[0, 0] * xp.ones(self.grid.shape)
         sigma_yy = background[1, 1] * xp.ones(self.grid.shape)
         sigma_xy = background[0, 1] * xp.ones(self.grid.shape)
 
-        home_dx = x - self.center[0]
-        home_dy = y - self.center[1]
-        home_xx, home_yy, home_xy = self._inhomogeneity_correction_cartesian(
-            home_dx, home_dy, load, magnitude
-        )
+        eps_star = self.periodic_equivalent_eigenstrain(load, magnitude)
 
         for n1 in range(-n_images, n_images + 1):
             for n2 in range(-n_images, n_images + 1):
                 dx = x - (self.center[0] + n1 * length_x)
                 dy = y - (self.center[1] + n2 * length_y)
-                sxx, syy, sxy = self._inhomogeneity_correction_cartesian(dx, dy, load, magnitude)
+                sxx, syy, sxy = self._inhomogeneity_correction_cartesian(
+                    dx, dy, load, magnitude, eps_star=eps_star
+                )
                 sigma_xx = sigma_xx + sxx
                 sigma_yy = sigma_yy + syy
                 sigma_xy = sigma_xy + sxy
 
         outside = self.elliptical_radius >= 1.0
-        recentered_xx = sigma_xx - (xp.mean(sigma_xx) - recenter_target[0, 0])
-        recentered_yy = sigma_yy - (xp.mean(sigma_yy) - recenter_target[1, 1])
-        recentered_xy = sigma_xy - (xp.mean(sigma_xy) - recenter_target[0, 1])
-
-        sigma_xx = xp.where(outside, recentered_xx, background[0, 0] + home_xx)
-        sigma_yy = xp.where(outside, recentered_yy, background[1, 1] + home_yy)
-        sigma_xy = xp.where(outside, recentered_xy, background[0, 1] + home_xy)
+        interior = self.periodic_interior_stress(load, magnitude)
+        recentered_xx = sigma_xx - _exterior_shift(sigma_xx, outside, interior[0, 0], recenter_target[0, 0])
+        recentered_yy = sigma_yy - _exterior_shift(sigma_yy, outside, interior[1, 1], recenter_target[1, 1])
+        recentered_xy = sigma_xy - _exterior_shift(sigma_xy, outside, interior[0, 1], recenter_target[0, 1])
+        sigma_xx = xp.where(outside, recentered_xx, interior[0, 0])
+        sigma_yy = xp.where(outside, recentered_yy, interior[1, 1])
+        sigma_xy = xp.where(outside, recentered_xy, interior[0, 1])
 
         stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
         stress[0, 0] = sigma_xx
@@ -3974,7 +4369,7 @@ class EllipticalHoleInPlateCase:
         )
         return self.grid.ifft(sigma_hat)
 
-    def _antiplane_inhomogeneity_correction_cartesian(self, x, y, magnitude):
+    def _antiplane_inhomogeneity_correction_cartesian(self, x, y, magnitude, eps_star=None):
         r"""Contrast-aware antiplane local correction for a single isolated
         copy of this case's finite-`contrast` elliptical inhomogeneity:
         the equivalent eigenstrain
@@ -3992,9 +4387,10 @@ class EllipticalHoleInPlateCase:
         sigma_13, sigma_23 : ndarray
         """
         a, b = self.semi_axis_a, self.semi_axis_b
-        eps_star = _antiplane_periodic_equivalent_eigenstrain(
-            magnitude, self.contrast, self.matrix_lame_mu, b / (2.0 * (a + b))
-        )
+        if eps_star is None:
+            eps_star = _antiplane_periodic_equivalent_eigenstrain(
+                magnitude, self.contrast, self.matrix_lame_mu, b / (2.0 * (a + b))
+            )
         *_, sigma_13, sigma_23 = self._prescribed_eigenstrain_correction_cartesian(x, y, eps_star)
         return sigma_13, sigma_23
 
@@ -4025,31 +4421,31 @@ class EllipticalHoleInPlateCase:
         length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
         background = self.remote_antiplane_stress(magnitude)
 
-        stress_fft = xp.asarray(self.periodic_antiplane_analytic_stress(magnitude))
-        target_13 = xp.mean(stress_fft[0, 2])
-        target_23 = xp.mean(stress_fft[1, 2])
+        mean_stress = self.periodic_antiplane_mean_stress(magnitude)
+        eps_star = self.periodic_antiplane_equivalent_eigenstrain(magnitude)
+        target_13 = mean_stress[0, 2]
+        target_23 = mean_stress[1, 2]
 
         sigma_13 = background[0, 2] * xp.ones(self.grid.shape)
         sigma_23 = background[1, 2] * xp.ones(self.grid.shape)
 
-        home_13, home_23 = self._antiplane_inhomogeneity_correction_cartesian(
-            x - self.center[0], y - self.center[1], magnitude
-        )
 
         for n1 in range(-n_images, n_images + 1):
             for n2 in range(-n_images, n_images + 1):
                 dx = x - (self.center[0] + n1 * length_x)
                 dy = y - (self.center[1] + n2 * length_y)
-                s13, s23 = self._antiplane_inhomogeneity_correction_cartesian(dx, dy, magnitude)
+                s13, s23 = self._antiplane_inhomogeneity_correction_cartesian(
+                    dx, dy, magnitude, eps_star=eps_star
+                )
                 sigma_13 = sigma_13 + s13
                 sigma_23 = sigma_23 + s23
 
         outside = self.elliptical_radius >= 1.0
-        recentered_13 = sigma_13 - (xp.mean(sigma_13) - target_13)
-        recentered_23 = sigma_23 - (xp.mean(sigma_23) - target_23)
-
-        sigma_13 = xp.where(outside, recentered_13, background[0, 2] + home_13)
-        sigma_23 = xp.where(outside, recentered_23, background[1, 2] + home_23)
+        interior = self.periodic_antiplane_interior_stress(magnitude)
+        recentered_13 = sigma_13 - _exterior_shift(sigma_13, outside, interior[0, 2], target_13)
+        recentered_23 = sigma_23 - _exterior_shift(sigma_23, outside, interior[1, 2], target_23)
+        sigma_13 = xp.where(outside, recentered_13, interior[0, 2])
+        sigma_23 = xp.where(outside, recentered_23, interior[1, 2])
 
         stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_13.dtype)
         stress[0, 2] = stress[2, 0] = sigma_13
@@ -4153,6 +4549,17 @@ class EllipticalHoleInPlateCase:
         The elliptical counterpart
         of :meth:`HoleInPlateCase.periodic_gradient_stress`, extended to
         finite `contrast`.
+
+        Unlike the uniform loads (:meth:`periodic_inhomogeneity_stress`),
+        this needs neither recentering nor a periodic-calibrated
+        eigenstrain: a gradient load's perturbation is dipolar, so the
+        periodic-environment correction is higher order in the area
+        fraction. Checked against a converged CG solve (256^2, contrast
+        1e-3 and 3, area fraction 0.8% to 12%): near-hole error 0.2-1.4% of
+        the peak stress with no growth in area fraction (the CG solver's
+        own diffuse-edge floor), domain-mean sigma_yy and sigma_xy within
+        1e-7 of ``magnitude * b``, and the dominant interior slope
+        ``d sigma_xx / dy`` within 1.4%.
 
         Parameters
         ----------
