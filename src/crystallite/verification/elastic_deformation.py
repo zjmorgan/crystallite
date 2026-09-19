@@ -1028,7 +1028,8 @@ def _ellipse_exterior_zeta(z, semi_axis_a, semi_axis_b):
 
 
 def _ellipse_gradient_inhomogeneity_solution(
-    semi_axis_a, semi_axis_b, contrast, nu, magnitude, n_terms=64, n_collocation=1024
+    semi_axis_a, semi_axis_b, contrast, nu, magnitude, n_terms=None, n_collocation=None,
+    tolerance=1.0e-10,
 ):
     r"""Coefficients of the exact isolated-ellipse solution for a
     finite-`contrast` elliptical inhomogeneity under the "moment" remote
@@ -1054,10 +1055,14 @@ def _ellipse_gradient_inhomogeneity_solution(
     at :math:`|\zeta|=1` gives a linear system for the coefficients,
     solved here in the least-squares sense on `n_collocation` boundary
     points (the exterior series is truncated at `n_terms`; the interior
-    is exact). The exterior series converges like :math:`m^{n/2}` with
-    :math:`m=(a-b)/(a+b)`, so extreme aspect ratios need many terms --
-    the default 64 gives a boundary residual of ~5e-9 (relative to
-    `magnitude`) at ``a/b=8``.
+    is exact). The exterior series converges like :math:`|m|^{n/2}` with
+    :math:`m=(a-b)/(a+b)`, so slender ellipses need many terms. Unless
+    given, `n_terms` is chosen so the truncation error is about
+    `tolerance` (relative), ``2 ln(tolerance)/ln|m|`` clamped to
+    ``[16, 384]`` -- measured, a fixed 64 terms leaves a ~1e-4 relative
+    traction error at ``a/b=8`` or ``1/8`` while 128 reaches ~1e-7.
+    Aspect ratios beyond ~``|m|>0.97`` (about 60:1) hit the cap and
+    lose accuracy; `n_collocation` defaults to ``max(1024, 8*n_terms)``.
 
     Checked independently: at ``contrast=1`` the correction vanishes
     identically; at ``a=b`` and ``contrast -> 0`` it reproduces
@@ -1069,6 +1074,13 @@ def _ellipse_gradient_inhomogeneity_solution(
     semi_r = (a + b) / 2.0
     m = (a - b) / (a + b)
     kappa = 3.0 - 4.0 * nu
+    if n_terms is None:
+        if abs(m) < 1.0e-12:
+            n_terms = 16
+        else:
+            n_terms = int(min(384, max(16, xp.ceil(2.0 * xp.log(tolerance) / xp.log(abs(m))))))
+    if n_collocation is None:
+        n_collocation = max(1024, 8 * n_terms)
     theta = xp.linspace(0.0, 2.0 * xp.pi, n_collocation, endpoint=False)
     s = xp.exp(1j * theta)
     z = semi_r * (s + m / s)
