@@ -1517,3 +1517,121 @@ def test_periodic_interior_stress_approaches_the_isolated_value_for_a_tiny_ellip
     # antiplane: sigma_13 = tau*beta*(a+b)/(a+beta*b)
     antiplane = float(np.asarray(case.periodic_antiplane_interior_stress(magnitude))[0, 2])
     assert antiplane == pytest.approx(magnitude * contrast * (a + b) / (a + contrast * b), rel=5e-3)
+
+
+# -- Radial line force (the "pressurized hole" of cylindrical_pressurized_hole.py)
+# as a dilatation eigenstrain plus a uniform interior shift --
+
+
+def _line_force_case(a, b, grid_n=128):
+    grid = Grid(shape=(grid_n, grid_n, 1), lengths=(1.0, 1.0, 1.0))
+    return EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=1.0, matrix_lame_mu=0.7, semi_axis_a=a, semi_axis_b=b,
+        contrast=1.0, center=(0.5, 0.5),
+    )
+
+
+def test_line_force_interior_of_a_circle_is_the_uniform_hydrostatic_minus_p():
+    case = _line_force_case(0.1, 0.1)
+    q = 0.02
+    lam, mu = 1.0, 0.7
+    p = q * (lam + mu) / (lam + 2.0 * mu)
+    stress = np.asarray(case.periodic_line_force_stress(q, n_images=2))
+    inside = np.asarray(case.elliptical_radius) < 1.0
+    np.testing.assert_allclose(stress[0, 0][inside], -p, rtol=1e-9)
+    np.testing.assert_allclose(stress[1, 1][inside], -p, rtol=1e-9)
+    np.testing.assert_allclose(stress[0, 1][inside], 0.0, atol=1e-12)
+
+
+def test_line_force_stress_is_the_eigenstrain_stress_outside_and_shifted_by_q_inside():
+    case = _line_force_case(0.09, 0.13)
+    q = 0.02
+    lam, mu = 1.0, 0.7
+    eigenstrain = np.zeros((3, 3))
+    eigenstrain[0, 0] = eigenstrain[1, 1] = -q / (2.0 * (lam + mu))
+    eigen = np.asarray(case.periodic_prescribed_eigenstrain_void_stress(eigenstrain, n_images=1))
+    force = np.asarray(case.periodic_line_force_stress(q, n_images=1))
+    inside = np.asarray(case.elliptical_radius) < 1.0
+    for i in (0, 1):
+        np.testing.assert_allclose(force[i, i][~inside], eigen[i, i][~inside], atol=1e-14)
+        np.testing.assert_allclose(force[i, i][inside], eigen[i, i][inside] - q, atol=1e-14)
+    np.testing.assert_allclose(force[0, 1], eigen[0, 1], atol=1e-14)
+
+
+def test_line_force_domain_mean_is_zero_up_to_the_grid_sampling_of_the_disk():
+    case = _line_force_case(0.1, 0.1)
+    q = 0.02
+    stress = np.asarray(case.periodic_line_force_stress(q, n_images=2))
+    assert abs(np.mean(stress[0, 0])) < 5e-3 * q
+    assert abs(np.mean(stress[1, 1])) < 5e-3 * q
+
+
+def test_line_force_exterior_approaches_the_isolated_lame_field_for_a_small_disk():
+    # A small disk (area fraction ~2e-4): sigma_rr = -sigma_thth = A (R/r)^2
+    a = 0.008
+    case = _line_force_case(a, a)
+    q = 0.02
+    lam, mu = 1.0, 0.7
+    amplitude = q * mu / (lam + 2.0 * mu)
+    stress = np.asarray(case.periodic_line_force_stress(q, n_images=2))
+    x1 = np.asarray(case.grid.x[0])[:, 0, 0]
+    x2 = np.asarray(case.grid.x[1])[0, :, 0]
+    col = int(np.argmin(np.abs(x1 - 0.5)))
+    r = np.abs(x2 - 0.5)
+    mask = (r > 3.0 * a) & (r < 0.2)
+    # along the x2 axis: sigma_yy is the radial component, sigma_xx the hoop one
+    np.testing.assert_allclose(
+        stress[1, 1, col, :, 0][mask], amplitude * (a / r[mask]) ** 2, atol=0.03 * amplitude
+    )
+    np.testing.assert_allclose(
+        stress[0, 0, col, :, 0][mask], -amplitude * (a / r[mask]) ** 2, atol=0.03 * amplitude
+    )
+
+
+# -- Body force over a disk: no compact closed form (a net force cannot be
+# balanced by a periodic operator, so the exact solution needs lattice sums
+# with a compensating background), so the reference is the spectral solve
+# with the analytic disk transform; verify it independently of any solver --
+
+
+def _body_force_case(grid_n):
+    grid = Grid(shape=(grid_n, grid_n, 1), lengths=(1.0, 1.0, 1.0))
+    return HoleInPlateCase(
+        grid, matrix_lame_lambda=1.0, matrix_lame_mu=0.7, hole_radius=0.1,
+        contrast=1.0, center=(0.5, 0.5),
+    )
+
+
+def _body_force_equilibrium_residual(grid_n, force):
+    case = _body_force_case(grid_n)
+    _, stress = case.periodic_body_force_solution(force)
+    stress = np.asarray(stress)[:, :, :, :, 0]
+    dx = 1.0 / grid_n
+
+    def derivative(a, axis):
+        return (np.roll(a, -1, axis=axis) - np.roll(a, 1, axis=axis)) / (2.0 * dx)
+
+    radius = np.asarray(case.radius)[:, :, 0]
+    chi = (radius < case.hole_radius).astype(float)
+    source = chi - np.pi * case.hole_radius**2  # force density is force * (chi - mean)
+    residual_x = derivative(stress[0, 0], 0) + derivative(stress[0, 1], 1) + force[0] * source
+    residual_y = derivative(stress[1, 0], 0) + derivative(stress[1, 1], 1) + force[1] * source
+    away = (np.abs(radius - case.hole_radius) > 0.25 * case.hole_radius) & (radius < 0.4)
+    return max(np.abs(residual_x[away]).max(), np.abs(residual_y[away]).max()), stress
+
+
+def test_body_force_solution_has_zero_domain_mean_stress():
+    _, stress = _body_force_equilibrium_residual(64, np.array([0.0, -0.01, 0.0]))
+    # zero net force, zero macroscopic strain
+    np.testing.assert_allclose(np.mean(stress[0, 0]), 0.0, atol=1e-15)
+    np.testing.assert_allclose(np.mean(stress[1, 1]), 0.0, atol=1e-15)
+
+
+def test_body_force_solution_satisfies_equilibrium_and_converges_with_the_grid():
+    force = np.array([0.0, -0.01, 0.0])
+    coarse, _ = _body_force_equilibrium_residual(64, force)
+    fine, _ = _body_force_equilibrium_residual(128, force)
+    # div(sigma) + f = 0 away from the boundary layer, to a small fraction of
+    # the force (the remainder is the finite-difference check's own error)
+    assert fine < 2.0e-2 * abs(force[1])
+    assert fine < 0.6 * coarse

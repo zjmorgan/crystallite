@@ -73,7 +73,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 
@@ -170,11 +170,13 @@ def plot_mode(label):
     for color, (_, plot_label), values_num, values_an in zip(
         ("C0", "C1"), stress_components, s_num, s_an
     ):
-        ax.plot(xi_an, values_an, "-", color=color, label=f"{plot_label} analytical")
-        ax.plot(xi_num, values_num, "o", color=color, ms=4, label=f"{plot_label} numerical")
+        analytic_numeric_curve(
+            ax, xi_an, values_an, values_num, plot_label, color,
+            downsample=1, x_numeric=xi_num, markersize=4,
+        )
     ax.set_xlabel(r"$x_1 / r_0$")
     ax.set_ylabel(r"$\sigma / (\mu \varepsilon^0)$")
-    ax.legend(fontsize=7)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.dislocation_{label}")
     plt.close(fig)
 

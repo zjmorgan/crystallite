@@ -16,16 +16,15 @@ numerical solve to resolve the sharper near-boundary stress concentration
 fixed contrast shrinks as `smoothing_width` narrows, and grows with
 `smoothing_width` held fixed as contrast increases).
 
-The moment/bending cases use
-:meth:`crystallite.verification.HoleInPlateCase.periodic_gradient_eigenstrain_stress`
--- the finite-contrast Eshelby-*dipole* construction (a linear eigenstrain
-within the disk, calibrated against a numerically probed gradient-order
-Eshelby tensor), unlike ``hole_in_plate.py``'s own moment case, which is
-void-only (built by image-summing the exact traction-free-void closed
-form instead). Verified directly against that image-sum method at a
-near-void contrast (the two share no code and agree to within floating
-noise) and against the actual numeric CG solver (agreement within 0.1%)
-before relying on it here.
+Both analytic references are exact isolated solutions image-summed over
+the periodic lattice, with no FFT: the uniform-load case uses
+:meth:`crystallite.verification.HoleInPlateCase.periodic_inhomogeneity_stress`
+(the isolated equivalent-inclusion field with the periodic-calibrated
+eigenstrain and the exact lattice-sum mean and interior stress), and the
+moment/bending cases use
+:meth:`crystallite.verification.HoleInPlateCase.periodic_gradient_inhomogeneity_stress`
+(the finite-contrast Muskhelishvili solution, any contrast from void to
+rigid), unlike ``hole_in_plate.py``'s moment case, which is void-only.
 
 Same 1D line-scan-through-the-hole convention as ``hole_in_plate.py``.
 """
@@ -34,7 +33,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -84,10 +83,9 @@ def _line_through_hole(case, solver, load):
 
 def _periodic_analytic_line(case, load):
     """Return (xi, sigma_xx, sigma_yy)/MAGNITUDE along the same line, from
-    :meth:`HoleInPlateCase.periodic_analytic_solution`."""
+    :meth:`HoleInPlateCase.periodic_inhomogeneity_stress`."""
     grid = case.grid
-    _, stress = case.periodic_analytic_solution(load, MAGNITUDE)
-    stress = np.asarray(stress)
+    stress = np.asarray(case.periodic_inhomogeneity_stress(load, MAGNITUDE))
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
@@ -151,12 +149,11 @@ def _moment_line(case, solver):
 def _periodic_moment_line(case):
     """Return (xi, sigma_xx, sigma_yy)/(GRADIENT_MAGNITUDE * HOLE_RADIUS)
     along the same line, from
-    :meth:`HoleInPlateCase.periodic_gradient_eigenstrain_stress` -- the
-    finite-contrast Eshelby-dipole construction, unlike
-    ``hole_in_plate.py``'s void-only image-summed
+    :meth:`HoleInPlateCase.periodic_gradient_inhomogeneity_stress` -- the
+    finite-contrast image sum, unlike ``hole_in_plate.py``'s void-only
     :meth:`HoleInPlateCase.periodic_gradient_stress`."""
     grid = case.grid
-    stress = np.asarray(case.periodic_gradient_eigenstrain_stress(GRADIENT_MAGNITUDE))
+    stress = np.asarray(case.periodic_gradient_inhomogeneity_stress(GRADIENT_MAGNITUDE))
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
@@ -183,7 +180,7 @@ def plot_inclusion_moment(label):
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / (k r_0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.inclusion_moment_{label}")
     plt.close(fig)
 
@@ -202,7 +199,7 @@ def plot_inclusion(label):
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.inclusion_{label}")
     plt.close(fig)
 

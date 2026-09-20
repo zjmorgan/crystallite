@@ -123,7 +123,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 
@@ -315,13 +315,15 @@ def _sweep(load, extract_numeric, extract_analytic, labels, title, filename, yla
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
     for i, label in enumerate(labels):
         color = f"C{i}"
-        ax.plot(fine_ratios, fine[i], color=color, label=f"{label} analytical")
-        ax.plot(ASPECT_RATIOS, numeric[i], "o", color=color, markersize=6, label=f"{label} numerical")
+        analytic_numeric_curve(
+            ax, fine_ratios, fine[i], numeric[i], label, color,
+            downsample=1, x_numeric=ASPECT_RATIOS, markersize=6,
+        )
     ax.set_xlim(ASPECT_RATIOS.min(), ASPECT_RATIOS.max())
     ax.set_xlabel(r"$a / b$")
     ax.set_ylabel(ylabel)
     ax.set_title(title)
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, filename)
     plt.close(fig)
 
@@ -366,17 +368,17 @@ def plot_tension():
 def plot_shear():
     _sweep(
         "shear", _shear_numeric, _shear_analytic,
-        (r"$\sigma_{I}^{max}$", r"$\sigma_{II}^{min}$"),
+        (r"$\sigma_1$", r"$\sigma_2$"),
         "elliptical hole, shear: extremal principal stress vs. aspect ratio",
         "elastic_deformation.elliptical_hole_aspect_ratio_shear",
-        r"$\sigma_{\mathrm{principal}} / \sigma_\infty$",
+        r"$\sigma_{1,2} / \sigma_\infty$",
     )
 
 
 def plot_moment():
     _sweep(
         "moment", _moment_numeric, _moment_analytic,
-        (r"$\sigma_{11}$ (+apex)", r"$\sigma_{11}$ (-apex)"),
+        (r"$\sigma_{11}^{\mathrm{apex},+}$", r"$\sigma_{11}^{\mathrm{apex},-}$"),
         "elliptical hole, moment: apex stress vs. aspect ratio",
         "elastic_deformation.elliptical_hole_aspect_ratio_moment",
         r"$\sigma_{11} / (\gamma_\infty b)$",
@@ -443,7 +445,7 @@ def plot_biaxial_profile():
     analytic_numeric_curve(ax, xi, syy_an, syy_num, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / b$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.elliptical_hole_pressure")
     plt.close(fig)
 

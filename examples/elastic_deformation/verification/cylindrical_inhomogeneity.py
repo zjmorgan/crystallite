@@ -35,13 +35,14 @@ against exactly this rotated-diagonal equivalence), and full hydrostatic
 dilatation (``dilation``, eps_11=eps_22=eps_33 all equal).
 
 The analytic reference is
-:meth:`crystallite.verification.HoleInPlateCase.periodic_prescribed_eigenstrain_solution`,
-an exact periodic Khachaturyan-Shatalov Fourier solve for the prescribed
-eigenstrain (not an approximation, and not image-summed -- this is a
-*homogeneous*-matrix problem, so the same Eshelby-eigenstrain-in-Fourier-
-space machinery used for the circular hole/inclusion cases applies
-directly and exactly, with no "equivalent inclusion" step needed since
-there is no actual stiffness contrast to equate). The numeric side uses
+:meth:`crystallite.verification.EllipticalHoleInPlateCase.periodic_prescribed_eigenstrain_void_stress`
+at ``semi_axis_a == semi_axis_b`` (a circle is a degenerate ellipse): the
+exact isolated H/T-tensor field of the prescribed eigenstrain, image-summed
+over the periodic lattice, with no FFT. This is a *homogeneous*-matrix
+problem, so there is no equivalent-inclusion step and no periodic
+calibration -- the eigenstrain is given, so the image sum is exact, its
+domain mean is analytically ``-f * sigma*`` (``f`` the area fraction), and
+the interior is the exact uniform Eshelby value. The numeric side uses
 :class:`crystallite.elastic_deformation.ElasticDeformation`'s
 `eigenstrain` support (new: a prescribed stress-free transformation
 strain entering Hooke's law as ``sigma(x) = C(x):(eps(x) -
@@ -56,15 +57,16 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
-from crystallite.verification import HoleInPlateCase
+from crystallite.verification import EllipticalHoleInPlateCase
 
 MATRIX_LAME_LAMBDA = 1.0
 MATRIX_LAME_MU = 0.7
 HOLE_RADIUS = 0.1
 GRID_SHAPE = (256, 256, 1)
 EIGENSTRAIN_MAGNITUDE = 0.01
+N_IMAGES = 2  # periodic image cutoff for the analytic reference
 
 # label -> eigenstrain tensor (3, 3)
 def _eigenstrain_tensor(label):
@@ -89,9 +91,9 @@ def _eigenstrain_tensor(label):
 
 def _build_case():
     grid = Grid(shape=GRID_SHAPE, lengths=(1.0, 1.0, 1.0))
-    return HoleInPlateCase(
+    return EllipticalHoleInPlateCase(
         grid, matrix_lame_lambda=MATRIX_LAME_LAMBDA, matrix_lame_mu=MATRIX_LAME_MU,
-        hole_radius=HOLE_RADIUS, contrast=1.0, center=(0.5, 0.5),
+        semi_axis_a=HOLE_RADIUS, semi_axis_b=HOLE_RADIUS, contrast=1.0, center=(0.5, 0.5),
     )
 
 
@@ -145,10 +147,11 @@ def _line_through_hole(case, solver, eigenstrain_tensor, components):
 def _periodic_analytic_line(case, eigenstrain_tensor, components):
     """Return (xi, value_a, value_b)/(mu*EIGENSTRAIN_MAGNITUDE) along the
     same line, from
-    :meth:`HoleInPlateCase.periodic_prescribed_eigenstrain_solution`."""
+    :meth:`EllipticalHoleInPlateCase.periodic_prescribed_eigenstrain_void_stress`."""
     grid = case.grid
-    _, stress = case.periodic_prescribed_eigenstrain_solution(eigenstrain_tensor)
-    stress = np.asarray(stress)
+    stress = np.asarray(
+        case.periodic_prescribed_eigenstrain_void_stress(eigenstrain_tensor, n_images=N_IMAGES)
+    )
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
@@ -184,7 +187,7 @@ def plot_eigenstrain(label):
         analytic_numeric_curve(ax, xi, pb, sb, _LABELS[components[1]], "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / (\mu \varepsilon^0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.eigenstrain_{label}")
     plt.close(fig)
 

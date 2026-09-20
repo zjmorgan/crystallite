@@ -30,7 +30,19 @@ information about the inhomogeneity.
 
 The analytic reference is
 :meth:`crystallite.verification.HoleInPlateCase.periodic_body_force_solution`
--- exact, not an approximation or an image sum, and not even iterative:
+-- a spectral solve, the one reference in this family that is *not* a
+closed-form image sum. That is deliberate: a uniform force over the disk has
+a nonzero net force, which no periodic cell can balance, so an exact
+real-space solution needs lattice sums (Ewald or Weierstrass potentials)
+with a compensating uniform background -- machinery with no accuracy payoff
+here, because the stress is *continuous* across the disk boundary (the force
+loads the stress's derivative, not the stress), so the spectral sum, with the
+analytic Bessel transform of the disk (no pixelated mask), converges quickly:
+against a 1024^2 solution the 256^2 line is within 2e-4 of the force times
+the radius away from the boundary and 1.2e-3 within 0.4 radii of it (peak
+stress 0.65). It also satisfies ``div(sigma) + f = 0`` (see the tests) and has
+exactly zero domain mean. It is exact, not an approximation or an image sum,
+and not even iterative:
 since only the *force* differs between the disk and the matrix (not the
 elastic constants), the reference-medium Green's function is already the
 exact solution, the same way
@@ -57,7 +69,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -139,7 +151,7 @@ def plot_body_force():
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / (F_0 r_0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.cylindrical_body_force")
     plt.close(fig)
 

@@ -77,7 +77,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -143,7 +143,7 @@ def plot_antiplane():
     analytic_numeric_curve(ax, xi, pa, sa, r"$\sigma_{13}$", "C0")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \tau_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.antiplane_hole")
     plt.close(fig)
 

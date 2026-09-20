@@ -12,24 +12,32 @@ exterior of ``hole_in_plate.py``'s pressure figure (that would need an
 eigenstrain, i.e. the Eshelby route, not a force).
 
 The analytic reference is
-:meth:`crystallite.verification.HoleInPlateCase.periodic_surface_force_solution`
-(exact periodic Green's-function solve). Numeric and periodic solves share the same band-limited
-source.
+:meth:`crystallite.verification.EllipticalHoleInPlateCase.periodic_line_force_stress`
+at ``semi_axis_a == semi_axis_b``, with no FFT. A source
+``f = -div(sigma*)`` is the equilibrium source of the eigenstress
+``sigma* = -q chi I``, i.e. a uniform dilatation eigenstrain
+``e = -q / (2 (lambda + mu))`` over the disk, so the force-loaded stress is
+the exact closed-form image sum of that eigenstrain
+(:meth:`~crystallite.verification.EllipticalHoleInPlateCase.periodic_prescribed_eigenstrain_void_stress`)
+minus ``q`` on the diagonal inside the disk -- identical outside, exactly
+``-p I`` inside. No new kernel is involved. The numeric solve applies the
+same band-limited line force.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
-from crystallite.verification import HoleInPlateCase
+from crystallite.verification import EllipticalHoleInPlateCase, HoleInPlateCase
 
 MATRIX_LAME_LAMBDA = 1.0
 MATRIX_LAME_MU = 0.7
 HOLE_RADIUS = 0.1
 GRID_SHAPE = (256, 256, 1)
 PRESSURE = 0.01  # interior stress is -PRESSURE * I
+N_IMAGES = 2  # periodic image cutoff for the analytic reference
 
 
 def _traction():
@@ -42,6 +50,16 @@ def _build_case():
     return HoleInPlateCase(
         grid, matrix_lame_lambda=MATRIX_LAME_LAMBDA, matrix_lame_mu=MATRIX_LAME_MU,
         hole_radius=HOLE_RADIUS, contrast=1.0, center=(0.5, 0.5),
+    )
+
+
+def _build_analytic_case():
+    """The same disk as :func:`_build_case`, as the ``a == b`` ellipse that
+    owns the closed-form image-sum reference."""
+    grid = Grid(shape=GRID_SHAPE, lengths=(1.0, 1.0, 1.0))
+    return EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=MATRIX_LAME_LAMBDA, matrix_lame_mu=MATRIX_LAME_MU,
+        semi_axis_a=HOLE_RADIUS, semi_axis_b=HOLE_RADIUS, contrast=1.0, center=(0.5, 0.5),
     )
 
 
@@ -65,7 +83,7 @@ def plot_pressurized_hole():
     print(f"numerical: converged={sol.converged}, iterations={sol.iterations}, "
           f"residual={sol.residual_norm:.3g}")
     xi, sxx_num, syy_num = _line(case, np.asarray(sol.stress))
-    _, stress = case.periodic_surface_force_solution(traction)
+    stress = _build_analytic_case().periodic_line_force_stress(traction, n_images=N_IMAGES)
     _, sxx_an, syy_an = _line(case, np.asarray(stress))
     center = len(xi) // 2
     print(f"interior sigma_11/p: numeric={sxx_num[center]:.3f} periodic={sxx_an[center]:.3f} isolated=-1")
@@ -76,7 +94,7 @@ def plot_pressurized_hole():
     analytic_numeric_curve(ax, xi, syy_an, syy_num, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / p$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.pressurized_hole")
     plt.close(fig)
 

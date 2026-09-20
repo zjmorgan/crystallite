@@ -64,7 +64,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import HoleInPlateCase
 
@@ -238,7 +238,7 @@ def plot_moment():
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / (k r_0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.hole_moment")
     plt.close(fig)
 
@@ -255,7 +255,7 @@ def plot_pressure():
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / p_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.hole_pressure")
     plt.close(fig)
 
@@ -272,7 +272,7 @@ def plot_tension_or_compression(load):
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.hole_{load}")
     plt.close(fig)
 
@@ -289,7 +289,7 @@ def plot_biaxial():
     analytic_numeric_curve(ax, xi, pyy, syy, r"$\sigma_{22}$", "C1")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.hole_biaxial")
     plt.close(fig)
 
@@ -305,7 +305,7 @@ def plot_shear():
     analytic_numeric_curve(ax, xi, pxy, sxy, r"$\sigma_{12}$", "C0")
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.hole_shear")
     plt.close(fig)
 

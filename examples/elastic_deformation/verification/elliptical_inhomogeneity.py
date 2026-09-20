@@ -13,24 +13,24 @@ grid has a single point along x3, since antiplane elasticity is exactly
 solver represents e.g. a screw dislocation's displacement field), and an
 in-plane shear component (``eta5``, eps_12).
 
-Both the analytic reference
-(:meth:`crystallite.verification.EllipticalHoleInPlateCase.periodic_prescribed_eigenstrain_solution`)
-and the numeric solve (via
+The analytic reference is
+:meth:`crystallite.verification.EllipticalHoleInPlateCase.periodic_prescribed_eigenstrain_void_stress`
+-- the exact isolated H/T-tensor field of the prescribed eigenstrain,
+image-summed over the periodic lattice, with no FFT -- the same reference
+as ``cylindrical_inhomogeneity.py`` (which is this case at
+``semi_axis_a == semi_axis_b``). Since this is a pure eigenstrain problem
+(no stiffness contrast to equate) there is no periodic calibration: the
+image sum is exact, its domain mean is analytically ``-f * sigma*``, and
+the interior is the exact uniform Eshelby value. The numeric solve uses
 :class:`crystallite.elastic_deformation.ElasticDeformation`'s
-`eigenstrain` support) reuse the exact same machinery as
-``cylindrical_inhomogeneity.py`` -- since this is a pure eigenstrain
-problem (no stiffness contrast to equate), no elliptical Eshelby tensor
-is needed even for the elliptical geometry, just the ellipse's own
-Fourier transform
-(:func:`crystallite.verification.elastic_deformation._ellipse_fourier_transform`,
-a straightforward affine rescaling of the disk's) in place of the disk's.
+`eigenstrain` support.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-from _plotting import analytic_numeric_curve, plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 
@@ -39,6 +39,7 @@ MATRIX_LAME_MU = 0.7
 SEMI_AXIS_A = 0.15
 SEMI_AXIS_B = 0.08
 GRID_SHAPE = (256, 256, 1)
+N_IMAGES = 2  # periodic image cutoff for the analytic reference
 EIGENSTRAIN_MAGNITUDE = 0.01
 
 
@@ -103,8 +104,9 @@ def _line_through_hole(case, solver, eigenstrain_tensor, components):
 
 def _periodic_analytic_line(case, eigenstrain_tensor, components):
     grid = case.grid
-    _, stress = case.periodic_prescribed_eigenstrain_solution(eigenstrain_tensor)
-    stress = np.asarray(stress)
+    stress = np.asarray(
+        case.periodic_prescribed_eigenstrain_void_stress(eigenstrain_tensor, n_images=N_IMAGES)
+    )
 
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
@@ -134,7 +136,7 @@ def plot_eigenstrain(label):
         analytic_numeric_curve(ax, xi, pb, sb, _LABELS[components[1]], "C1")
     ax.set_xlabel(r"$x_2 / b$")
     ax.set_ylabel(r"$\sigma / (\mu \varepsilon^0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.elliptical_eigenstrain_{label}")
     plt.close(fig)
 

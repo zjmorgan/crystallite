@@ -53,7 +53,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 
@@ -135,13 +135,17 @@ def plot_point_defect():
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
     ax.set_xlim(0.0, 4.0)
-    ax.plot(xi_an, sxx_an, "-", color="C0", label=r"$\sigma_{11}$ analytical")
-    ax.plot(xi_num, sxx_num, "o", color="C0", ms=4, label=r"$\sigma_{11}$ numerical")
-    ax.plot(xi_an, syy_an, "-", color="C1", label=r"$\sigma_{22}$ analytical")
-    ax.plot(xi_num, syy_num, "o", color="C1", ms=4, label=r"$\sigma_{22}$ numerical")
+    analytic_numeric_curve(
+        ax, xi_an, sxx_an, sxx_num, r"$\sigma_{11}$", "C0",
+        downsample=1, x_numeric=xi_num, markersize=4,
+    )
+    analytic_numeric_curve(
+        ax, xi_an, syy_an, syy_num, r"$\sigma_{22}$", "C1",
+        downsample=1, x_numeric=xi_num, markersize=4,
+    )
     ax.set_xlabel(r"$x_1 / r_0$")
     ax.set_ylabel(r"$\sigma / (\mu \varepsilon^0)$")
-    ax.legend(fontsize=7, ncol=2)
+    component_legend(ax)
     save_all(fig, "elastic_deformation.point_defect")
     plt.close(fig)
 

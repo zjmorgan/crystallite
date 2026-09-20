@@ -85,7 +85,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from _plotting import plt, save_all
+from _plotting import analytic_numeric_curve, component_legend, plt, save_all
 from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 
@@ -176,11 +176,12 @@ def plot_mode(label):
 
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
     ax.set_xlim(1.0, 4.0)
-    ax.plot(xi_an, s_an, "-", color="C0", label=f"{plot_label} analytical")
-    ax.plot(xi_num, s_num, "o", color="C0", ms=4, label=f"{plot_label} numerical")
+    analytic_numeric_curve(
+        ax, xi_an, s_an, s_num, plot_label, "C0", downsample=1, x_numeric=xi_num, markersize=4
+    )
     ax.set_xlabel(r"$x_2 / r_0$")
     ax.set_ylabel(r"$\sigma / \sigma_\infty$")
-    ax.legend(fontsize=7)
+    component_legend(ax)
     save_all(fig, f"elastic_deformation.thin_crack_{label}")
     plt.close(fig)
 

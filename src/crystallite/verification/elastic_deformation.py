@@ -316,7 +316,8 @@ def _ellipse_equivalent_eigenstrain(
     """
     nu = matrix_lame_lambda / (2.0 * (matrix_lame_lambda + matrix_lame_mu))
     lam0, mu0 = matrix_lame_lambda, matrix_lame_mu
-    lam1, mu1 = contrast * lam0, contrast * mu0
+    rigid = contrast == float("inf")
+    lam1, mu1 = (0.0, 0.0) if rigid else (contrast * lam0, contrast * mu0)
     a, b = semi_axis_a, semi_axis_b
 
     denom = 2.0 * (1.0 - nu)
@@ -334,6 +335,11 @@ def _ellipse_equivalent_eigenstrain(
         eps_bar = xp.array([eps_bar_11, eps_bar_22, 0.0])
 
         s_mat = xp.array([[s1111, s1122, 0.0], [s2211, s2222, 0.0], [0.0, 0.0, 0.0]])
+        if rigid:
+            # contrast -> inf: the interior strain vanishes, eps_bar + S:eps* = 0
+            # (eps*_33 stays 0, as in the finite-contrast solve)
+            es_in_plane = xp.linalg.solve(s_mat[:2, :2], -eps_bar[:2])
+            return xp.array([es_in_plane[0], es_in_plane[1], 0.0])
         identity3 = xp.eye(3)
         ones3 = xp.ones((3, 3))
         c1_mat = lam1 * ones3 + 2.0 * mu1 * identity3
@@ -349,7 +355,10 @@ def _ellipse_equivalent_eigenstrain(
     elif load == "shear":
         eps_bar_12 = magnitude / (2.0 * mu0)
         s_eff = 2.0 * s1212
-        es12 = eps_bar_12 * (mu0 - mu1) / (mu1 * s_eff - mu0 * s_eff + mu0)
+        if rigid:
+            es12 = -eps_bar_12 / s_eff
+        else:
+            es12 = eps_bar_12 * (mu0 - mu1) / (mu1 * s_eff - mu0 * s_eff + mu0)
         eps_star = xp.zeros((3, 3))
         eps_star[0, 1] = eps_star[1, 0] = es12
         return eps_star
@@ -981,6 +990,41 @@ def _antiplane_eigenstrain_correction(x, y, eps_star, a, b, mu):
     return tuple(xp.where(outside, e, i) for e, i in zip(ext, inn))
 
 
+def _periodic_gradient_inhomogeneity_stress(
+    grid, center, a, b, contrast, lam, mu, magnitude, n_images
+):
+    """Periodic-array stress ``(3, 3) + grid.shape`` of an elliptical
+    inhomogeneity (semi-axes `a`, `b`, `contrast`) under the "moment" remote
+    stress gradient, as the background plus the image sum of the isolated
+    solution (:func:`_ellipse_gradient_inhomogeneity_solution`) -- shared by
+    both case classes (a circle is ``a == b``). Only the in-plane
+    ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` are populated."""
+    nu = lam / (2.0 * (lam + mu))
+    solution = _ellipse_gradient_inhomogeneity_solution(a, b, contrast, nu, magnitude)
+    x, y = grid.x[0], grid.x[1]
+    length_x, length_y = grid.lengths[0], grid.lengths[1]
+
+    sigma_xx = magnitude * (y - center[1]) * xp.ones(grid.shape)
+    sigma_yy = xp.zeros(grid.shape)
+    sigma_xy = xp.zeros(grid.shape)
+    for n1 in range(-n_images, n_images + 1):
+        for n2 in range(-n_images, n_images + 1):
+            dx = x - (center[0] + n1 * length_x)
+            dy = y - (center[1] + n2 * length_y)
+            sxx, syy, sxy = _ellipse_gradient_inhomogeneity_correction_cartesian(
+                xp.broadcast_to(dx, grid.shape), xp.broadcast_to(dy, grid.shape), solution
+            )
+            sigma_xx = sigma_xx + sxx
+            sigma_yy = sigma_yy + syy
+            sigma_xy = sigma_xy + sxy
+
+    stress = xp.zeros((3, 3) + grid.shape, dtype=sigma_xx.dtype)
+    stress[0, 0] = sigma_xx
+    stress[1, 1] = sigma_yy
+    stress[0, 1] = stress[1, 0] = sigma_xy
+    return stress
+
+
 def cartesian_to_polar_stress(sigma_xx, sigma_yy, sigma_xy, theta):
     """Rotate a 2D Cartesian stress state into polar (r, theta) components.
 
@@ -1119,7 +1163,7 @@ def _antiplane_inhomogeneity_polar_stress(r, theta, hole_radius, magnitude, cont
     from the inhomogeneity.
     """
     beta = contrast
-    k = (1.0 - beta) / (1.0 + beta)
+    k = -1.0 if beta == float("inf") else (1.0 - beta) / (1.0 + beta)
     a_over_r_sq = (hole_radius / r) ** 2
     sigma_r3 = magnitude * (1.0 - k * a_over_r_sq) * xp.cos(theta)
     sigma_theta3 = -magnitude * (1.0 + k * a_over_r_sq) * xp.sin(theta)
@@ -1146,7 +1190,8 @@ def _antiplane_inhomogeneity_interior_stress(magnitude, contrast):
     void carries no antiplane stress at all, interior or otherwise.
     """
     beta = contrast
-    sigma_13 = magnitude * 2.0 * beta / (1.0 + beta)
+    # beta -> inf (rigid): 2*beta/(1+beta) -> 2
+    sigma_13 = magnitude * (2.0 if beta == float("inf") else 2.0 * beta / (1.0 + beta))
     sigma_23 = 0.0 * magnitude
     return sigma_13, sigma_23
 
@@ -1272,18 +1317,53 @@ def _ellipse_exterior_zeta(z, semi_axis_a, semi_axis_b):
     return xp.where(zeta == 0, 1.0 + 0j, zeta)
 
 
+def _pole_basis_terms(m, n_power, k_pole):
+    r"""Exterior potential basis in :math:`\zeta` (all decaying at
+    infinity): the powers :math:`\zeta^{-n}`, :math:`n=1..` `n_power`, plus the
+    pole terms :math:`(\zeta^2-m)^{-k}` and :math:`\zeta(\zeta^2-m)^{-k}`,
+    :math:`k=1..` `k_pole`. Returns a list of ``(F, dF, ddF)`` callables.
+
+    The exact solution has poles at :math:`\zeta=\pm\sqrt m`, just inside
+    the unit disk for a slender ellipse (:math:`|m|\to 1`); a pure power
+    series then converges only like :math:`|m|^{n/2}`. Carrying the poles
+    explicitly (order 2 suffices; order >= 3 makes the columns near-
+    degenerate and hurts) leaves the powers only smooth structure.
+    """
+    terms = []
+    for n in range(1, n_power + 1):
+        terms.append((
+            lambda z, n=n: z ** (-n),
+            lambda z, n=n: -n * z ** (-n - 1),
+            lambda z, n=n: n * (n + 1) * z ** (-n - 2),
+        ))
+    for k in range(1, k_pole + 1):
+        terms.append((
+            lambda z, k=k: (z**2 - m) ** (-k),
+            lambda z, k=k: -2 * k * z * (z**2 - m) ** (-k - 1),
+            lambda z, k=k: -2 * k * (z**2 - m) ** (-k - 1)
+            + 4 * k * (k + 1) * z**2 * (z**2 - m) ** (-k - 2),
+        ))
+        terms.append((
+            lambda z, k=k: z * (z**2 - m) ** (-k),
+            lambda z, k=k: (z**2 - m) ** (-k) - 2 * k * z**2 * (z**2 - m) ** (-k - 1),
+            lambda z, k=k: -6 * k * z * (z**2 - m) ** (-k - 1)
+            + 4 * k * (k + 1) * z**3 * (z**2 - m) ** (-k - 2),
+        ))
+    return terms
+
+
 def _ellipse_gradient_inhomogeneity_solution(
-    semi_axis_a, semi_axis_b, contrast, nu, magnitude, n_terms=None, n_collocation=None,
-    tolerance=1.0e-10,
+    semi_axis_a, semi_axis_b, contrast, nu, magnitude, n_terms=24, n_collocation=1024,
+    n_pole=2,
 ):
     r"""Coefficients of the exact isolated-ellipse solution for a
     finite-`contrast` elliptical inhomogeneity under the "moment" remote
     stress gradient :math:`\sigma_{11}\to\mathrm{magnitude}\cdot x_2`
     (:math:`\sigma_{22}=\sigma_{12}=0` far away) -- the gradient-loading
     counterpart of :func:`_ellipse_void_cartesian_stress`, extended to
-    finite `contrast` (`contrast` is the inhomogeneity-to-matrix
-    shear-modulus ratio; both phases share `nu`, as everywhere in this
-    module).
+    finite `contrast` (the inhomogeneity-to-matrix shear-modulus ratio,
+    ``0`` a void, ``inf`` rigid; both phases share `nu`, as everywhere in
+    this module).
 
     Muskhelishvili plane-strain potentials
     (:math:`\sigma_{11}+\sigma_{22}=4\,\mathrm{Re}\,\Phi`,
@@ -1291,58 +1371,63 @@ def _ellipse_gradient_inhomogeneity_solution(
     :math:`2\mu(u_1+iu_2)=\kappa\varphi-z\overline{\varphi'}-\overline\psi`,
     :math:`\kappa=3-4\nu`). The remote field has
     :math:`\varphi_0=-i g z^2/8`, :math:`\psi_0=i g z^2/8`. Outside, the
-    correction potentials are Laurent series in :math:`\zeta^{-1}` under
-    the conformal map of :func:`_ellipse_exterior_zeta`; a linear remote
-    field makes the interior stress exactly linear (Eshelby's polynomial
+    correction potentials are expanded in :func:`_pole_basis_terms` under the
+    conformal map of :func:`_ellipse_exterior_zeta`; a linear remote field
+    makes the interior stress exactly linear (Eshelby's polynomial
     uniformity), so the interior potentials are exactly quadratic in
     :math:`z`. Continuity of traction
     (:math:`\varphi+z\overline{\varphi'}+\overline\psi`) and displacement
-    at :math:`|\zeta|=1` gives a linear system for the coefficients,
-    solved here in the least-squares sense on `n_collocation` boundary
-    points (the exterior series is truncated at `n_terms`; the interior
-    is exact). The exterior series converges like :math:`|m|^{n/2}` with
-    :math:`m=(a-b)/(a+b)`, so slender ellipses need many terms. Unless
-    given, `n_terms` is chosen so the truncation error is about
-    `tolerance` (relative), ``2 ln(tolerance)/ln|m|`` clamped to
-    ``[16, 384]`` -- measured, a fixed 64 terms leaves a ~1e-4 relative
-    traction error at ``a/b=8`` or ``1/8`` while 128 reaches ~1e-7.
-    Aspect ratios beyond ~``|m|>0.97`` (about 60:1) hit the cap and
-    lose accuracy; `n_collocation` defaults to ``max(1024, 8*n_terms)``.
+    at :math:`|\zeta|=1` gives a linear system for the coefficients, solved
+    in the least-squares sense on `n_collocation` boundary points, with
+    the columns equilibrated (the pole columns are thousands of times
+    larger than the power columns for a slender ellipse).
 
-    Checked independently: at ``contrast=1`` the correction vanishes
-    identically; at ``a=b`` and ``contrast -> 0`` it reproduces
-    :func:`_gradient_void_hole_correction_cartesian` (~1e-11); traction
-    is continuous across the interface at finite contrast, and the field
-    is in pointwise equilibrium (finite differences).
+    For ``contrast=inf`` the inclusion is a free rigid body: the exterior
+    boundary displacement is :math:`2(w_0+i\omega z)` with the translation
+    :math:`w_0` and rotation :math:`\omega` solved for (three extra
+    unknowns); clamping it to zero leaves an inconsistent system for
+    slender ellipses. Contrasts above ``1e8`` are treated as rigid (the
+    difference is below ``1e-8``, and the finite solve sits on a ~1e-6
+    round-off floor there). The solve is nondimensionalized by the mean
+    semi-axis, since otherwise the interior coefficients scale like
+    size\ :sup:`-2` and round-off breaks scale invariance.
+
+    Accuracy: with the defaults (24 power terms, poles to order 2) the
+    interface traction is continuous to ~1e-6 (relative to the stress
+    scale) for every contrast from a void to rigid and every aspect ratio
+    tested from 1/1000 to 1000 (versus 1e-2 to 1e-1 with a pure power series
+    of 384 terms beyond about 60:1). Also checked: at ``contrast=1`` the
+    correction vanishes identically; at ``a=b`` and ``contrast -> 0`` it
+    reproduces :func:`_gradient_void_hole_correction_cartesian`
+    (~1e-11); the field is in pointwise equilibrium.
     """
-    a, b = semi_axis_a, semi_axis_b
-    semi_r = (a + b) / 2.0
+    if contrast > 1.0e8:
+        contrast = float("inf")
+    rigid = contrast == float("inf")
+    length = (semi_axis_a + semi_axis_b) / 2.0
+    a, b = semi_axis_a / length, semi_axis_b / length
     m = (a - b) / (a + b)
+    scaled_magnitude = magnitude * length  # sigma_11 = g*y = (g*length)*(y/length)
     kappa = 3.0 - 4.0 * nu
-    if n_terms is None:
-        if abs(m) < 1.0e-12:
-            n_terms = 16
-        else:
-            n_terms = int(min(384, max(16, xp.ceil(2.0 * xp.log(tolerance) / xp.log(abs(m))))))
-    if n_collocation is None:
-        n_collocation = max(1024, 8 * n_terms)
     theta = xp.linspace(0.0, 2.0 * xp.pi, n_collocation, endpoint=False)
     s = xp.exp(1j * theta)
-    z = semi_r * (s + m / s)
-    omega_prime = semi_r * (1.0 - m / s**2)
-    n = xp.arange(1, n_terms + 1)
-    powers = s[:, None] ** (-n[None, :])
-    powers_shifted = powers / s[:, None]
-    n_unknown = 2 * (2 * n_terms + 6)
+    z = s + m / s  # mean semi-axis is 1 in these units
+    omega_prime = 1.0 - m / s**2
+    terms = _pole_basis_terms(m, n_terms, n_pole)
+    n_basis = len(terms)
+    values = xp.stack([f(s) for f, _, _ in terms], axis=1)
+    slopes = xp.stack([d(s) for _, d, _ in terms], axis=1)
+    n_complex = 2 * (2 * n_basis + 6)
+    n_unknown = n_complex + (3 if rigid else 0)
 
     def residual(x, remote):
-        c = x[0::2] + 1j * x[1::2]
-        a_ext, c_ext = c[:n_terms], c[n_terms : 2 * n_terms]
-        a_int, b_int = c[2 * n_terms : 2 * n_terms + 3], c[2 * n_terms + 3 :]
+        c = x[:n_complex][0::2] + 1j * x[:n_complex][1::2]
+        a_ext, c_ext = c[:n_basis], c[n_basis : 2 * n_basis]
+        a_int, b_int = c[2 * n_basis : 2 * n_basis + 3], c[2 * n_basis + 3 :]
         scale = 1.0 if remote else 0.0
-        phi_e = scale * (-1j * magnitude * z**2 / 8.0) + powers @ a_ext
-        dphi_e = scale * (-1j * magnitude * z / 4.0) - (powers_shifted @ (n * a_ext)) / omega_prime
-        psi_e = scale * (1j * magnitude * z**2 / 8.0) + powers @ c_ext
+        phi_e = scale * (-1j * scaled_magnitude * z**2 / 8.0) + values @ a_ext
+        dphi_e = scale * (-1j * scaled_magnitude * z / 4.0) + (slopes @ a_ext) / omega_prime
+        psi_e = scale * (1j * scaled_magnitude * z**2 / 8.0) + values @ c_ext
         phi_i = a_int[0] + a_int[1] * z + a_int[2] * z**2
         dphi_i = a_int[1] + 2.0 * a_int[2] * z
         psi_i = b_int[0] + b_int[1] * z + b_int[2] * z**2
@@ -1351,8 +1436,18 @@ def _ellipse_gradient_inhomogeneity_solution(
         )
         disp_e = kappa * phi_e - z * xp.conj(dphi_e) - xp.conj(psi_e)
         disp_i = kappa * phi_i - z * xp.conj(dphi_i) - xp.conj(psi_i)
-        # beta*D_e - D_i rather than D_e - D_i/beta: well conditioned as beta -> 0
-        disp = contrast * disp_e - disp_i
+        # Displacement continuity D_e/mu_0 = D_i/mu_1, scaled to stay well
+        # conditioned at both extremes (beta*D_e - D_i for beta <= 1,
+        # D_e - D_i/beta for beta > 1); rigid: the boundary displacement is a
+        # free rigid-body motion.
+        if rigid:
+            w0 = x[n_complex] + 1j * x[n_complex + 1]
+            spin = x[n_complex + 2]
+            disp = disp_e - 2.0 * (w0 + 1j * spin * z)
+        elif contrast > 1.0:
+            disp = disp_e - disp_i / contrast
+        else:
+            disp = contrast * disp_e - disp_i
         return xp.concatenate([traction.real, traction.imag, disp.real, disp.imag])
 
     r0 = residual(xp.zeros(n_unknown), True)
@@ -1361,13 +1456,15 @@ def _ellipse_gradient_inhomogeneity_solution(
         unit = xp.zeros(n_unknown)
         unit[k] = 1.0
         matrix[:, k] = residual(unit, False)
-    x = xp.linalg.lstsq(matrix, -r0, rcond=None)[0]
+    norms = xp.linalg.norm(matrix, axis=0)
+    norms = xp.where(norms == 0, 1.0, norms)
+    x = (xp.linalg.lstsq(matrix / norms, -r0, rcond=None)[0] / norms)[:n_complex]
     c = x[0::2] + 1j * x[1::2]
     return {
-        "a": a, "b": b, "semi_r": semi_r, "m": m, "magnitude": magnitude,
-        "a_ext": c[:n_terms], "c_ext": c[n_terms : 2 * n_terms],
-        "a_int": c[2 * n_terms : 2 * n_terms + 3], "b_int": c[2 * n_terms + 3 :],
-        "n_terms": n_terms,
+        "a": a, "b": b, "m": m, "magnitude": magnitude, "length": length,
+        "n_power": n_terms, "n_pole": n_pole,
+        "a_ext": c[:n_basis], "c_ext": c[n_basis : 2 * n_basis],
+        "a_int": c[2 * n_basis : 2 * n_basis + 3], "b_int": c[2 * n_basis + 3 :],
     }
 
 
@@ -1382,28 +1479,37 @@ def _ellipse_gradient_inhomogeneity_correction_cartesian(x, y, solution):
     exactly the role :func:`_gradient_void_hole_correction_cartesian`
     plays for the true-void circle.
     """
-    a, b = solution["a"], solution["b"]
-    semi_r, m, g = solution["semi_r"], solution["m"], solution["magnitude"]
-    x, y = xp.asarray(x), xp.asarray(y)
+    a, b = solution["a"], solution["b"]  # in units of the mean semi-axis
+    m = solution["m"]
+    length = solution["length"]
+    g = solution["magnitude"] * length  # background g*y == g_scaled * (y/length)
+    x, y = xp.asarray(x) / length, xp.asarray(y) / length
     inside = (x / a) ** 2 + (y / b) ** 2 < 1.0
     far = 2.0 * (a + b) + 0j
     z = x + 1j * y
     z_safe = xp.where(inside, far, z)
     zeta = _ellipse_exterior_zeta(z_safe, a, b)
     inv = 1.0 / zeta
+    n_power = solution["n_power"]
     power = inv
     phi_z = xp.zeros_like(zeta)
     phi_zz = xp.zeros_like(zeta)
     psi_z = xp.zeros_like(zeta)
-    for k in range(1, solution["n_terms"] + 1):
+    for k in range(1, n_power + 1):
         a_k, c_k = solution["a_ext"][k - 1], solution["c_ext"][k - 1]
         shifted = power * inv
         phi_z = phi_z - k * a_k * shifted
         phi_zz = phi_zz + k * (k + 1) * a_k * shifted * inv
         psi_z = psi_z - k * c_k * shifted
         power = power * inv
-    omega_p = semi_r * (1.0 - m * inv**2)
-    omega_pp = 2.0 * semi_r * m * inv**3
+    pole_terms = _pole_basis_terms(m, 0, solution["n_pole"])
+    for j, (_, d, dd) in enumerate(pole_terms):
+        a_j, c_j = solution["a_ext"][n_power + j], solution["c_ext"][n_power + j]
+        phi_z = phi_z + a_j * d(zeta)
+        phi_zz = phi_zz + a_j * dd(zeta)
+        psi_z = psi_z + c_j * d(zeta)
+    omega_p = 1.0 - m * inv**2
+    omega_pp = 2.0 * m * inv**3
     phi = phi_z / omega_p
     dphi = (phi_zz / omega_p - phi_z * omega_pp / omega_p**2) / omega_p
     psi = psi_z / omega_p
@@ -3155,6 +3261,20 @@ class HoleInPlateCase:
             )
         )
 
+    def periodic_gradient_inhomogeneity_stress(self, magnitude, n_images=2):
+        """Periodic-array stress field for the circular inhomogeneity
+        (any `contrast`, void to rigid) under the "moment" remote stress
+        gradient, by image-summing the exact isolated solution -- the
+        finite-contrast counterpart of :meth:`periodic_gradient_stress`
+        (which is void-only), and the circular case (``a == b``) of
+        :meth:`EllipticalHoleInPlateCase.periodic_gradient_inhomogeneity_stress`,
+        whose docstring has the validation. Only the in-plane
+        ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` are populated."""
+        return _periodic_gradient_inhomogeneity_stress(
+            self.grid, self.center, self.hole_radius, self.hole_radius, self.contrast,
+            self.matrix_lame_lambda, self.matrix_lame_mu, magnitude, n_images,
+        )
+
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
         r"""Periodic-array stress field for a void loaded by uniform
         internal pressure `magnitude` (zero remote stress) -- the
@@ -4008,6 +4128,55 @@ class EllipticalHoleInPlateCase:
             )
         )
 
+    def periodic_line_force_stress(self, traction, n_images=1):
+        r"""Periodic-array stress of a radial line force
+        :math:`f=q\nabla\chi` (`traction` :math:`=q`, directed inward,
+        :math:`\chi` the ellipse indicator) applied on the boundary of a
+        region of the *same* material as the matrix -- the "pressurized
+        hole" of ``cylindrical_pressurized_hole.py`` (not the pressurized
+        cavity, whose exterior differs).
+
+        A source :math:`f=-\nabla\cdot\sigma^*` is exactly the equilibrium
+        source of the eigenstress :math:`\sigma^*=-q\chi I` (in plane),
+        which is a uniform dilatation eigenstrain
+        :math:`e=-q/(2(\lambda+\mu))` over the ellipse. The body-force
+        stress is :math:`C:\varepsilon` while the eigenstrain stress is
+        :math:`C:\varepsilon-\sigma^*`, so the two are identical outside
+        and differ by :math:`-q\chi I` inside::
+
+            sigma_force = sigma_eigenstrain - q * chi * I     (in plane)
+
+        No new kernel: this is :meth:`periodic_prescribed_eigenstrain_void_stress`
+        (exact closed-form image sum) plus that uniform interior shift.
+        For a circle the interior is the uniform hydrostatic
+        :math:`-p I`, :math:`p=q(\lambda+\mu)/(\lambda+2\mu)`, the exterior
+        the isolated Lame field :math:`\sigma_{rr}=-\sigma_{\theta\theta}
+        =\frac{\mu q}{\lambda+2\mu}(R/r)^2` plus the periodic-image correction,
+        and the domain mean is zero (zero net force, zero macroscopic strain) up to
+        the grid's sampling of the disk area (~0.1% of :math:`p` at 256^2).
+
+        Parameters
+        ----------
+        traction : float
+        n_images : int, default=1
+
+        Returns
+        -------
+        stress : ndarray
+            Shape ``(3, 3) + grid.shape``; only the in-plane components are
+            populated.
+        """
+        lam, mu = self.matrix_lame_lambda, self.matrix_lame_mu
+        eigenstrain = xp.zeros((3, 3))
+        eigenstrain[0, 0] = eigenstrain[1, 1] = -traction / (2.0 * (lam + mu))
+        stress = xp.asarray(
+            self.periodic_prescribed_eigenstrain_void_stress(eigenstrain, n_images=n_images)
+        )
+        inside = self.elliptical_radius < 1.0
+        stress[0, 0] = xp.where(inside, stress[0, 0] - traction, stress[0, 0])
+        stress[1, 1] = xp.where(inside, stress[1, 1] - traction, stress[1, 1])
+        return stress
+
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
         r"""Periodic-array stress field for an elliptical void loaded by
         uniform internal pressure `magnitude` (zero remote stress) --
@@ -4574,31 +4743,7 @@ class EllipticalHoleInPlateCase:
             Shape ``(3, 3) + grid.shape``; only the in-plane
             ``sigma_xx``, ``sigma_yy``, ``sigma_xy`` are populated.
         """
-        nu = self.matrix_lame_lambda / (2.0 * (self.matrix_lame_lambda + self.matrix_lame_mu))
-        solution = _ellipse_gradient_inhomogeneity_solution(
-            self.semi_axis_a, self.semi_axis_b, self.contrast, nu, magnitude
+        return _periodic_gradient_inhomogeneity_stress(
+            self.grid, self.center, self.semi_axis_a, self.semi_axis_b, self.contrast,
+            self.matrix_lame_lambda, self.matrix_lame_mu, magnitude, n_images,
         )
-        x, y = self.grid.x[0], self.grid.x[1]
-        length_x, length_y = self.grid.lengths[0], self.grid.lengths[1]
-
-        sigma_xx = magnitude * (y - self.center[1]) * xp.ones(self.grid.shape)
-        sigma_yy = xp.zeros(self.grid.shape)
-        sigma_xy = xp.zeros(self.grid.shape)
-        for n1 in range(-n_images, n_images + 1):
-            for n2 in range(-n_images, n_images + 1):
-                dx = x - (self.center[0] + n1 * length_x)
-                dy = y - (self.center[1] + n2 * length_y)
-                sxx, syy, sxy = _ellipse_gradient_inhomogeneity_correction_cartesian(
-                    xp.broadcast_to(dx, self.grid.shape),
-                    xp.broadcast_to(dy, self.grid.shape),
-                    solution,
-                )
-                sigma_xx = sigma_xx + sxx
-                sigma_yy = sigma_yy + syy
-                sigma_xy = sigma_xy + sxy
-
-        stress = xp.zeros((3, 3) + self.grid.shape, dtype=sigma_xx.dtype)
-        stress[0, 0] = sigma_xx
-        stress[1, 1] = sigma_yy
-        stress[0, 1] = stress[1, 0] = sigma_xy
-        return stress
