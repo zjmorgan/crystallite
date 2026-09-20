@@ -39,12 +39,10 @@ from crystallite.grid import Grid
 from crystallite.verification import EllipticalHoleInPlateCase
 from elliptical_hole import ASPECT_RATIOS, CHARACTERISTIC_SIZE, _semi_axes
 
-# Finer than the hole sweep's 512^2: each solve here is a single iteration (a
-# homogeneous matrix makes the reference operator exact), so resolution is
-# nearly free, and it matters -- at the slender ratios the ellipse is only ~6
-# cells across at 512^2 and the numeric interior stress is off by up to 4%
-# there, against <= 1.3% at 1024^2 (20% -> 2% -> 0.4% at a/b=1/8 for 256^2,
-# 512^2, 1024^2).
+# Finer than the hole sweep's 512^2: a homogeneous matrix makes each solve a
+# single iteration, so resolution is nearly free, and it matters -- at the
+# slender ratios the ellipse is only ~6 cells across at 512^2, off by up to
+# 4% there vs. <=1.3% at 1024^2 (20% -> 2% -> 0.4% at a/b=1/8, 256/512/1024^2).
 GRID_SHAPE = (1024, 1024, 1)
 MATRIX_LAME_LAMBDA = 1.0
 MATRIX_LAME_MU = 0.7

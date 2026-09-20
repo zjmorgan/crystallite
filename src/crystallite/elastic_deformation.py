@@ -278,31 +278,19 @@ class ElasticDeformation:
         spatial_ndim = len(self.grid.shape)
         strain_field = macro_strain.reshape((3, 3) + (1,) * spatial_ndim)
         sigma_bar = self.stress(strain_field)
-        # Equilibrium: div(C:eps_bar) + div(C:eps*(u*)) = 0, and A(u) is
-        # defined as -div(C:eps*(u)), so A(u*) = +div(C:eps_bar) here --
-        # no leading minus (a previous version of this had one, which is
-        # invisible far from any heterogeneity, since u* -> 0 there
-        # regardless of its sign, but flips the correction's sign exactly
-        # where it matters, right around a heterogeneity).
+        # A(u*) = -div(C:eps*(u*)); equilibrium gives div(C:eps_bar) +
+        # div(C:eps*(u*)) = 0, so A(u*) = +div(C:eps_bar): no leading minus.
+        # (A previous version had one -- invisible far from any
+        # heterogeneity since u*->0 there, but wrong right around one.)
         if macro_strain_gradient is not None:
-            # The gradient part must be handled separately from the plain
-            # C(x):eps_bar path above: eps_bar is spatially constant, so
-            # C(x):eps_bar is trivially periodic (its C0 part is a
-            # constant array, and only the localized deltaC(x):eps_bar
-            # part varies), safe to FFT as `sigma_bar` already is. A
-            # spatially *growing* affine field is not periodic, so
-            # C0:eps_grad(x) must never be formed and FFT'd -- but its
-            # analytic divergence is exactly zero everywhere by
-            # construction (`macro_strain_gradient` comes from applying
-            # the reference medium's own compliance to a target stress
-            # gradient, so C0:eps_grad(x) reproduces that target stress
-            # gradient pointwise, which is trivially divergence-free: see
-            # HoleInPlateCase.remote_stress_gradient/macro_strain_gradient
-            # for the "moment" case this exists for). So only the
-            # localized deltaC(x):eps_grad(x) term contributes to the
-            # body force, and it alone is safe to FFT (deltaC -> 0 away
-            # from any heterogeneity, keeping the product periodic even
-            # though eps_grad(x) itself is not).
+            # eps_bar is constant, so C(x):eps_bar is periodic and safe to
+            # FFT as `sigma_bar` already is. A growing affine field is not
+            # periodic, so C0:eps_grad(x) must never be formed/FFT'd -- but
+            # it's analytically divergence-free by construction (see
+            # HoleInPlateCase.remote_stress_gradient/macro_strain_gradient),
+            # so only the localized deltaC(x):eps_grad(x) term contributes,
+            # and it alone (deltaC -> 0 away from any heterogeneity) is safe
+            # to FFT.
             if self.stiffness is not None:
                 raise NotImplementedError(
                     "macro_strain_gradient is not supported with a general stiffness"
@@ -316,16 +304,11 @@ class ElasticDeformation:
                 delta_lambda * trace[None, None, ...] * delta + 2.0 * delta_mu * eps_grad
             )
         if eigenstrain is not None:
-            # Hooke's law with an eigenstrain is sigma(x) = C(x):(eps(x) -
-            # eigenstrain(x)); substituting into div(sigma)=0 alongside
-            # the macro_strain/macro_strain_gradient background above
-            # adds a further -div(C(x):eigenstrain(x)) to A(u)'s target
-            # (same sign derivation as the docstring's "no leading minus"
-            # note, just with an extra term). Safe to use the full C(x)
-            # (not just deltaC) and FFT directly, unlike the gradient
-            # background above: eigenstrain(x) is itself already a
-            # prescribed, localized/periodic real-space field (e.g.
-            # nonzero only inside a disk), not an unbounded affine one.
+            # sigma(x) = C(x):(eps(x) - eigenstrain(x)); substituting into
+            # div(sigma)=0 adds -div(C(x):eigenstrain(x)) to A(u)'s target
+            # (same sign as the "no leading minus" note above). Safe to use
+            # full C(x) and FFT directly -- unlike eps_grad above,
+            # eigenstrain(x) is already a localized/periodic field.
             eigenstrain = xp.asarray(eigenstrain, dtype=self.grid.real_dtype)
             sigma_bar = sigma_bar - self.stress(eigenstrain)
         return self._divergence_of_stress(sigma_bar)
@@ -405,12 +388,10 @@ class ElasticDeformation:
         if body_force is not None:
             body_force = xp.asarray(body_force, dtype=self.grid.real_dtype)
             spatial_axes = tuple(range(1, body_force.ndim))
-            # A has no k=0 response (a periodic operator cannot balance a
-            # net force), so a nonzero-mean body_force makes A(u)=b
-            # inconsistent -- CG then has no solution to converge to and
-            # diverges outright, rather than failing gracefully. Drop the
-            # mean explicitly here, matching what GreenOperator.field's
-            # own k=0 branch already does silently for an FFT-based solve.
+            # A has no k=0 response, so a nonzero-mean body_force makes
+            # A(u)=b inconsistent and CG diverges rather than failing
+            # gracefully. Drop the mean, as GreenOperator.field's own k=0
+            # branch already does for an FFT-based solve.
             b = b + (body_force - xp.mean(body_force, axis=spatial_axes, keepdims=True))
 
         if initial_displacement is None:
@@ -428,10 +409,9 @@ class ElasticDeformation:
 
         iterations = 0
         if b_norm < 1.0e-12:
-            # No net body force (e.g. a homogeneous material, or C(x)
-            # already matching the reference medium): u=0 already solves
-            # A(u)=b=0 exactly, to floating-point noise -- skip the
-            # relative-residual check, which would divide by ~0.
+            # No net body force: u=0 already solves A(u)=b=0 (to floating-
+            # point noise). Skip the relative-residual check to avoid
+            # dividing by ~0.
             residual_norm = 0.0
             converged = True
         else:
@@ -440,9 +420,8 @@ class ElasticDeformation:
             rz_old = xp.sum(r * z)
             residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
             converged = residual_norm < tol
-            # Best iterate seen so far, and its residual -- see the loop's
-            # own stagnation guard below for why this is tracked rather
-            # than just returning whatever `u` the loop ends on.
+            # Best iterate so far; the stagnation guard below may stop
+            # before the loop's last step is actually the best one.
             best_u, best_residual_norm = u, residual_norm
 
             while not converged and iterations < max_iterations:
@@ -460,38 +439,15 @@ class ElasticDeformation:
                 if residual_norm < best_residual_norm:
                     best_u, best_residual_norm = u, residual_norm
                 elif residual_norm > 100.0 * best_residual_norm:
-                    # CG has started diverging rather than merely
-                    # stalling: `p^T A p` collapsing toward zero (round-
-                    # off leaking into a near-null-eigenvalue sector of A
-                    # -- e.g. the out-of-plane DOF on a pseudo-2D grid,
-                    # shape[2]==1, has a whole continuum of vanishingly
-                    # small eigenvalues at low in-plane wavenumber, easily
-                    # excited by round-off alone when nothing actually
-                    # forces that sector) makes `alpha` blow up, and once
-                    # that happens further iteration only amplifies the
-                    # error, never recovers. Stop here and report the best
-                    # iterate found rather than whatever `u` this runaway
-                    # step produced -- checked directly against a `body_force`
-                    # RHS (a compact force with nothing forcing the
-                    # out-of-plane sector) that reproduces this exact
-                    # failure mode: `p^T A p` collapsing to ~1e-12 by the
-                    # second iteration and `alpha` swinging between ~3 and
-                    # ~20, versus a sane `alpha~1` on the first step.
-                    #
-                    # 100x, not a tighter multiple: ordinary CG on a
-                    # genuinely heterogeneous problem (a real stiffness
-                    # contrast, not this pathology) can have its own benign
-                    # residual blips well above a small multiple of its
-                    # best-so-far before recovering and converging
-                    # normally -- checked directly against a converging
-                    # case (a soft elliptical inclusion under tension) that
-                    # blips to ~2.5x its best at iteration ~25 and still
-                    # goes on to converge cleanly at iteration 135; an
-                    # earlier version of this guard used 2x and cut that
-                    # solve off at iteration 25, a real regression this
-                    # threshold is sized to avoid while still catching the
-                    # true divergence case well before it reaches its own
-                    # eventual >1e15 residual.
+                    # Divergence, not stalling: round-off can excite the
+                    # near-null eigenvalue sector of a pseudo-2D grid's
+                    # out-of-plane DOF (shape[2]==1), blowing up alpha with
+                    # no recovery. Report the best iterate seen instead of
+                    # the runaway one. 100x, not a tighter multiple: ordinary
+                    # CG on a real heterogeneous problem can blip to ~2.5x
+                    # its best before converging normally; 2x cut such a
+                    # solve off early (a real regression this threshold
+                    # avoids).
                     break
                 z = self._precondition(r)
                 rz_new = xp.sum(r * z)

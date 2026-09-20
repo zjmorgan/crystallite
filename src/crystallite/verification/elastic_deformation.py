@@ -1844,17 +1844,10 @@ def _ellipse_inhomogeneity_exterior_stress(x, y, eps_star, semi_axis_a, semi_axi
     )
 
     e0, e1, e2 = eps_star[0, 0], eps_star[1, 1], eps_star[2, 2]
-    # The h0100/h0111/h0101 terms contract against the *off-diagonal*
-    # (0,1)/(1,0) index pair of the symmetric eigenstrain tensor, unlike
-    # e0/e1/e2's diagonal (single-index-pair) terms -- eps_star[0, 1] alone
-    # double-counts nothing when it stands for a diagonal entry, but here it
-    # must stand for *both* eps_star[0, 1] and eps_star[1, 0] (equal, by
-    # symmetry), i.e. 2*eps_star[0, 1], not eps_star[0, 1] alone. Missing
-    # this factor of 2 was exactly the shear-coupling bug this function's
-    # own docstring used to document (~20% traction-continuity residual,
-    # in fact a clean, confirmed factor of 2 -- not ~20% -- once checked
-    # against an independent reference built by rotating the already-
-    # correct diagonal/tension case 45 degrees rather than assumed).
+    # h0100/h0111/h0101 contract against the off-diagonal (0,1)/(1,0) pair,
+    # so eps_star[0,1] must stand for both it and eps_star[1,0]: a factor of
+    # 2, unlike e0/e1/e2's diagonal terms. Missing it was a real bug here
+    # (confirmed a clean factor of 2, not the ~20% first suspected).
     e5 = 2.0 * eps_star[0, 1]
     sigma_xx = h0000 * e0 + h1100 * e1 + h0022 * e2 + h0100 * e5
     sigma_yy = h1100 * e0 + h1111 * e1 + h1122 * e2 + h0111 * e5
@@ -2115,18 +2108,11 @@ class HoleInPlateCase:
             blend = 0.5 * (1.0 + xp.tanh((r - self.hole_radius) / self.smoothing_width))
         else:
             blend = xp.where(r < self.hole_radius, 0.0, 1.0)
-        # A literal contrast=inf (rigid inclusion) hits inf-inf in the
-        # formula below at blend=1 (the matrix, where it should reduce
-        # exactly to matrix_lame_lambda/mu) -- substitute a large but
-        # finite practical value for the *numerical* field only; the
-        # analytic methods (analytic_stress, periodic_analytic_solution)
-        # use the exact contrast -> infinity closed-form limit instead
-        # (see _inhomogeneity_polar_stress/_inhomogeneity_interior_stress).
-        # 1e3, not something more extreme: checked directly (a 1e3/1e4/
-        # 1e5/1e6 sweep) that this project's float32 grid arithmetic
-        # develops real, growing interior-stress noise above this --
-        # 1e6 gave a max interior |sigma| of ~10 (vs. a well-behaved ~1.5
-        # analytically), clearly numerical ill-conditioning, not signal.
+        # contrast=inf hits inf-inf below at blend=1 (the matrix); substitute
+        # a large finite value for the numerical field only (the analytic
+        # methods use the exact limit, see _inhomogeneity_polar_stress).
+        # 1e3: float32 grid arithmetic develops real noise above this
+        # (1e6 gave interior |sigma|~10 vs. an analytic ~1.5).
         contrast = 1.0e3 if self.contrast == float("inf") else self.contrast
         lam = (contrast + (1.0 - contrast) * blend) * self.matrix_lame_lambda
         mu = (contrast + (1.0 - contrast) * blend) * self.matrix_lame_mu
@@ -3085,16 +3071,10 @@ class HoleInPlateCase:
                 sigma_xy = sigma_xy + sxy
 
         outside = self.radius >= self.hole_radius
-        # The domain mean feeding the recentering below uses this raw sum
-        # as-is (neighbor images' exterior field leaking into the home
-        # hole's own interior included) -- matching eshelby.cpp's own
-        # domain-mean accumulation, which likewise sums the *raw*,
-        # not-yet-corrected per-pixel array (see this method's docstring).
-        # Only *after* that mean is taken do interior points get replaced
-        # below with the uncontaminated home-image-only value -- exactly
-        # eshelby.cpp's own two-pass structure (accumulate the mean over
-        # the raw array first, overwrite the interior unconditionally
-        # after), not simultaneous with the outside-only recentering.
+        # The recentering mean below uses this raw sum as-is (neighbor
+        # images' exterior field leaking into the home interior included),
+        # matching eshelby.cpp's two-pass structure: mean over the raw array
+        # first, interior overwritten with the uncontaminated value after.
         if interior_target is None:
             interior_xx = background[0, 0] + home_xx
             interior_yy = background[1, 1] + home_yy
