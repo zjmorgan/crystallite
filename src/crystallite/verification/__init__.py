@@ -1,5 +1,6 @@
 """Small, reproducible verification cases for crystallite models."""
 
+from crystallite.verification.anisotropic_inclusion import AnisotropicInclusionCase
 from crystallite.verification.elastic_deformation import (
     EllipticalHoleInPlateCase,
     HoleInPlateCase,
@@ -17,4 +18,5 @@ __all__ = [
     "CircularGrainCase",
     "HoleInPlateCase",
     "EllipticalHoleInPlateCase",
+    "AnisotropicInclusionCase",
 ]

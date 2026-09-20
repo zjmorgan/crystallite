@@ -764,7 +764,7 @@ def _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes, chunk=64):
     eigenstrain. Every term is analytic: no grid, no pixelated mask, no
     numerical probing. Returns the in-plane components in the same
     convention as :func:`_periodic_eshelby_tensor` (``s1212`` is half the
-    tensor-shear response) plus the antiplane ``s1313``.
+    tensor-shear response) plus the antiplane ``s1313`` and ``s2323``.
 
     The truncation error falls like ``1/n_modes``; see
     :func:`_lattice_eshelby_tensor` for the extrapolated version.
@@ -779,6 +779,7 @@ def _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes, chunk=64):
     }
     acc = {name: np.zeros(3) for name in unit}
     acc_13 = 0.0
+    acc_23 = 0.0
     for start in range(-n_modes, n_modes + 1, chunk):
         m = np.arange(start, min(start + chunk, n_modes + 1))
         kx = (2.0 * np.pi * m / length_x)[:, None]
@@ -805,6 +806,7 @@ def _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes, chunk=64):
                 ]
             )
         acc_13 += np.sum(shape2 * kx**2 / k2_safe)
+        acc_23 += np.sum(shape2 * ky**2 / k2_safe)
     scale = 1.0 / (cell_area * region_area)
     return {
         "s1111": acc["11"][0] * scale,
@@ -813,6 +815,7 @@ def _lattice_eshelby_sum(a, b, length_x, length_y, lam, mu, n_modes, chunk=64):
         "s2222": acc["22"][1] * scale,
         "s1212": acc["12"][2] * scale / 2.0,
         "s1313": acc_13 * scale / 2.0,
+        "s2323": acc_23 * scale / 2.0,
     }
 
 
@@ -1023,6 +1026,31 @@ def _periodic_gradient_inhomogeneity_stress(
     stress[1, 1] = sigma_yy
     stress[0, 1] = stress[1, 0] = sigma_xy
     return stress
+
+
+def _periodic_prescribed_interior_stress(eps_star, lam, mu, a, b, length_x, length_y):
+    r"""Interior stress ``(3, 3)`` of a periodic array of ellipses (semi-axes
+    `a`, `b`, cell `length_x` by `length_y`) each carrying the uniform
+    eigenstrain `eps_star` in an otherwise homogeneous matrix, at zero
+    macroscopic strain: :math:`\sigma_{\mathrm{in}}=C_0:(S^{\mathrm{per}}:
+    \varepsilon^*-\varepsilon^*)`, with the exact lattice-sum Eshelby tensor
+    (:func:`_lattice_eshelby_tensor`) -- no FFT and no grid. Covers the
+    in-plane components (``[0, 0]``, ``[1, 1]``, ``[0, 1]``), the antiplane
+    ones (``[0, 2]``, ``[1, 2]``) and a plane-strain ``[2, 2]`` eigenstrain
+    (which only enters through the trace). In the dilute limit this reduces
+    to the classical isolated Eshelby interior stress.
+    """
+    eps_star = np.asarray(eps_star, dtype=float)
+    s = _lattice_eshelby_tensor(a, b, length_x, length_y, lam, mu)
+    eps_in = np.zeros((3, 3))
+    eps_in[0, 0] = s["s1111"] * eps_star[0, 0] + s["s1122"] * eps_star[1, 1]
+    eps_in[1, 1] = s["s2211"] * eps_star[0, 0] + s["s2222"] * eps_star[1, 1]
+    eps_in[0, 1] = eps_in[1, 0] = 2.0 * s["s1212"] * eps_star[0, 1]
+    eps_in[0, 2] = eps_in[2, 0] = 2.0 * s["s1313"] * eps_star[0, 2]
+    eps_in[1, 2] = eps_in[2, 1] = 2.0 * s["s2323"] * eps_star[1, 2]
+    difference = eps_in - eps_star
+    trace = difference[0, 0] + difference[1, 1] + difference[2, 2]
+    return lam * trace * np.eye(3) + 2.0 * mu * difference
 
 
 def cartesian_to_polar_stress(sigma_xx, sigma_yy, sigma_xy, theta):
@@ -4176,6 +4204,21 @@ class EllipticalHoleInPlateCase:
         stress[0, 0] = xp.where(inside, stress[0, 0] - traction, stress[0, 0])
         stress[1, 1] = xp.where(inside, stress[1, 1] - traction, stress[1, 1])
         return stress
+
+    def periodic_prescribed_eigenstrain_interior_stress(self, eigenstrain_tensor):
+        """Exact interior stress ``(3, 3)`` of the periodic array for a
+        uniform `eigenstrain_tensor` prescribed over the ellipse in a
+        homogeneous matrix (zero macroscopic strain), from the lattice-sum
+        Eshelby tensor -- see :func:`_periodic_prescribed_interior_stress`.
+        The classical "internal stress versus aspect ratio" Eshelby result,
+        with the periodic-cell correction included."""
+        return xp.asarray(
+            _periodic_prescribed_interior_stress(
+                eigenstrain_tensor, self.matrix_lame_lambda, self.matrix_lame_mu,
+                self.semi_axis_a, self.semi_axis_b,
+                float(self.grid.lengths[0]), float(self.grid.lengths[1]),
+            )
+        )
 
     def periodic_void_pressurized_stress(self, magnitude, n_images=1):
         r"""Periodic-array stress field for an elliptical void loaded by

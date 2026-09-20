@@ -137,6 +137,19 @@ class ElasticDeformation:
     preconditioner_green : object, optional
         The Green's operator :meth:`_precondition` actually uses. Defaults
         to `reference_green`.
+    stiffness : array_like, optional
+        A general (anisotropic) rank-4 stiffness ``C_ijkl``: shape
+        ``(3, 3, 3, 3)`` (homogeneous) or ``(3, 3, 3, 3) + grid.shape``
+        (heterogeneous). When given it replaces the isotropic
+        `lame_lambda`/`lame_mu` law in :meth:`stress` (those two are then
+        only placeholders, kept for the isotropic call signature). A
+        homogeneous `stiffness` also builds the default `reference_green`,
+        which is then the exact Green's function of the true medium (so a
+        homogeneous problem, e.g. an eigenstrain in a uniform anisotropic
+        matrix, converges in one iteration); a heterogeneous one needs an
+        explicit `reference_green`. Not supported together with
+        ``macro_strain_gradient`` (whose background treatment assumes an
+        isotropic reference).
     """
 
     grid: object
@@ -147,14 +160,32 @@ class ElasticDeformation:
     operator: object = None
     reference_green: object = None
     preconditioner_green: object = None
+    stiffness: object = None
 
     def __post_init__(self):
         if self.operator is None:
             object.__setattr__(self, "operator", DifferentialOperators(self.grid))
+        if self.stiffness is not None:
+            stiffness = xp.asarray(self.stiffness, dtype=self.grid.real_dtype)
+            if stiffness.shape[:4] != (3, 3, 3, 3) or stiffness.ndim not in (
+                4, 4 + len(self.grid.shape)
+            ):
+                raise ValueError(
+                    "stiffness must have shape (3, 3, 3, 3) or (3, 3, 3, 3) + "
+                    f"grid.shape, got {stiffness.shape}"
+                )
+            object.__setattr__(self, "stiffness", stiffness)
         if self.reference_green is None:
-            reference_stiffness = isotropic_stiffness(
-                self.reference_lame_lambda, self.reference_lame_mu
-            )
+            if self.stiffness is not None and self.stiffness.ndim == 4:
+                reference_stiffness = self.stiffness
+            elif self.stiffness is not None:
+                raise ValueError(
+                    "a heterogeneous stiffness needs an explicit reference_green"
+                )
+            else:
+                reference_stiffness = isotropic_stiffness(
+                    self.reference_lame_lambda, self.reference_lame_mu
+                )
             object.__setattr__(
                 self, "reference_green", GreenOperator(self.grid, reference_stiffness)
             )
@@ -203,8 +234,14 @@ class ElasticDeformation:
             Shape ``(3, 3) + grid.shape``.
         """
         strain = xp.asarray(strain)
-        trace = xp.einsum("ii...->...", strain)
         spatial_ndim = len(self.grid.shape)
+        if self.stiffness is not None:
+            stiffness = self.stiffness
+            if stiffness.ndim == 4:
+                stiffness = stiffness.reshape(stiffness.shape + (1,) * spatial_ndim)
+            sigma = xp.einsum("ijkl...,kl...->ij...", stiffness, strain)
+            return xp.broadcast_to(sigma, (3, 3) + self.grid.shape)
+        trace = xp.einsum("ii...->...", strain)
         delta = xp.eye(3, dtype=strain.dtype).reshape((3, 3) + (1,) * spatial_ndim)
         sigma = self.lame_lambda * trace[None, None, ...] * delta + (
             2.0 * self.lame_mu * strain
@@ -266,6 +303,10 @@ class ElasticDeformation:
             # body force, and it alone is safe to FFT (deltaC -> 0 away
             # from any heterogeneity, keeping the product periodic even
             # though eps_grad(x) itself is not).
+            if self.stiffness is not None:
+                raise NotImplementedError(
+                    "macro_strain_gradient is not supported with a general stiffness"
+                )
             eps_grad = self._gradient_strain_field(macro_strain_gradient, gradient_origin)
             trace = xp.einsum("ii...->...", eps_grad)
             delta = xp.eye(3, dtype=eps_grad.dtype).reshape((3, 3) + (1,) * spatial_ndim)

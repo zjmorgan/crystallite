@@ -8,6 +8,7 @@ directory.
 from __future__ import annotations
 
 import os
+import pickle
 
 import numpy as np
 
@@ -60,3 +61,22 @@ def save_all(fig, name):
         path = os.path.join(FIGURES_DIR, f"{name}.{ext}")
         fig.savefig(path, dpi=200, bbox_inches="tight")
     print(f"saved figures/{name}.{{pgf,pdf,png}}")
+
+
+CACHE_DIR = os.path.join(FIGURES_DIR, "_numeric_cache")
+
+
+def cached_numeric(key, compute):
+    """Return ``compute()``, cached on disk under `key` (pickled in
+    ``figures/_numeric_cache``), so restyling a figure does not repeat the
+    numeric solves. `key` must encode everything the result depends on (grid,
+    sizes, parameters); set ``CRYSTALLITE_RECOMPUTE=1`` to ignore the cache."""
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    path = os.path.join(CACHE_DIR, f"{key}.pkl")
+    if os.path.exists(path) and not os.environ.get("CRYSTALLITE_RECOMPUTE"):
+        with open(path, "rb") as handle:
+            return pickle.load(handle)
+    result = compute()
+    with open(path, "wb") as handle:
+        pickle.dump(result, handle)
+    return result

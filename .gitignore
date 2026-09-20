@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# on-disk cache of numeric solves used by the verification figures
+examples/elastic_deformation/verification/figures/_numeric_cache/

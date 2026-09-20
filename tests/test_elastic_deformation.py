@@ -330,3 +330,93 @@ def test_solve_does_not_diverge_for_a_body_force_that_does_not_excite_the_out_of
     assert solution.residual_norm < 0.1
     assert np.all(np.isfinite(np.asarray(solution.stress)))
     assert np.max(np.abs(np.asarray(solution.stress))) < 1.0
+
+
+# -- General (anisotropic) stiffness ------------------------------------
+
+
+def _cubic_stiffness(c11, c12, c44):
+    """Rank-4 cubic stiffness with the crystal axes along x, y, z."""
+    c = np.zeros((3, 3, 3, 3))
+    for i in range(3):
+        for j in range(3):
+            for k in range(3):
+                for l in range(3):
+                    if i == j == k == l:
+                        c[i, j, k, l] = c11
+                    elif i == j and k == l:
+                        c[i, j, k, l] = c12
+                    elif (i == k and j == l) or (i == l and j == k):
+                        c[i, j, k, l] = c44
+    return c
+
+
+def _disk_eigenstrain(grid, tensor, radius=0.15, band_limited=False):
+    x, y = np.asarray(grid.x[0]) - 0.5, np.asarray(grid.x[1]) - 0.5
+    inside = (x**2 + y**2 < radius**2).astype(float)
+    field = np.asarray(tensor)[:, :, None, None, None] * inside[None, None]
+    if band_limited:
+        # Lanczos-smoothed: no Nyquist content, where the discrete Green and
+        # stiffness operators differ, so the reference-medium preconditioner
+        # is then an exact inverse
+        field = np.real(np.asarray(grid.ifft(grid.fft(field) * grid.lanczos_filter)))
+    return field
+
+
+def test_isotropic_stiffness_tensor_reproduces_the_lame_solver_exactly():
+    grid = Grid(shape=(32, 32, 1), lengths=(1.0, 1.0, 1.0))
+    lam, mu = 1.0, 0.7
+    eigenstrain = _disk_eigenstrain(grid, np.diag([0.01, 0.0, 0.0]))
+    common = dict(grid=grid, lame_lambda=lam, lame_mu=mu, reference_lame_lambda=lam,
+                  reference_lame_mu=mu)
+    lame = ElasticDeformation(**common).solve(np.zeros((3, 3)), eigenstrain=eigenstrain, tol=1e-6)
+    tensor = ElasticDeformation(**common, stiffness=isotropic_stiffness(lam, mu)).solve(
+        np.zeros((3, 3)), eigenstrain=eigenstrain, tol=1e-6
+    )
+    # single precision grid: agree to ~1e-6 of the stress scale
+    scale = np.abs(np.asarray(lame.stress)).max()
+    np.testing.assert_allclose(
+        np.asarray(tensor.stress), np.asarray(lame.stress), atol=2e-6 * scale
+    )
+
+
+@pytest.mark.parametrize("zener", [0.125, 8.0])
+def test_homogeneous_anisotropic_eigenstrain_converges_in_one_iteration_and_is_in_equilibrium(zener):
+    grid = Grid(shape=(48, 48, 1), lengths=(1.0, 1.0, 1.0))
+    c_prime = 0.7
+    bulk = 1.0 + 2.0 * 0.7 / 3.0
+    c11, c12 = bulk + 4.0 * c_prime / 3.0, bulk - 2.0 * c_prime / 3.0
+    stiffness = _cubic_stiffness(c11, c12, zener * c_prime)
+    solver = ElasticDeformation(
+        grid, lame_lambda=1.0, lame_mu=0.7, reference_lame_lambda=1.0, reference_lame_mu=0.7,
+        stiffness=stiffness,
+    )
+    eigenstrain = _disk_eigenstrain(grid, np.diag([0.01, 0.0, 0.0]), band_limited=True)
+    solution = solver.solve(np.zeros((3, 3)), eigenstrain=eigenstrain, tol=1e-6)
+    # the reference medium *is* the true medium (and the source is band-limited),
+    # so the preconditioner is an exact inverse
+    assert solution.converged
+    assert solution.iterations <= 2
+    # div(sigma) = 0 (spectrally) everywhere, to single-precision round-off
+    stress = np.asarray(solution.stress)
+    divergence = np.asarray(solver._divergence_of_stress(stress))
+    assert np.abs(divergence).max() < 1e-4 * np.abs(stress).max() * 48
+
+
+def test_general_stiffness_rejects_a_strain_gradient_load():
+    grid = Grid(shape=(16, 16, 1), lengths=(1.0, 1.0, 1.0))
+    solver = ElasticDeformation(
+        grid, lame_lambda=1.0, lame_mu=0.7, reference_lame_lambda=1.0, reference_lame_mu=0.7,
+        stiffness=isotropic_stiffness(1.0, 0.7),
+    )
+    with pytest.raises(NotImplementedError):
+        solver.solve(np.zeros((3, 3)), macro_strain_gradient=np.zeros((3, 3, 3)))
+
+
+def test_stiffness_with_a_wrong_shape_is_rejected():
+    grid = Grid(shape=(16, 16, 1), lengths=(1.0, 1.0, 1.0))
+    with pytest.raises(ValueError):
+        ElasticDeformation(
+            grid, lame_lambda=1.0, lame_mu=0.7, reference_lame_lambda=1.0,
+            reference_lame_mu=0.7, stiffness=np.zeros((3, 3)),
+        )

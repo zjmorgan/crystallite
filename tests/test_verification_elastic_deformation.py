@@ -1635,3 +1635,62 @@ def test_body_force_solution_satisfies_equilibrium_and_converges_with_the_grid()
     # the force (the remainder is the finite-difference check's own error)
     assert fine < 2.0e-2 * abs(force[1])
     assert fine < 0.6 * coarse
+
+
+# -- Exact periodic interior stress of a prescribed eigenstrain (the Eshelby
+# "internal stress vs. aspect ratio" result, with the periodic-cell correction) --
+
+
+@pytest.mark.parametrize("a, b", [(0.004, 0.004), (0.003, 0.006), (0.006, 0.003)])
+def test_prescribed_eigenstrain_interior_approaches_the_isolated_eshelby_stress(a, b):
+    lam, mu = 1.0, 0.7
+    nu = lam / (2.0 * (lam + mu))
+    grid = Grid(shape=(32, 32, 1), lengths=(1.0, 1.0, 1.0))
+    case = EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=lam, matrix_lame_mu=mu, semi_axis_a=a, semi_axis_b=b,
+        contrast=1.0, center=(0.5, 0.5),
+    )
+    e = 0.01
+    for (i, j) in ((0, 0), (0, 1)):
+        eps = np.zeros((3, 3))
+        eps[i, j] = eps[j, i] = e
+        interior = np.asarray(case.periodic_prescribed_eigenstrain_interior_stress(eps))
+        isolated = _ellipse_inhomogeneity_interior_stress(eps, a, b, mu, nu)
+        exact_xx, exact_yy, exact_xy = interior[0, 0], interior[1, 1], interior[0, 1]
+        # lattice-sum truncation of a few 1e-4 in S, times the stiffness, times e
+        assert exact_xx == pytest.approx(float(isolated[0]), abs=2e-3 * mu * e)
+        assert exact_yy == pytest.approx(float(isolated[1]), abs=2e-3 * mu * e)
+        assert exact_xy == pytest.approx(float(isolated[2]), abs=2e-3 * mu * e)
+    # antiplane: sigma_13 = -2 mu e a/(a+b), sigma_23 = -2 mu e b/(a+b)
+    eps = np.zeros((3, 3))
+    eps[0, 2] = eps[2, 0] = e
+    s13 = float(np.asarray(case.periodic_prescribed_eigenstrain_interior_stress(eps))[0, 2])
+    assert s13 == pytest.approx(-2.0 * mu * e * a / (a + b), abs=2e-3 * mu * e)
+    eps = np.zeros((3, 3))
+    eps[1, 2] = eps[2, 1] = e
+    s23 = float(np.asarray(case.periodic_prescribed_eigenstrain_interior_stress(eps))[1, 2])
+    assert s23 == pytest.approx(-2.0 * mu * e * b / (a + b), abs=2e-3 * mu * e)
+
+
+def test_prescribed_eigenstrain_interior_of_a_dilating_circle_is_the_elementary_pressure():
+    a = 0.005
+    lam, mu = 1.0, 0.7
+    nu = lam / (2.0 * (lam + mu))
+    grid = Grid(shape=(32, 32, 1), lengths=(1.0, 1.0, 1.0))
+    case = EllipticalHoleInPlateCase(
+        grid, matrix_lame_lambda=lam, matrix_lame_mu=mu, semi_axis_a=a, semi_axis_b=a,
+        contrast=1.0, center=(0.5, 0.5),
+    )
+    e = 0.01
+    eps = np.zeros((3, 3))
+    eps[0, 0] = eps[1, 1] = e
+    interior = np.asarray(case.periodic_prescribed_eigenstrain_interior_stress(eps))
+    # plane strain circle, in-plane dilatation: interior sigma = -mu e / (1 - nu) (elementary)
+    assert interior[0, 0] == pytest.approx(-mu * e / (1.0 - nu), rel=5e-3)
+    assert interior[1, 1] == pytest.approx(-mu * e / (1.0 - nu), rel=5e-3)
+
+
+def test_lattice_eshelby_antiplane_components_sum_to_one_half_for_a_circle_in_a_dilute_cell():
+    tensor = _lattice_eshelby_tensor(0.004, 0.004, 1.0, 1.0, 1.0, 0.7)
+    assert tensor["s1313"] + tensor["s2323"] == pytest.approx(0.5, abs=1e-3)
+    assert tensor["s1313"] == pytest.approx(tensor["s2323"], rel=1e-10)
