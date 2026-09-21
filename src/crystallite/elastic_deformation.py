@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from crystallite.backend import xp
 from crystallite.material.properties import isotropic_stiffness
 from crystallite.spectral.long_range import GreenOperator
+from crystallite.spectral.krylov import preconditioned_conjugate_gradient
 from crystallite.spectral.short_range import DifferentialOperators
 
 
@@ -404,59 +405,9 @@ class ElasticDeformation:
                     f"expected {(3,) + self.grid.shape}, got {u.shape}"
                 )
 
-        b_norm = float(xp.sqrt(xp.sum(b * b)))
-        r = b - self._matvec(u)
-
-        iterations = 0
-        if b_norm < 1.0e-12:
-            # No net body force: u=0 already solves A(u)=b=0 (to floating-
-            # point noise). Skip the relative-residual check to avoid
-            # dividing by ~0.
-            residual_norm = 0.0
-            converged = True
-        else:
-            z = self._precondition(r)
-            p = z
-            rz_old = xp.sum(r * z)
-            residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
-            converged = residual_norm < tol
-            # Best iterate so far; the stagnation guard below may stop
-            # before the loop's last step is actually the best one.
-            best_u, best_residual_norm = u, residual_norm
-
-            while not converged and iterations < max_iterations:
-                iterations += 1
-                a_p = self._matvec(p)
-                pAp = xp.sum(p * a_p)
-                alpha = rz_old / pAp
-                u = u + alpha * p
-                r = r - alpha * a_p
-                residual_norm = float(xp.sqrt(xp.sum(r * r))) / b_norm
-                if residual_norm < tol:
-                    converged = True
-                    best_u, best_residual_norm = u, residual_norm
-                    break
-                if residual_norm < best_residual_norm:
-                    best_u, best_residual_norm = u, residual_norm
-                elif residual_norm > 100.0 * best_residual_norm:
-                    # Divergence, not stalling: round-off can excite the
-                    # near-null eigenvalue sector of a pseudo-2D grid's
-                    # out-of-plane DOF (shape[2]==1), blowing up alpha with
-                    # no recovery. Report the best iterate seen instead of
-                    # the runaway one. 100x, not a tighter multiple: ordinary
-                    # CG on a real heterogeneous problem can blip to ~2.5x
-                    # its best before converging normally; 2x cut such a
-                    # solve off early (a real regression this threshold
-                    # avoids).
-                    break
-                z = self._precondition(r)
-                rz_new = xp.sum(r * z)
-                beta = rz_new / rz_old
-                p = z + beta * p
-                rz_old = rz_new
-
-            u = best_u
-            residual_norm = best_residual_norm
+        u, residual_norm, iterations, converged = preconditioned_conjugate_gradient(
+            self._matvec, self._precondition, b, u, tol=tol, max_iterations=max_iterations
+        )
 
         strain = macro_strain.reshape((3, 3) + (1,) * len(self.grid.shape)) + (
             self._strain_from_displacement(u)

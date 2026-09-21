@@ -30,3 +30,46 @@ Elastic deformation cases
    :members:
    :show-inheritance:
    :undoc-members:
+
+Conduction cases
+----------------------------
+
+The shared mathematics of steady conduction (equivalent inclusion,
+depolarization tensors, image sums) that heat and charge conduction both use.
+
+.. automodule:: crystallite.verification.conduction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Heat conduction cases
+----------------------------
+
+.. automodule:: crystallite.verification.heat_conduction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Charge conduction cases
+----------------------------
+
+.. automodule:: crystallite.verification.charge_conduction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Electrostatics cases
+----------------------------
+
+.. automodule:: crystallite.verification.electrostatics
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+Magnetostatics cases
+----------------------------
+
+.. automodule:: crystallite.verification.magnetostatics
+   :members:
+   :show-inheritance:
+   :undoc-members:

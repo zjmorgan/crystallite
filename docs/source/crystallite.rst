@@ -18,6 +18,9 @@ Subpackages
    mass_diffusion
    grain_orientation
    elastic_deformation
+   conduction
+   electrostatics
+   magnetostatics
 
 crystallite.mass_diffusion module
 ----------------------------------
@@ -39,6 +42,30 @@ crystallite.elastic_deformation module
 ----------------------------------------
 
 .. automodule:: crystallite.elastic_deformation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.conduction module
+-----------------------------
+
+.. automodule:: crystallite.conduction
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.electrostatics module
+---------------------------------
+
+.. automodule:: crystallite.electrostatics
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.magnetostatics module
+---------------------------------
+
+.. automodule:: crystallite.magnetostatics
    :members:
    :show-inheritance:
    :undoc-members:
