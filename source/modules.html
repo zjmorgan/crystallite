@@ -340,17 +340,25 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.spectral.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.spectral.html#module-crystallite.spectral.long_range">crystallite.spectral.long_range module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.spectral.html#module-crystallite.spectral.short_range">crystallite.spectral.short_range module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.spectral.html#module-crystallite.spectral.krylov">crystallite.spectral.krylov module</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html">crystallite.verification namespace</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.mass_diffusion">Mass diffusion cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.grain_orientation">Grain orientation cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.elastic_deformation">Elastic deformation cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#conduction-cases">Conduction cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.heat_conduction">Heat conduction cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.charge_conduction">Charge conduction cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.electrostatics">Electrostatics cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.magnetostatics">Magnetostatics cases</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.mass_diffusion">crystallite.mass_diffusion module</a><ul>
@@ -448,6 +456,59 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticSolution.residual_norm"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.residual_norm</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticSolution.strain"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.strain</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticSolution.stress"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.stress</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.conduction">crystallite.conduction module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution"><code class="docutils literal notranslate"><span class="pre">ConductionSolution</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.converged"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.converged</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.driving_force"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.driving_force</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.flux"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.flux</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.iterations"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.iterations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.potential"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.potential</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.ConductionSolution.residual_norm"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.residual_norm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction"><code class="docutils literal notranslate"><span class="pre">SteadyConduction</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.conductivity"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.conductivity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.flux"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.flux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.grid"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.operator"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.operator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.preconditioner_green"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.preconditioner_green</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.reference_conductivity"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.reference_conductivity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.reference_green"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.reference_green</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction.solve"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.electrostatics">crystallite.electrostatics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.ElectrostaticSolution"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.ElectrostaticSolution.displacement"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.displacement</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.ElectrostaticSolution.electric_field"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.electric_field</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.ElectrostaticSolution.potential"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.Electrostatics"><code class="docutils literal notranslate"><span class="pre">Electrostatics</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.Electrostatics.grid"><code class="docutils literal notranslate"><span class="pre">Electrostatics.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.Electrostatics.permittivity"><code class="docutils literal notranslate"><span class="pre">Electrostatics.permittivity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.electrostatics.Electrostatics.solve"><code class="docutils literal notranslate"><span class="pre">Electrostatics.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.magnetostatics">crystallite.magnetostatics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.MagnetostaticSolution"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.MagnetostaticSolution.flux_density"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.flux_density</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.MagnetostaticSolution.magnetic_field"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.magnetic_field</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.MagnetostaticSolution.potential"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics"><code class="docutils literal notranslate"><span class="pre">Magnetostatics</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.grid"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.permeability"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.permeability</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.solve"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.solve()</span></code></a></li>
 </ul>
 </li>
 </ul>

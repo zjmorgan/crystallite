@@ -304,6 +304,8 @@
 <li class="toctree-l1"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
 </ul>
 </div>
 </nav></div>
@@ -393,6 +395,10 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.spectral.html#crystallite.spectral.short_range.DifferentialOperators.laplacian"><code class="docutils literal notranslate"><span class="pre">DifferentialOperators.laplacian()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.spectral.html#module-crystallite.spectral.krylov">crystallite.spectral.krylov module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.spectral.html#crystallite.spectral.krylov.preconditioned_conjugate_gradient"><code class="docutils literal notranslate"><span class="pre">preconditioned_conjugate_gradient()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -560,6 +566,71 @@
 <li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.elastic_deformation.polar_to_cartesian_stress"><code class="docutils literal notranslate"><span class="pre">polar_to_cartesian_stress()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#conduction-cases">Conduction cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.center"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.center</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.conductivity_field"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.conductivity_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.contrast"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.contrast</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.elliptical_radius"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.elliptical_radius</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.grid"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.isolated_depolarization_tensor"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.isolated_depolarization_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.isolated_interior_driving_force"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.isolated_interior_driving_force()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.isotropic_matrix"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.isotropic_matrix</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.matrix_conductivity"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.matrix_conductivity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.periodic_depolarization_tensor"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.periodic_depolarization_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.periodic_exterior_field"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.periodic_exterior_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.periodic_flux_field"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.periodic_flux_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.periodic_interior_driving_force"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.periodic_interior_driving_force()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.periodic_interior_flux"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.periodic_interior_flux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.semi_axis_a"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.semi_axis_a</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.semi_axis_b"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.semi_axis_b</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.smoothing_width"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.smoothing_width</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase.solver"><code class="docutils literal notranslate"><span class="pre">ConductionInclusionCase.solver()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.circular_inhomogeneity_driving_force"><code class="docutils literal notranslate"><span class="pre">circular_inhomogeneity_driving_force()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.disk_source_flux"><code class="docutils literal notranslate"><span class="pre">disk_source_flux()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.elliptical_perturbation"><code class="docutils literal notranslate"><span class="pre">elliptical_perturbation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.equivalent_driving_force"><code class="docutils literal notranslate"><span class="pre">equivalent_driving_force()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.interior_driving_force"><code class="docutils literal notranslate"><span class="pre">interior_driving_force()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.isolated_depolarization_tensor"><code class="docutils literal notranslate"><span class="pre">isolated_depolarization_tensor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.periodic_depolarization_tensor"><code class="docutils literal notranslate"><span class="pre">periodic_depolarization_tensor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.heat_conduction">Heat conduction cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.HeatInclusionCase"><code class="docutils literal notranslate"><span class="pre">HeatInclusionCase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.HeatInclusionCase.periodic_heat_flux"><code class="docutils literal notranslate"><span class="pre">HeatInclusionCase.periodic_heat_flux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.HeatInclusionCase.periodic_interior_heat_flux"><code class="docutils literal notranslate"><span class="pre">HeatInclusionCase.periodic_interior_heat_flux()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.HeatInclusionCase.periodic_interior_thermal_driving_force"><code class="docutils literal notranslate"><span class="pre">HeatInclusionCase.periodic_interior_thermal_driving_force()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.HeatInclusionCase.periodic_thermal_driving_force"><code class="docutils literal notranslate"><span class="pre">HeatInclusionCase.periodic_thermal_driving_force()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.elliptical_perturbation"><code class="docutils literal notranslate"><span class="pre">elliptical_perturbation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.heat_conduction.heat_generation_flux"><code class="docutils literal notranslate"><span class="pre">heat_generation_flux()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.charge_conduction">Charge conduction cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.ChargeInclusionCase"><code class="docutils literal notranslate"><span class="pre">ChargeInclusionCase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.ChargeInclusionCase.periodic_current_density"><code class="docutils literal notranslate"><span class="pre">ChargeInclusionCase.periodic_current_density()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.ChargeInclusionCase.periodic_electric_field"><code class="docutils literal notranslate"><span class="pre">ChargeInclusionCase.periodic_electric_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.ChargeInclusionCase.periodic_interior_current_density"><code class="docutils literal notranslate"><span class="pre">ChargeInclusionCase.periodic_interior_current_density()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.ChargeInclusionCase.periodic_interior_electric_field"><code class="docutils literal notranslate"><span class="pre">ChargeInclusionCase.periodic_interior_electric_field()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.charge_conduction.elliptical_perturbation"><code class="docutils literal notranslate"><span class="pre">elliptical_perturbation()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.electrostatics">Electrostatics cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.electrostatics.charged_disk_field"><code class="docutils literal notranslate"><span class="pre">charged_disk_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.electrostatics.polarized_disk_fields"><code class="docutils literal notranslate"><span class="pre">polarized_disk_fields()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.electrostatics.smoothed_disk"><code class="docutils literal notranslate"><span class="pre">smoothed_disk()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.magnetostatics">Magnetostatics cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.magnetostatics.magnetized_disk_fields"><code class="docutils literal notranslate"><span class="pre">magnetized_disk_fields()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.magnetostatics.smoothed_disk"><code class="docutils literal notranslate"><span class="pre">smoothed_disk()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -569,6 +640,8 @@
 <li class="toctree-l1"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
 </ul>
 </div>
 </section>
@@ -1349,7 +1422,7 @@ over orientation pairs.</p>
 preconditioned-conjugate-gradient spectral solver.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preconditioner_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stiffness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L42-L523"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticDeformation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_lame_mu</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preconditioner_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stiffness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L43-L430"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Static mechanical equilibrium in a heterogeneous isotropic solid.</p>
 <p>Solves periodic equilibrium <span class="math notranslate nohighlight">\(\nabla\cdot\sigma(x) + f(x) = 0\)</span> with
@@ -1518,7 +1591,7 @@ isotropic reference).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.solve">
-<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body_force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L333-L523"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.solve" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain_gradient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body_force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L317-L430"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.solve" title="Link to this definition">#</a></dt>
 <dd><p>Solve for the equilibrium displacement fluctuation.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1589,7 +1662,7 @@ mean being discarded is not what you intended to model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticDeformation.stress">
-<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L222-L249"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.stress" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strain</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L223-L250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticDeformation.stress" title="Link to this definition">#</a></dt>
 <dd><p>Return the pointwise isotropic stress <code class="docutils literal notranslate"><span class="pre">C(x):strain</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1612,7 +1685,7 @@ bare <code class="docutils literal notranslate"><span class="pre">(3,</span> <sp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticSolution">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">displacement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L12-L39"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticSolution" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElasticSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">displacement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py#L13-L40"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticSolution" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Result of <a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation.solve" title="crystallite.elastic_deformation.ElasticDeformation.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ElasticDeformation.solve()</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1664,6 +1737,446 @@ applied load produces no net force, e.g. a homogeneous material).</p>
 <dt class="sig sig-object py" id="crystallite.elastic_deformation.ElasticSolution.stress">
 <span class="sig-name descname"><span class="pre">stress</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/elastic_deformation.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.elastic_deformation.ElasticSolution.stress" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-crystallite.conduction">
+<span id="crystallite-conduction-module"></span><h2>crystallite.conduction module<a class="headerlink" href="#module-crystallite.conduction" title="Link to this heading">#</a></h2>
+<p>Steady-state heterogeneous conduction (Fourier’s and Ohm’s laws) via a
+matrix-free, preconditioned-conjugate-gradient spectral solver.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ConductionSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">potential</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">driving_force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residual_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converged</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py#L12-L40"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Result of <a class="reference internal" href="#crystallite.conduction.SteadyConduction.solve" title="crystallite.conduction.SteadyConduction.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SteadyConduction.solve()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>potential</strong><span class="classifier">ndarray</span></dt><dd><p>Periodic potential fluctuation <code class="docutils literal notranslate"><span class="pre">T*</span></code> (zero mean), shape
+<code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>driving_force</strong><span class="classifier">ndarray</span></dt><dd><p>Total driving force <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">=</span> <span class="pre">X_bar</span> <span class="pre">-</span> <span class="pre">grad(T*)</span></code>, shape
+<code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>flux</strong><span class="classifier">ndarray</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">q</span> <span class="pre">=</span> <span class="pre">kappa(x)</span> <span class="pre">.</span> <span class="pre">X</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>residual_norm</strong><span class="classifier">float</span></dt><dd><p>Final relative Krylov residual, <code class="docutils literal notranslate"><span class="pre">||b</span> <span class="pre">-</span> <span class="pre">A(T*)||</span> <span class="pre">/</span> <span class="pre">||b||</span></code> (0 if the
+load produces no net source, e.g. a homogeneous medium).</p>
+</dd>
+<dt><strong>iterations</strong><span class="classifier">int</span></dt><dd><p>Number of conjugate-gradient iterations taken.</p>
+</dd>
+<dt><strong>converged</strong><span class="classifier">bool</span></dt><dd><p>Whether <code class="docutils literal notranslate"><span class="pre">residual_norm</span></code> reached <code class="docutils literal notranslate"><span class="pre">tol</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.converged">
+<span class="sig-name descname"><span class="pre">converged</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.converged" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.driving_force">
+<span class="sig-name descname"><span class="pre">driving_force</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.driving_force" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.flux">
+<span class="sig-name descname"><span class="pre">flux</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.flux" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.iterations">
+<span class="sig-name descname"><span class="pre">iterations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.iterations" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.potential">
+<span class="sig-name descname"><span class="pre">potential</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.potential" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.ConductionSolution.residual_norm">
+<span class="sig-name descname"><span class="pre">residual_norm</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.ConductionSolution.residual_norm" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">SteadyConduction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conductivity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_conductivity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preconditioner_green</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py#L43-L275"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Steady conduction in a heterogeneous solid with an optional source.</p>
+<p>One solver for both linear-transport laws, which differ only in
+vocabulary:</p>
+<p>Solves <span class="math notranslate nohighlight">\(\nabla\cdot q = \varphi\)</span> with <span class="math notranslate nohighlight">\(q = \kappa(x)\,X\)</span>,
+<span class="math notranslate nohighlight">\(X = \bar X - \nabla T^*\)</span> for a periodic, zero-mean potential
+fluctuation <span class="math notranslate nohighlight">\(T^*\)</span> under a prescribed mean driving force
+<span class="math notranslate nohighlight">\(\bar X\)</span> and source <span class="math notranslate nohighlight">\(\varphi\)</span>. <span class="math notranslate nohighlight">\(\kappa\)</span> may be a
+scalar, a <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code> field, a <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> tensor, or a
+<code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code> tensor field.</p>
+<p>Substituting into conservation gives a matrix-free SPD system</p>
+<div class="math notranslate nohighlight">
+\[A(T^*) = b, \qquad A(T) = -\nabla\cdot(\kappa\nabla T), \qquad
+b = \varphi - \nabla\cdot(\kappa\bar X),\]</div>
+<p>solved by preconditioned CG. As in
+<a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a>, the
+preconditioner is the Green’s operator of a homogeneous <em>reference</em>
+medium <span class="math notranslate nohighlight">\(\kappa_0\)</span>, <code class="docutils literal notranslate"><span class="pre">G(k)</span> <span class="pre">=</span> <span class="pre">1/(k</span> <span class="pre">.</span> <span class="pre">kappa_0</span> <span class="pre">.</span> <span class="pre">k)</span></code>. Its k=0 output
+is zero, and so is that of every right-hand side (a divergence has no
+k=0 mode; the source’s mean is dropped), so the null direction
+(a uniform potential) never enters the iteration.</p>
+<p>A uniform source has no periodic steady state (heat has nowhere to
+go), so <cite>source</cite>’s mean is dropped, as if a uniform sink balanced it.
+Give a <em>localized</em> source and read the field away from the domain
+mean accordingly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>conductivity</strong><span class="classifier">float or array_like</span></dt><dd><p>See above. Real-valued.</p>
+</dd>
+<dt><strong>reference_conductivity</strong><span class="classifier">float or array_like of shape (3, 3), optional</span></dt><dd><p>Homogeneous reference medium for the preconditioner. Defaults to
+<cite>conductivity</cite> when that is homogeneous; required otherwise.</p>
+</dd>
+<dt><strong>operator</strong><span class="classifier">object, optional</span></dt><dd><p>Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">DifferentialOperators(grid)</span></code>.</p>
+</dd>
+<dt><strong>reference_green</strong><span class="classifier">object, optional</span></dt><dd><p>Defaults to <code class="docutils literal notranslate"><span class="pre">GreenOperator(grid,</span> <span class="pre">reference_conductivity)</span></code>. Public
+so callers can convert a far-field flux to a driving force with
+<code class="docutils literal notranslate"><span class="pre">reference_green.apply_compliance(q_inf)</span></code>.</p>
+</dd>
+<dt><strong>preconditioner_green</strong><span class="classifier">object, optional</span></dt><dd><p>The Green’s operator CG actually preconditions with. Defaults to
+<cite>reference_green</cite>; changes only the convergence rate.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>operator</strong></dt><dd></dd>
+<dt><strong>preconditioner_green</strong></dt><dd></dd>
+<dt><strong>reference_conductivity</strong></dt><dd></dd>
+<dt><strong>reference_green</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.conduction.SteadyConduction.flux" title="crystallite.conduction.SteadyConduction.flux"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flux</span></code></a>(driving_force)</p></td>
+<td><p>Return the pointwise flux <a href="#id1"><span class="problematic" id="id2">``</span></a>kappa(x) .</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.conduction.SteadyConduction.solve" title="crystallite.conduction.SteadyConduction.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>(macro_field[, source, tol, ...])</p></td>
+<td><p>Solve for the steady potential fluctuation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.conductivity">
+<span class="sig-name descname"><span class="pre">conductivity</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.conductivity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.flux">
+<span class="sig-name descname"><span class="pre">flux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">driving_force</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py#L158-L183"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.flux" title="Link to this definition">#</a></dt>
+<dd><p>Return the pointwise flux <code class="docutils literal notranslate"><span class="pre">kappa(x)</span> <span class="pre">.</span> <span class="pre">driving_force</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>driving_force</strong><span class="classifier">array_like</span></dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code> (or broadcastable, e.g. a bare
+<code class="docutils literal notranslate"><span class="pre">(3,)</span></code> constant).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray</dt><dd><p>Shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.operator">
+<span class="sig-name descname"><span class="pre">operator</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.operator" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.preconditioner_green">
+<span class="sig-name descname"><span class="pre">preconditioner_green</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.preconditioner_green" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.reference_conductivity">
+<span class="sig-name descname"><span class="pre">reference_conductivity</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.reference_conductivity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.reference_green">
+<span class="sig-name descname"><span class="pre">reference_green</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.reference_green" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.conduction.SteadyConduction.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">macro_field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/conduction.py#L210-L275"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.conduction.SteadyConduction.solve" title="Link to this definition">#</a></dt>
+<dd><p>Solve for the steady potential fluctuation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>macro_field</strong><span class="classifier">array_like</span></dt><dd><p>Prescribed mean driving force <span class="math notranslate nohighlight">\(\bar X\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span></code>
+(<code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">=</span> <span class="pre">-grad</span> <span class="pre">T</span></code> averaged over the cell).</p>
+</dd>
+<dt><strong>source</strong><span class="classifier">array_like, optional</span></dt><dd><p>Heat generation density <span class="math notranslate nohighlight">\(\varphi\)</span>, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>
+(positive generates). Its mean is dropped, see the class
+docstring.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, default=1e-6</span></dt><dd><p>Relative Krylov residual at which to stop. The default reflects
+<cite>Grid</cite>’s float32 arithmetic, not a limitation of the method.</p>
+</dd>
+<dt><strong>max_iterations</strong><span class="classifier">int, default=500</span></dt><dd></dd>
+<dt><strong>initial_potential</strong><span class="classifier">ndarray, optional</span></dt><dd><p>Warm start, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>. Defaults to zero.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ConductionSolution</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-crystallite.electrostatics">
+<span id="crystallite-electrostatics-module"></span><h2>crystallite.electrostatics module<a class="headerlink" href="#module-crystallite.electrostatics" title="Link to this heading">#</a></h2>
+<p>Periodic electrostatics (and, by relabeling, magnetostatics) from free
+charge and polarization, solved directly in Fourier space.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.electrostatics.ElectrostaticSolution">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ElectrostaticSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">potential</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">electric_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">displacement</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py#L11-L28"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.ElectrostaticSolution" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Result of <a class="reference internal" href="#crystallite.electrostatics.Electrostatics.solve" title="crystallite.electrostatics.Electrostatics.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Electrostatics.solve()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>potential</strong><span class="classifier">ndarray</span></dt><dd><p>Electrostatic potential <span class="math notranslate nohighlight">\(\phi\)</span> (zero mean), shape
+<code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>electric_field</strong><span class="classifier">ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(E=E_\infty-\nabla\phi\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>displacement</strong><span class="classifier">ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(D=\varepsilon E+P\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.electrostatics.ElectrostaticSolution.displacement">
+<span class="sig-name descname"><span class="pre">displacement</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.ElectrostaticSolution.displacement" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.electrostatics.ElectrostaticSolution.electric_field">
+<span class="sig-name descname"><span class="pre">electric_field</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.ElectrostaticSolution.electric_field" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.electrostatics.ElectrostaticSolution.potential">
+<span class="sig-name descname"><span class="pre">potential</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.ElectrostaticSolution.potential" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.electrostatics.Electrostatics">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Electrostatics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permittivity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py#L31-L127"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.Electrostatics" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Gauss’s law in a homogeneous medium with free charge and polarization.</p>
+<p>Solves <span class="math notranslate nohighlight">\(\nabla\cdot D=\rho\)</span> with <span class="math notranslate nohighlight">\(D=\varepsilon E+P\)</span> and
+<span class="math notranslate nohighlight">\(E=E_\infty-\nabla\phi\)</span>, i.e. the Poisson equation</p>
+<div class="math notranslate nohighlight">
+\[-\varepsilon\nabla^2\phi=\rho-\nabla\cdot P,
+\qquad \hat\phi=\frac{\hat\rho-i\mathbf{k}\cdot\hat P}
+{\varepsilon k^2},\]</div>
+<p>so a polarization acts through its bound charge
+<span class="math notranslate nohighlight">\(\rho_b=-\nabla\cdot P\)</span> (a surface charge <span class="math notranslate nohighlight">\(P\cdot n\)</span> where it
+ends). Direct, no iteration: the operator is diagonal in Fourier space.</p>
+<p>A periodic cell holds no net charge, so the <span class="math notranslate nohighlight">\(k=0\)</span> mode of the
+source is dropped, as if a uniform neutralizing background balanced it.
+Give band-limited sources (e.g. Lanczos-smoothed, see
+<code class="docutils literal notranslate"><span class="pre">grid.lanczos_filter</span></code>): a sharp edge rings at the grid scale.</p>
+<p><strong>Magnetostatics is the same problem</strong> with <span class="math notranslate nohighlight">\(\varepsilon=1\)</span>, no free
+charge and the magnetization <span class="math notranslate nohighlight">\(M\)</span> as <cite>polarization</cite>: <span class="math notranslate nohighlight">\(H=-\nabla
+\psi\)</span> is <cite>electric_field</cite> and <span class="math notranslate nohighlight">\(B/\mu_0=H+M\)</span> is <cite>displacement</cite>. It is
+exposed with magnetic vocabulary as
+<a class="reference internal" href="#crystallite.magnetostatics.Magnetostatics" title="crystallite.magnetostatics.Magnetostatics"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.magnetostatics.Magnetostatics</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>permittivity</strong><span class="classifier">float, default=1</span></dt><dd><p>Homogeneous <span class="math notranslate nohighlight">\(\varepsilon\)</span> (vacuum <span class="math notranslate nohighlight">\(\varepsilon_0\)</span>, or
+1 in nondimensional units). A heterogeneous dielectric is
+<a class="reference internal" href="#crystallite.conduction.SteadyConduction" title="crystallite.conduction.SteadyConduction"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.conduction.SteadyConduction</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">conductivity=permittivity_field</span></code> and <code class="docutils literal notranslate"><span class="pre">source=charge_density</span></code>
+(its <code class="docutils literal notranslate"><span class="pre">flux</span></code> is <span class="math notranslate nohighlight">\(D\)</span>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.electrostatics.Electrostatics.solve" title="crystallite.electrostatics.Electrostatics.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>([charge_density, polarization, far_field])</p></td>
+<td><p>Solve for the potential and fields of the given sources.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.electrostatics.Electrostatics.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.Electrostatics.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.electrostatics.Electrostatics.permittivity">
+<span class="sig-name descname"><span class="pre">permittivity</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.Electrostatics.permittivity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.electrostatics.Electrostatics.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">charge_density</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">polarization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">far_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/electrostatics.py#L79-L127"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.electrostatics.Electrostatics.solve" title="Link to this definition">#</a></dt>
+<dd><p>Solve for the potential and fields of the given sources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>charge_density</strong><span class="classifier">array_like, optional</span></dt><dd><p>Free charge <span class="math notranslate nohighlight">\(\rho\)</span>, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>polarization</strong><span class="classifier">array_like, optional</span></dt><dd><p><span class="math notranslate nohighlight">\(P\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>far_field</strong><span class="classifier">array_like of shape (3,), optional</span></dt><dd><p>Uniform applied field <span class="math notranslate nohighlight">\(E_\infty\)</span>, added at the k=0 mode.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ElectrostaticSolution</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-crystallite.magnetostatics">
+<span id="crystallite-magnetostatics-module"></span><h2>crystallite.magnetostatics module<a class="headerlink" href="#module-crystallite.magnetostatics" title="Link to this heading">#</a></h2>
+<p>Periodic magnetostatics from a magnetization, solved directly in Fourier
+space.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.MagnetostaticSolution">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MagnetostaticSolution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">potential</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">magnetic_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_density</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py#L9-L26"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.MagnetostaticSolution" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Result of <a class="reference internal" href="#crystallite.magnetostatics.Magnetostatics.solve" title="crystallite.magnetostatics.Magnetostatics.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Magnetostatics.solve()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>potential</strong><span class="classifier">ndarray</span></dt><dd><p>Magnetic scalar potential <span class="math notranslate nohighlight">\(\psi\)</span> (zero mean), shape
+<code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>magnetic_field</strong><span class="classifier">ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(H=H_\infty-\nabla\psi\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>flux_density</strong><span class="classifier">ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(B=\mu_0(H+M)\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.MagnetostaticSolution.flux_density">
+<span class="sig-name descname"><span class="pre">flux_density</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.MagnetostaticSolution.flux_density" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.MagnetostaticSolution.magnetic_field">
+<span class="sig-name descname"><span class="pre">magnetic_field</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.MagnetostaticSolution.magnetic_field" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.MagnetostaticSolution.potential">
+<span class="sig-name descname"><span class="pre">potential</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.MagnetostaticSolution.potential" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.Magnetostatics">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Magnetostatics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permeability</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py#L29-L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.Magnetostatics" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Magnetostatics of a magnetization <span class="math notranslate nohighlight">\(M\)</span> with no free current.</p>
+<p>Solves <span class="math notranslate nohighlight">\(\nabla\cdot B=0\)</span>, <span class="math notranslate nohighlight">\(\nabla\times H=0\)</span> with
+<span class="math notranslate nohighlight">\(B=\mu_0(H+M)\)</span>, <span class="math notranslate nohighlight">\(H=H_\infty-\nabla\psi\)</span>, i.e.
+<span class="math notranslate nohighlight">\(-\nabla^2\psi=-\nabla\cdot M\)</span> with the bound “magnetic charge”
+<span class="math notranslate nohighlight">\(\rho_m=-\nabla\cdot M\)</span>. This is
+<a class="reference internal" href="#crystallite.electrostatics.Electrostatics" title="crystallite.electrostatics.Electrostatics"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.electrostatics.Electrostatics</span></code></a> with
+<span class="math notranslate nohighlight">\(\varepsilon=1\)</span>, <span class="math notranslate nohighlight">\(P\to M\)</span>, <span class="math notranslate nohighlight">\(E\to H\)</span> and
+<span class="math notranslate nohighlight">\(D\to B/\mu_0\)</span>; this class only fixes that mapping and the
+magnetic vocabulary. The k=0 mode is dropped and sources should be
+band-limited, as there.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>permeability</strong><span class="classifier">float, default=1</span></dt><dd><p><span class="math notranslate nohighlight">\(\mu_0\)</span>, only scaling <span class="math notranslate nohighlight">\(B\)</span> (1 in nondimensional units).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.magnetostatics.Magnetostatics.solve" title="crystallite.magnetostatics.Magnetostatics.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve</span></code></a>(magnetization[, far_field])</p></td>
+<td><p>Solve for the potential and fields of <cite>magnetization</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.Magnetostatics.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.Magnetostatics.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.Magnetostatics.permeability">
+<span class="sig-name descname"><span class="pre">permeability</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.Magnetostatics.permeability" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.magnetostatics.Magnetostatics.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">magnetization</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">far_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/magnetostatics.py#L57-L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.magnetostatics.Magnetostatics.solve" title="Link to this definition">#</a></dt>
+<dd><p>Solve for the potential and fields of <cite>magnetization</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>magnetization</strong><span class="classifier">array_like</span></dt><dd><p><span class="math notranslate nohighlight">\(M\)</span>, shape <code class="docutils literal notranslate"><span class="pre">(3,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>far_field</strong><span class="classifier">array_like of shape (3,), optional</span></dt><dd><p>Uniform applied field <span class="math notranslate nohighlight">\(H_\infty\)</span>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>MagnetostaticSolution</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
@@ -1925,6 +2438,59 @@ solvers of nonlinear PDEs.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticSolution.residual_norm"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.residual_norm</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticSolution.strain"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.strain</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.elastic_deformation.ElasticSolution.stress"><code class="docutils literal notranslate"><span class="pre">ElasticSolution.stress</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.conduction">crystallite.conduction module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution"><code class="docutils literal notranslate"><span class="pre">ConductionSolution</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.converged"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.converged</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.driving_force"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.driving_force</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.flux"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.flux</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.iterations"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.iterations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.potential"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.potential</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.ConductionSolution.residual_norm"><code class="docutils literal notranslate"><span class="pre">ConductionSolution.residual_norm</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction"><code class="docutils literal notranslate"><span class="pre">SteadyConduction</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.conductivity"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.conductivity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.flux"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.flux()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.grid"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.operator"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.operator</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.preconditioner_green"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.preconditioner_green</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.reference_conductivity"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.reference_conductivity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.reference_green"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.reference_green</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.conduction.SteadyConduction.solve"><code class="docutils literal notranslate"><span class="pre">SteadyConduction.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.electrostatics">crystallite.electrostatics module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.ElectrostaticSolution"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.ElectrostaticSolution.displacement"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.displacement</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.ElectrostaticSolution.electric_field"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.electric_field</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.ElectrostaticSolution.potential"><code class="docutils literal notranslate"><span class="pre">ElectrostaticSolution.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.Electrostatics"><code class="docutils literal notranslate"><span class="pre">Electrostatics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.Electrostatics.grid"><code class="docutils literal notranslate"><span class="pre">Electrostatics.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.Electrostatics.permittivity"><code class="docutils literal notranslate"><span class="pre">Electrostatics.permittivity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.electrostatics.Electrostatics.solve"><code class="docutils literal notranslate"><span class="pre">Electrostatics.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.magnetostatics">crystallite.magnetostatics module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.MagnetostaticSolution"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.MagnetostaticSolution.flux_density"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.flux_density</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.MagnetostaticSolution.magnetic_field"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.magnetic_field</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.MagnetostaticSolution.potential"><code class="docutils literal notranslate"><span class="pre">MagnetostaticSolution.potential</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics"><code class="docutils literal notranslate"><span class="pre">Magnetostatics</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.grid"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.permeability"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.permeability</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.solve"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.solve()</span></code></a></li>
 </ul>
 </li>
 </ul>

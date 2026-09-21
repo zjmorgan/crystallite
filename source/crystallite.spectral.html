@@ -304,6 +304,8 @@
 <li class="toctree-l1"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
 </ul>
 </div>
 </nav></div>
@@ -781,6 +783,51 @@ matrix axes leading.</p>
 </dd></dl>
 
 </section>
+<section id="module-crystallite.spectral.krylov">
+<span id="crystallite-spectral-krylov-module"></span><h2>crystallite.spectral.krylov module<a class="headerlink" href="#module-crystallite.spectral.krylov" title="Link to this heading">#</a></h2>
+<p>Krylov solvers shared by the matrix-free spectral solvers.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.spectral.krylov.preconditioned_conjugate_gradient">
+<span class="sig-name descname"><span class="pre">preconditioned_conjugate_gradient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matvec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precondition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divergence_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/spectral/krylov.py#L6-L89"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.spectral.krylov.preconditioned_conjugate_gradient" title="Link to this definition">#</a></dt>
+<dd><p>Solve <span class="math notranslate nohighlight">\(A x = b\)</span> for a symmetric positive semi-definite <cite>matvec</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>matvec</strong><span class="classifier">callable</span></dt><dd><p><span class="math notranslate nohighlight">\(x \mapsto A x\)</span>.</p>
+</dd>
+<dt><strong>precondition</strong><span class="classifier">callable</span></dt><dd><p>Applies an SPD approximate inverse of <span class="math notranslate nohighlight">\(A\)</span> to a residual. Its
+choice changes the convergence rate, never the converged value.</p>
+</dd>
+<dt><strong>b</strong><span class="classifier">ndarray</span></dt><dd><p>Right-hand side. Must be consistent (no component along <span class="math notranslate nohighlight">\(A\)</span>’s
+null space).</p>
+</dd>
+<dt><strong>x0</strong><span class="classifier">ndarray</span></dt><dd><p>Initial guess.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, default=1e-6</span></dt><dd><p>Relative residual <span class="math notranslate nohighlight">\(\|b - Ax\| / \|b\|\)</span> at which to stop.</p>
+</dd>
+<dt><strong>max_iterations</strong><span class="classifier">int, default=500</span></dt><dd></dd>
+<dt><strong>divergence_factor</strong><span class="classifier">float or None, default=100</span></dt><dd><p>Stop and return the best iterate once the residual exceeds this
+multiple of the best seen; <code class="docutils literal notranslate"><span class="pre">None</span></code> disables the guard. Only for
+systems with a near-null sector that round-off can excite; a
+legitimate (non-monotone) CG residual can blip by more than 100x
+at high contrast.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">ndarray</span></dt><dd><p>The best iterate seen (see the divergence guard in the source).</p>
+</dd>
+<dt><strong>residual_norm</strong><span class="classifier">float</span></dt><dd><p>Relative residual of <cite>x</cite> (0 if <code class="docutils literal notranslate"><span class="pre">b</span></code> is numerically zero).</p>
+</dd>
+<dt><strong>iterations</strong><span class="classifier">int</span></dt><dd></dd>
+<dt><strong>converged</strong><span class="classifier">bool</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
@@ -855,6 +902,10 @@ matrix axes leading.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.spectral.short_range.DifferentialOperators.laplacian"><code class="docutils literal notranslate"><span class="pre">DifferentialOperators.laplacian()</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.spectral.krylov">crystallite.spectral.krylov module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.spectral.krylov.preconditioned_conjugate_gradient"><code class="docutils literal notranslate"><span class="pre">preconditioned_conjugate_gradient()</span></code></a></li>
 </ul>
 </li>
 </ul>

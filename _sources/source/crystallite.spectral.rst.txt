@@ -21,3 +21,11 @@ crystallite.spectral.short\_range module
    :members:
    :show-inheritance:
    :undoc-members:
+
+crystallite.spectral.krylov module
+----------------------------------
+
+.. automodule:: crystallite.spectral.krylov
+   :members:
+   :show-inheritance:
+   :undoc-members:
