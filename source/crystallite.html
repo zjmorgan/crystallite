@@ -306,6 +306,8 @@
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="microstructure.html">Polycrystal microstructures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemomechanics.html">Coherent diffusion driver</a></li>
 </ul>
 </div>
 </nav></div>
@@ -631,6 +633,12 @@
 <li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.magnetostatics.smoothed_disk"><code class="docutils literal notranslate"><span class="pre">smoothed_disk()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.chemomechanics">Chemomechanics cases</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.chemomechanics.axis_diagonal_anisotropy"><code class="docutils literal notranslate"><span class="pre">axis_diagonal_anisotropy()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.chemomechanics.interface_orientation"><code class="docutils literal notranslate"><span class="pre">interface_orientation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.verification.html#crystallite.verification.chemomechanics.khachaturyan_b"><code class="docutils literal notranslate"><span class="pre">khachaturyan_b()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -642,6 +650,8 @@
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="microstructure.html">Polycrystal microstructures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chemomechanics.html">Coherent diffusion driver</a></li>
 </ul>
 </div>
 </section>
@@ -889,7 +899,7 @@ first time must be zero.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.mass_diffusion.MassDiffusion">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MassDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy_derivative</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bulk_free_energy_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'explicit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_curvature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L464-L713"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MassDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy_derivative</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bulk_free_energy_coefficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_well</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheme</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'explicit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_mobility</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_gradient_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_curvature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L464-L735"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Nonlinear mass-diffusion step for a scalar composition field.</p>
 <p>The solver advances</p>
@@ -993,7 +1003,7 @@ solvers; ported from the reference Fortran solver’s own
 <tr class="row-even"><td><p><a class="reference internal" href="#crystallite.mass_diffusion.MassDiffusion.energy" title="crystallite.mass_diffusion.MassDiffusion.energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">energy</span></code></a>(field)</p></td>
 <td><p>Return a simple bulk-plus-gradient energy estimate.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.mass_diffusion.MassDiffusion.step" title="crystallite.mass_diffusion.MassDiffusion.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a>(field, time_step)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.mass_diffusion.MassDiffusion.step" title="crystallite.mass_diffusion.MassDiffusion.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a>(field, time_step[, ...])</p></td>
 <td><p>Advance the field by one mass-diffusion step (see <code class="docutils literal notranslate"><span class="pre">scheme</span></code>).</p></td>
 </tr>
 </tbody>
@@ -1026,7 +1036,7 @@ equilibrium profiles (e.g. the tanh interface) without timestepping.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.mass_diffusion.MassDiffusion.energy">
-<span class="sig-name descname"><span class="pre">energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L705-L713"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion.energy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L727-L735"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion.energy" title="Link to this definition">#</a></dt>
 <dd><p>Return a simple bulk-plus-gradient energy estimate.</p>
 </dd></dl>
 
@@ -1087,8 +1097,24 @@ equilibrium profiles (e.g. the tanh interface) without timestepping.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.mass_diffusion.MassDiffusion.step">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L683-L703"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion.step" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_chemical_potential</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/mass_diffusion.py#L683-L725"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.mass_diffusion.MassDiffusion.step" title="Link to this definition">#</a></dt>
 <dd><p>Advance the field by one mass-diffusion step (see <code class="docutils literal notranslate"><span class="pre">scheme</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>field</strong><span class="classifier">array_like</span></dt><dd><p>Composition, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd>
+<dt><strong>time_step</strong><span class="classifier">float</span></dt><dd></dd>
+<dt><strong>extra_chemical_potential</strong><span class="classifier">array_like, optional</span></dt><dd><p>A real-space potential, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>, added to the
+chemical potential <code class="docutils literal notranslate"><span class="pre">mu</span></code> before the flux is formed – e.g. the
+elastic contribution of a coherent-precipitation model (see
+<a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion" title="crystallite.chemomechanics.CoherentDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.chemomechanics.CoherentDiffusion</span></code></a>). Treated
+explicitly, outside the <code class="docutils literal notranslate"><span class="pre">semi_implicit</span></code> stabilizer. A uniform
+value has no effect (it drives no flux).</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -2181,6 +2207,558 @@ band-limited, as there.</p>
 </dd></dl>
 
 </section>
+<section id="module-crystallite.microstructure">
+<span id="crystallite-microstructure-module"></span><h2>crystallite.microstructure module<a class="headerlink" href="#module-crystallite.microstructure" title="Link to this heading">#</a></h2>
+<p>Polycrystal microstructures on a periodic grid: tessellations, crystal
+orientations, and the orientation-dependent property fields the solvers take.</p>
+<p>Everything here builds host (NumPy) arrays; the solvers move them to the
+active backend. Property fields put the tensor axes first, <code class="docutils literal notranslate"><span class="pre">tensor.shape</span> <span class="pre">+</span>
+<span class="pre">grid.shape</span></code>, as <a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a>,
+<a class="reference internal" href="#crystallite.conduction.SteadyConduction" title="crystallite.conduction.SteadyConduction"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.conduction.SteadyConduction</span></code></a> and
+<a class="reference internal" href="#crystallite.mass_diffusion.MassDiffusion" title="crystallite.mass_diffusion.MassDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.MassDiffusion</span></code></a> expect.</p>
+<p><strong>Orientation convention.</strong> A rotation matrix <code class="docutils literal notranslate"><span class="pre">R</span></code> has the crystal axes as its
+columns, expressed in the sample frame, so a crystal-frame tensor <code class="docutils literal notranslate"><span class="pre">T</span></code> becomes
+<code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">T</span> <span class="pre">R^T</span></code> (rank 2), <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">R</span> <span class="pre">R</span> <span class="pre">R</span> <span class="pre">:</span> <span class="pre">C</span></code> (rank 4), and so on – the same
+convention as <a class="reference internal" href="crystallite.material.html#crystallite.material.properties.Solid.rotate" title="crystallite.material.properties.Solid.rotate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.material.properties.Solid.rotate()</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Microstructure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grain_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slots</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slot_orientations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L209-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A periodic polycrystal: grain ids, and a crystal orientation per grain.</p>
+<p>Orientations live on <em>slots</em>, the orientation pool that the
+order-parameter fields of
+<a class="reference internal" href="#crystallite.grain_orientation.GrainOrientation" title="crystallite.grain_orientation.GrainOrientation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.grain_orientation.GrainOrientation</span></code></a> index: every grain
+in a slot shares its orientation. With one slot per grain each grain has
+its own orientation; with a smaller pool, touching grains are given
+different slots (a random graph colouring), so a large polycrystal needs
+few order parameters.</p>
+<p>Build one with <a class="reference internal" href="#crystallite.microstructure.Microstructure.voronoi" title="crystallite.microstructure.Microstructure.voronoi"><code class="xref py py-meth docutils literal notranslate"><span class="pre">voronoi()</span></code></a>.</p>
+<dl class="field-list">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>grain_ids</strong><span class="classifier">ndarray of int, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code></span></dt><dd></dd>
+<dt><strong>slots</strong><span class="classifier">ndarray of int, shape <code class="docutils literal notranslate"><span class="pre">(n_grains,)</span></code></span></dt><dd><p>Slot (order-parameter index) of each grain.</p>
+</dd>
+<dt><strong>slot_orientations</strong><span class="classifier">ndarray, shape <code class="docutils literal notranslate"><span class="pre">(n_slots,</span> <span class="pre">3,</span> <span class="pre">3)</span></code></span></dt><dd><p>Rotation matrix of each slot (crystal axes as columns).</p>
+</dd>
+<dt><strong>seeds</strong><span class="classifier">ndarray or None</span></dt><dd><p>Seed positions of a Voronoi tessellation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.average_property" title="crystallite.microstructure.Microstructure.average_property"><code class="xref py py-obj docutils literal notranslate"><span class="pre">average_property</span></code></a>(tensor)</p></td>
+<td><p>Volume average (Voigt, arithmetic) of a crystal-frame property over the grains: the natural homogeneous reference medium of a polycrystal, e.g. <code class="docutils literal notranslate"><span class="pre">GreenOperator(grid,</span> <span class="pre">ms.average_property(stiffness))</span></code> for <a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.grain_interior" title="crystallite.microstructure.Microstructure.grain_interior"><code class="xref py py-obj docutils literal notranslate"><span class="pre">grain_interior</span></code></a>(grain[, margin])</p></td>
+<td><p>Mask of grain <cite>grain</cite> with <cite>margin</cite> voxels shaved off, periodically: the points whose whole neighborhood of half-width <cite>margin</cite> (along every axis with more than one point) is in the grain.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.order_parameters" title="crystallite.microstructure.Microstructure.order_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">order_parameters</span></code></a>([amplitude, smooth])</p></td>
+<td><p>Initial condition for <a class="reference internal" href="#crystallite.grain_orientation.GrainOrientation" title="crystallite.grain_orientation.GrainOrientation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.grain_orientation.GrainOrientation</span></code></a>: one order parameter per slot, equal to <cite>amplitude</cite> inside the grains of that slot and 0 elsewhere (<code class="docutils literal notranslate"><span class="pre">amplitude=sqrt(a/b)</span></code> for its barrier and quartic coefficients).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.property_field" title="crystallite.microstructure.Microstructure.property_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">property_field</span></code></a>(tensor)</p></td>
+<td><p>A crystal-frame property placed grain by grain in the sample frame: each voxel holds <cite>tensor</cite> rotated by its grain's orientation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.rotation_field" title="crystallite.microstructure.Microstructure.rotation_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_field</span></code></a>()</p></td>
+<td><p>Rotation matrix at every voxel, shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.slot_field" title="crystallite.microstructure.Microstructure.slot_field"><code class="xref py py-obj docutils literal notranslate"><span class="pre">slot_field</span></code></a>()</p></td>
+<td><p>Slot index at every voxel, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.microstructure.Microstructure.voronoi" title="crystallite.microstructure.Microstructure.voronoi"><code class="xref py py-obj docutils literal notranslate"><span class="pre">voronoi</span></code></a>(grid, n_grains[, orientations, ...])</p></td>
+<td><p>Random periodic Voronoi polycrystal.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.average_property">
+<span class="sig-name descname"><span class="pre">average_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L340-L352"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.average_property" title="Link to this definition">#</a></dt>
+<dd><p>Volume average (Voigt, arithmetic) of a crystal-frame property over
+the grains: the natural homogeneous reference medium of a polycrystal,
+e.g. <code class="docutils literal notranslate"><span class="pre">GreenOperator(grid,</span> <span class="pre">ms.average_property(stiffness))</span></code> for
+<a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray of <cite>tensor</cite>’s shape</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.grain_ids">
+<span class="sig-name descname"><span class="pre">grain_ids</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.grain_ids" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.grain_interior">
+<span class="sig-name descname"><span class="pre">grain_interior</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L354-L363"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.grain_interior" title="Link to this definition">#</a></dt>
+<dd><p>Mask of grain <cite>grain</cite> with <cite>margin</cite> voxels shaved off, periodically:
+the points whose whole neighborhood of half-width <cite>margin</cite> (along every
+axis with more than one point) is in the grain. Shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.grid">
+<span class="sig-name descname"><span class="pre">grid</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.n_grains">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_grains</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.n_grains" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.n_slots">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">n_slots</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.n_slots" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.order_parameters">
+<span class="sig-name descname"><span class="pre">order_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L365-L386"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.order_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Initial condition for
+<a class="reference internal" href="#crystallite.grain_orientation.GrainOrientation" title="crystallite.grain_orientation.GrainOrientation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.grain_orientation.GrainOrientation</span></code></a>: one order
+parameter per slot, equal to <cite>amplitude</cite> inside the grains of that slot
+and 0 elsewhere (<code class="docutils literal notranslate"><span class="pre">amplitude=sqrt(a/b)</span></code> for its barrier and quartic
+coefficients). With <cite>smooth</cite> the sharp indicators are Lanczos-filtered
+(band-limited, mean preserved), which the semi-implicit scheme then
+relaxes to the diffuse equilibrium profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ndarray of shape <code class="docutils literal notranslate"><span class="pre">(n_slots,)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>, dtype <code class="docutils literal notranslate"><span class="pre">grid.real_dtype</span></code></dt><dd><p>Order parameter <code class="docutils literal notranslate"><span class="pre">i</span></code> carries orientation <code class="docutils literal notranslate"><span class="pre">slot_orientations[i]</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.orientations">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">orientations</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.orientations" title="Link to this definition">#</a></dt>
+<dd><p>Rotation matrix of each grain, shape <code class="docutils literal notranslate"><span class="pre">(n_grains,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.property_field">
+<span class="sig-name descname"><span class="pre">property_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L313-L338"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.property_field" title="Link to this definition">#</a></dt>
+<dd><p>A crystal-frame property placed grain by grain in the sample frame:
+each voxel holds <cite>tensor</cite> rotated by its grain’s orientation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">array_like</span></dt><dd><p>Any rank: a scalar (returned uniform), a <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> conductivity
+or mobility, a <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> stiffness, …</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray of shape <code class="docutils literal notranslate"><span class="pre">tensor.shape</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>, dtype <code class="docutils literal notranslate"><span class="pre">grid.real_dtype</span></code></dt><dd><p>Ready for <code class="docutils literal notranslate"><span class="pre">SteadyConduction(grid,</span> <span class="pre">field,</span> <span class="pre">...)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ElasticDeformation(...,</span> <span class="pre">stiffness=field,</span> <span class="pre">...)</span></code>, etc. Sharp
+across grain boundaries.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.rotation_field">
+<span class="sig-name descname"><span class="pre">rotation_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L307-L311"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.rotation_field" title="Link to this definition">#</a></dt>
+<dd><p>Rotation matrix at every voxel, shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.seeds">
+<span class="sig-name descname"><span class="pre">seeds</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.seeds" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.slot_field">
+<span class="sig-name descname"><span class="pre">slot_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L303-L305"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.slot_field" title="Link to this definition">#</a></dt>
+<dd><p>Slot index at every voxel, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.slot_orientations">
+<span class="sig-name descname"><span class="pre">slot_orientations</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.slot_orientations" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.slots">
+<span class="sig-name descname"><span class="pre">slots</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.slots" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.microstructure.Microstructure.voronoi">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">voronoi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_grains</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">orientations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L241-L288"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.Microstructure.voronoi" title="Link to this definition">#</a></dt>
+<dd><p>Random periodic Voronoi polycrystal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>n_grains</strong><span class="classifier">int</span></dt><dd><p>Requested number of grains (grains too small to hold a voxel are
+dropped, so <a class="reference internal" href="#crystallite.microstructure.Microstructure.n_grains" title="crystallite.microstructure.Microstructure.n_grains"><code class="xref py py-attr docutils literal notranslate"><span class="pre">n_grains</span></code></a> can be smaller).</p>
+</dd>
+<dt><strong>orientations</strong><span class="classifier">None, int or array_like of shape (m, 3, 3)</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">None</span></code>: one uniformly random orientation per grain. An <code class="docutils literal notranslate"><span class="pre">int</span></code>
+<code class="docutils literal notranslate"><span class="pre">m</span></code>: a random pool of <code class="docutils literal notranslate"><span class="pre">m</span></code> orientations, assigned so that
+touching grains differ. An array: an explicit pool (e.g. from
+<a class="reference internal" href="#crystallite.microstructure.rotation_from_bunge_euler" title="crystallite.microstructure.rotation_from_bunge_euler"><code class="xref py py-func docutils literal notranslate"><span class="pre">rotation_from_bunge_euler()</span></code></a>, or a textured sample). A pool
+the size of the number of grains gives grain <code class="docutils literal notranslate"><span class="pre">g</span></code> orientation
+<code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int, optional</span></dt><dd><p>Seeds the seeds, the orientations and the assignment.</p>
+</dd>
+<dt><strong>seeds</strong><span class="classifier">array_like, optional</span></dt><dd><p>Explicit seed positions (see <a class="reference internal" href="#crystallite.microstructure.periodic_voronoi" title="crystallite.microstructure.periodic_voronoi"><code class="xref py py-func docutils literal notranslate"><span class="pre">periodic_voronoi()</span></code></a>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.grain_neighbors">
+<span class="sig-name descname"><span class="pre">grain_neighbors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grain_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L156-L182"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.grain_neighbors" title="Link to this definition">#</a></dt>
+<dd><p>Which grains touch, across the periodic boundary too.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grain_ids</strong><span class="classifier">ndarray of int</span></dt><dd><p>Grain-id field.</p>
+</dd>
+<dt><strong>axes</strong><span class="classifier">sequence of int, optional</span></dt><dd><p>Axes to compare along. Default: every axis with more than one point.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>list of set of int</dt><dd><p><code class="docutils literal notranslate"><span class="pre">neighbors[g]</span></code> is the set of grains touching grain <code class="docutils literal notranslate"><span class="pre">g</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.mixed_property_field">
+<span class="sig-name descname"><span class="pre">mixed_property_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;class</span> <span class="pre">'numpy.float32'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L400-L425"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.mixed_property_field" title="Link to this definition">#</a></dt>
+<dd><p>A crystal-frame property mixed over orientations,
+<span class="math notranslate nohighlight">\(P(x)=\sum_i w_i(x)\,R_i\cdot T\)</span> (arithmetic mixing of the rotated
+tensors) – for order-parameter fields that evolve, including ones grown
+from noise with no tessellation: <span class="math notranslate nohighlight">\(w=\)</span> <a class="reference internal" href="#crystallite.microstructure.orientation_weights" title="crystallite.microstructure.orientation_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">orientation_weights()</span></code></a>
+of <code class="docutils literal notranslate"><span class="pre">eta</span></code> and <code class="docutils literal notranslate"><span class="pre">rotations</span></code> the orientation attached to each order
+parameter. Other mixing rules replace this one function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>tensor</strong><span class="classifier">array_like</span></dt><dd><p>Crystal-frame property of any rank.</p>
+</dd>
+<dt><strong>rotations</strong><span class="classifier">array_like of shape (n, 3, 3)</span></dt><dd></dd>
+<dt><strong>weights</strong><span class="classifier">array_like of shape (n,) + grid.shape</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray of shape <code class="docutils literal notranslate"><span class="pre">tensor.shape</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.orientation_weights">
+<span class="sig-name descname"><span class="pre">orientation_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L389-L397"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.orientation_weights" title="Link to this definition">#</a></dt>
+<dd><p>Partition of unity from order parameters, <span class="math notranslate nohighlight">\(w_i=\eta_i^2/
+\sum_j\eta_j^2\)</span> (uniform where every <span class="math notranslate nohighlight">\(\eta\)</span> vanishes): the share of
+each orientation at a point, shape of <cite>eta</cite>, summing to 1 over axis 0.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.periodic_voronoi">
+<span class="sig-name descname"><span class="pre">periodic_voronoi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_grains</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L113-L153"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.periodic_voronoi" title="Link to this definition">#</a></dt>
+<dd><p>Grain ids of a periodic Voronoi tessellation on <cite>grid</cite>.</p>
+<p>Voxels take the id of the nearest seed under the minimum-image convention
+(a torus, so the tessellation is periodic), over the grid’s active axes: a
+grid with one point along an axis gives a 2D tessellation.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>grid</strong><span class="classifier">Grid</span></dt><dd></dd>
+<dt><strong>n_grains</strong><span class="classifier">int</span></dt><dd><p>Number of random seeds (ignored if <cite>seeds</cite> is given).</p>
+</dd>
+<dt><strong>seeds</strong><span class="classifier">array_like of shape (n, ndim_active), optional</span></dt><dd><p>Seed positions in physical units, within <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">length)</span></code> of each
+active axis.</p>
+</dd>
+<dt><strong>seed</strong><span class="classifier">int or numpy.random.Generator, optional</span></dt><dd><p>For the random seeds.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
+<dt><strong>grain_ids</strong><span class="classifier">ndarray of int, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code></span></dt><dd></dd>
+<dt><strong>seeds</strong><span class="classifier">ndarray of shape (n, ndim_active)</span></dt><dd><p>Seeds actually used. Grains too small to hold a voxel simply do not
+appear in <cite>grain_ids</cite>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.random_rotations">
+<span class="sig-name descname"><span class="pre">random_rotations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L53-L67"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.random_rotations" title="Link to this definition">#</a></dt>
+<dd><p><cite>n</cite> rotation matrices uniformly distributed on SO(3) (unit quaternions
+from a 4D normal, which is uniform on the 3-sphere and so on SO(3)).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd></dd>
+<dt><strong>seed</strong><span class="classifier">int or numpy.random.Generator, optional</span></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray of shape (n, 3, 3)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.rotate_tensor">
+<span class="sig-name descname"><span class="pre">rotate_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L96-L110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.rotate_tensor" title="Link to this definition">#</a></dt>
+<dd><p>Rotate a tensor of any rank by <cite>rotation</cite> (one matrix, or a stack
+<code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, giving a stack of tensors): every index is transformed,
+<code class="docutils literal notranslate"><span class="pre">T'_{ij...}</span> <span class="pre">=</span> <span class="pre">R_{ia}</span> <span class="pre">R_{jb}</span> <span class="pre">...</span> <span class="pre">T_{ab...}</span></code>. Polar tensors only (proper
+rotations do not distinguish axial ones).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.rotation_from_bunge_euler">
+<span class="sig-name descname"><span class="pre">rotation_from_bunge_euler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">big_phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phi2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">degrees</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L70-L93"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.rotation_from_bunge_euler" title="Link to this definition">#</a></dt>
+<dd><p>Rotation matrix for Bunge (ZXZ) Euler angles, in this module’s
+convention (crystal axes as columns, in the sample frame):
+<span class="math notranslate nohighlight">\(R=R_z(\varphi_1)R_x(\Phi)R_z(\varphi_2)\)</span> with active rotations, the
+transpose of the usual sample-to-crystal matrix <span class="math notranslate nohighlight">\(g\)</span>. Accepts arrays
+(broadcast together); returns shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.microstructure.rotation_from_quaternion">
+<span class="sig-name descname"><span class="pre">rotation_from_quaternion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quaternion</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/microstructure.py#L25-L50"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.microstructure.rotation_from_quaternion" title="Link to this definition">#</a></dt>
+<dd><p>Rotation matrices from unit quaternions <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">x,</span> <span class="pre">y,</span> <span class="pre">z)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>quaternion</strong><span class="classifier">array_like of shape (…, 4)</span></dt><dd><p>Normalized internally.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ndarray of shape (…, 3, 3)</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-crystallite.chemomechanics">
+<span id="crystallite-chemomechanics-module"></span><h2>crystallite.chemomechanics module<a class="headerlink" href="#module-crystallite.chemomechanics" title="Link to this heading">#</a></h2>
+<p>Coherent (elastically constrained) diffusion: composition-dependent misfit
+strain coupled to mechanical equilibrium.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">CoherentDiffusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffusion</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elasticity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">misfit_strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_composition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L11-L186"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Cahn-Hilliard diffusion with a coherent elastic misfit (Cahn-Larche).</p>
+<p>The free energy is the usual bulk-plus-gradient energy plus the elastic
+energy of a body whose stress-free (Vegard) strain follows the composition,</p>
+<div class="math notranslate nohighlight">
+\[E_\mathrm{el}[c]=\min_u\tfrac12\int(\varepsilon-\varepsilon^*):C:
+(\varepsilon-\varepsilon^*),\qquad
+\varepsilon^*_{ij}(c)=\eta_{ij}\,(c-c_\mathrm{ref}),\]</div>
+<p>with <span class="math notranslate nohighlight">\(\varepsilon=\bar\varepsilon+\mathrm{sym}\nabla u\)</span> at
+mechanical equilibrium. By the envelope theorem the elastic contribution to
+the chemical potential is <span class="math notranslate nohighlight">\(\mu_\mathrm{el}=\delta E_\mathrm{el}/
+\delta c=-\eta_{ij}\sigma_{ij}\)</span>, with <span class="math notranslate nohighlight">\(\sigma=C:(\varepsilon-
+\varepsilon^*)\)</span> the equilibrium stress, and each step is: solve
+<a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a> for the current
+composition, then advance
+<a class="reference internal" href="#crystallite.mass_diffusion.MassDiffusion" title="crystallite.mass_diffusion.MassDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.MassDiffusion</span></code></a> with
+<span class="math notranslate nohighlight">\(\mu_\mathrm{el}\)</span> as its <code class="docutils literal notranslate"><span class="pre">extra_chemical_potential</span></code>.</p>
+<p>For a homogeneous stiffness this reduces to Khachaturyan’s <span class="math notranslate nohighlight">\(E_\mathrm{el}
+=\tfrac12\sum_k B(\hat n)|\hat c_k|^2\)</span>, with <span class="math notranslate nohighlight">\(B(\hat n)\)</span> the
+elastic energy per unit composition squared of a modulation along
+<span class="math notranslate nohighlight">\(\hat n\)</span>, so the morphology is set by the misfit and the elastic
+anisotropy alone (the modulation lies along the elastically soft
+directions).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>diffusion</strong><span class="classifier">MassDiffusion</span></dt><dd></dd>
+<dt><strong>elasticity</strong><span class="classifier">ElasticDeformation</span></dt><dd><p>On the same grid. Give it the stiffness (a <code class="docutils literal notranslate"><span class="pre">stiffness=</span></code> tensor or
+Lame parameters); a homogeneous one converges in about one iteration.</p>
+</dd>
+<dt><strong>misfit_strain</strong><span class="classifier">array_like of shape (3, 3) or (3, 3) + grid.shape</span></dt><dd><p><span class="math notranslate nohighlight">\(\eta_{ij}\)</span>, the eigenstrain per unit composition: a constant
+tensor, or a field (e.g. a crystal-frame misfit rotated grain by grain
+with <a class="reference internal" href="#crystallite.microstructure.Microstructure.property_field" title="crystallite.microstructure.Microstructure.property_field"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.microstructure.Microstructure.property_field()</span></code></a>).</p>
+</dd>
+<dt><strong>reference_composition</strong><span class="classifier">float, default=0</span></dt><dd><p>Composition with zero eigenstrain. Only sets a uniform eigenstrain,
+which under a fixed macroscopic strain changes the stress by a
+constant and so drives no flux.</p>
+</dd>
+<dt><strong>macro_strain</strong><span class="classifier">array_like of shape (3, 3), optional</span></dt><dd><p>Fixed macroscopic strain of the cell. Default zero (a clamped cell).</p>
+</dd>
+<dt><strong>dealias</strong><span class="classifier">bool, default=True</span></dt><dd><p>Lanczos-filter the eigenstrain (band-limit it), which removes the
+Nyquist content on which the discrete elastic operator differs from
+its reference Green operator, and the potential (self-adjointly, so the
+coupling stays variational). Each mode’s elastic energy is scaled by
+the square of the filter gain <span class="math notranslate nohighlight">\(\prod_i\mathrm{sinc}(k_i\Delta x_i)\)</span>,
+about <span class="math notranslate nohighlight">\(1-(k\Delta x)^2/3\)</span>: negligible for resolved modes.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>grid</strong></dt><dd></dd>
+<dt><strong>macro_strain</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.eigenstrain" title="crystallite.chemomechanics.CoherentDiffusion.eigenstrain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigenstrain</span></code></a>(composition)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">eps*(c)</span> <span class="pre">=</span> <span class="pre">eta</span> <span class="pre">(c</span> <span class="pre">-</span> <span class="pre">c_ref)</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_energy" title="crystallite.chemomechanics.CoherentDiffusion.elastic_energy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">elastic_energy</span></code></a>(composition, solution)</p></td>
+<td><p>Mean elastic energy density <code class="docutils literal notranslate"><span class="pre">1/2</span> <span class="pre">sigma:(eps</span> <span class="pre">-</span> <span class="pre">eps*)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_potential" title="crystallite.chemomechanics.CoherentDiffusion.elastic_potential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">elastic_potential</span></code></a>(solution)</p></td>
+<td><p><span class="math notranslate nohighlight">\(\mu_\mathrm{el}=-\eta_{ij}\sigma_{ij}\)</span>, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>, from an equilibrium <cite>solution</cite> (Lanczos-filtered like the eigenstrain with <cite>dealias</cite>: the filter is self-adjoint, so this is exactly <span class="math notranslate nohighlight">\(\delta E_\mathrm{el}/\delta c\)</span> of the filtered problem).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.polycrystal" title="crystallite.chemomechanics.CoherentDiffusion.polycrystal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">polycrystal</span></code></a>(diffusion, microstructure, ...)</p></td>
+<td><p>Coherent diffusion in a polycrystal.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.solve_elastic" title="crystallite.chemomechanics.CoherentDiffusion.solve_elastic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solve_elastic</span></code></a>(composition[, displacement])</p></td>
+<td><p>Mechanical equilibrium at <cite>composition</cite>; returns the <a class="reference internal" href="#crystallite.elastic_deformation.ElasticSolution" title="crystallite.elastic_deformation.ElasticSolution"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticSolution</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.chemomechanics.CoherentDiffusion.step" title="crystallite.chemomechanics.CoherentDiffusion.step"><code class="xref py py-obj docutils literal notranslate"><span class="pre">step</span></code></a>(composition, time_step[, displacement])</p></td>
+<td><p>One coupled step.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.dealias">
+<span class="sig-name descname"><span class="pre">dealias</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.dealias" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.diffusion">
+<span class="sig-name descname"><span class="pre">diffusion</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.diffusion" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.eigenstrain">
+<span class="sig-name descname"><span class="pre">eigenstrain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L140-L147"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.eigenstrain" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">eps*(c)</span> <span class="pre">=</span> <span class="pre">eta</span> <span class="pre">(c</span> <span class="pre">-</span> <span class="pre">c_ref)</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span> <span class="pre">+</span> <span class="pre">grid.shape</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.elastic_energy">
+<span class="sig-name descname"><span class="pre">elastic_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solution</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L171-L174"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_energy" title="Link to this definition">#</a></dt>
+<dd><p>Mean elastic energy density <code class="docutils literal notranslate"><span class="pre">1/2</span> <span class="pre">sigma:(eps</span> <span class="pre">-</span> <span class="pre">eps*)</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.elastic_potential">
+<span class="sig-name descname"><span class="pre">elastic_potential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solution</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L160-L169"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_potential" title="Link to this definition">#</a></dt>
+<dd><p><span class="math notranslate nohighlight">\(\mu_\mathrm{el}=-\eta_{ij}\sigma_{ij}\)</span>, shape <code class="docutils literal notranslate"><span class="pre">grid.shape</span></code>,
+from an equilibrium <cite>solution</cite> (Lanczos-filtered like the eigenstrain
+with <cite>dealias</cite>: the filter is self-adjoint, so this is exactly
+<span class="math notranslate nohighlight">\(\delta E_\mathrm{el}/\delta c\)</span> of the filtered problem).</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.elasticity">
+<span class="sig-name descname"><span class="pre">elasticity</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.elasticity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.grid">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">grid</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.grid" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.macro_strain">
+<span class="sig-name descname"><span class="pre">macro_strain</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.macro_strain" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.misfit_strain">
+<span class="sig-name descname"><span class="pre">misfit_strain</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">object</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.misfit_strain" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.polycrystal">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">polycrystal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">diffusion</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">microstructure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stiffness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">misfit_strain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_composition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">macro_strain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dealias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">elasticity_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L92-L134"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.polycrystal" title="Link to this definition">#</a></dt>
+<dd><p>Coherent diffusion in a polycrystal.</p>
+<p>The crystal-frame <cite>stiffness</cite> <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3)</span></code> and <cite>misfit_strain</cite>
+<code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code> are rotated grain by grain into the sample frame
+(<a class="reference internal" href="#crystallite.microstructure.Microstructure.property_field" title="crystallite.microstructure.Microstructure.property_field"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.microstructure.Microstructure.property_field()</span></code></a>), and
+the elastic solver, now heterogeneous, is referenced to the Voigt-average
+stiffness of the grains (its Green’s operator is the CG preconditioner).
+The grain structure is fixed; the phases share one stiffness, so the
+misfit alone drives the decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>diffusion</strong><span class="classifier">MassDiffusion</span></dt><dd></dd>
+<dt><strong>microstructure</strong><span class="classifier">Microstructure</span></dt><dd><p>On the same grid.</p>
+</dd>
+<dt><strong>stiffness, misfit_strain</strong><span class="classifier">array_like</span></dt><dd><p>In the crystal frame.</p>
+</dd>
+<dt><strong>elasticity_kwargs</strong></dt><dd><p>Passed to <a class="reference internal" href="#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticDeformation</span></code></a>
+(e.g. <code class="docutils literal notranslate"><span class="pre">preconditioner_green</span></code>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.reference_composition">
+<span class="sig-name descname"><span class="pre">reference_composition</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.reference_composition" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.solve_elastic">
+<span class="sig-name descname"><span class="pre">solve_elastic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solve_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L149-L158"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.solve_elastic" title="Link to this definition">#</a></dt>
+<dd><p>Mechanical equilibrium at <cite>composition</cite>; returns the
+<a class="reference internal" href="#crystallite.elastic_deformation.ElasticSolution" title="crystallite.elastic_deformation.ElasticSolution"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElasticSolution</span></code></a>.
+<cite>displacement</cite> warm-starts the solve (e.g. the previous step’s).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.chemomechanics.CoherentDiffusion.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_step</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">displacement</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solve_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/chemomechanics.py#L176-L186"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.chemomechanics.CoherentDiffusion.step" title="Link to this definition">#</a></dt>
+<dd><p>One coupled step. Returns <code class="docutils literal notranslate"><span class="pre">(composition,</span> <span class="pre">solution)</span></code> with the
+equilibrium solution of the <em>old</em> composition, whose <code class="docutils literal notranslate"><span class="pre">displacement</span></code>
+warm-starts the next step.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
@@ -2491,6 +3069,54 @@ solvers of nonlinear PDEs.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.grid"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.grid</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.permeability"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.permeability</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.magnetostatics.Magnetostatics.solve"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.microstructure">crystallite.microstructure module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure"><code class="docutils literal notranslate"><span class="pre">Microstructure</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.average_property"><code class="docutils literal notranslate"><span class="pre">Microstructure.average_property()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.grain_ids"><code class="docutils literal notranslate"><span class="pre">Microstructure.grain_ids</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.grain_interior"><code class="docutils literal notranslate"><span class="pre">Microstructure.grain_interior()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.grid"><code class="docutils literal notranslate"><span class="pre">Microstructure.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.n_grains"><code class="docutils literal notranslate"><span class="pre">Microstructure.n_grains</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.n_slots"><code class="docutils literal notranslate"><span class="pre">Microstructure.n_slots</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.order_parameters"><code class="docutils literal notranslate"><span class="pre">Microstructure.order_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.orientations"><code class="docutils literal notranslate"><span class="pre">Microstructure.orientations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.property_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.property_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.rotation_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.rotation_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.seeds"><code class="docutils literal notranslate"><span class="pre">Microstructure.seeds</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.slot_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.slot_field()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.slot_orientations"><code class="docutils literal notranslate"><span class="pre">Microstructure.slot_orientations</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.slots"><code class="docutils literal notranslate"><span class="pre">Microstructure.slots</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.Microstructure.voronoi"><code class="docutils literal notranslate"><span class="pre">Microstructure.voronoi()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.grain_neighbors"><code class="docutils literal notranslate"><span class="pre">grain_neighbors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.mixed_property_field"><code class="docutils literal notranslate"><span class="pre">mixed_property_field()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.orientation_weights"><code class="docutils literal notranslate"><span class="pre">orientation_weights()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.periodic_voronoi"><code class="docutils literal notranslate"><span class="pre">periodic_voronoi()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.random_rotations"><code class="docutils literal notranslate"><span class="pre">random_rotations()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.rotate_tensor"><code class="docutils literal notranslate"><span class="pre">rotate_tensor()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.rotation_from_bunge_euler"><code class="docutils literal notranslate"><span class="pre">rotation_from_bunge_euler()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.microstructure.rotation_from_quaternion"><code class="docutils literal notranslate"><span class="pre">rotation_from_quaternion()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.chemomechanics">crystallite.chemomechanics module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.dealias"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.dealias</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.diffusion"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.diffusion</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.eigenstrain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.eigenstrain()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_energy"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elastic_energy()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.elastic_potential"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elastic_potential()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.elasticity"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elasticity</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.grid"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.grid</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.macro_strain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.macro_strain</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.misfit_strain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.misfit_strain</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.polycrystal"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.polycrystal()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.reference_composition"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.reference_composition</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.solve_elastic"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.solve_elastic()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.chemomechanics.CoherentDiffusion.step"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.step()</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Steady conduction driver &#8212; crystallite  documentation</title>
+    <title>Coherent diffusion driver &#8212; crystallite  documentation</title>
   
   
   
@@ -42,12 +42,11 @@
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'source/conduction';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/chemomechanics';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Electrostatics driver" href="electrostatics.html" />
-    <link rel="prev" title="Elastic deformation driver" href="elastic_deformation.html" />
+    <link rel="prev" title="Polycrystal microstructures" href="microstructure.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -300,10 +299,10 @@
 <li class="toctree-l1"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="grain_orientation.html">Grain orientation driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Steady conduction driver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="microstructure.html">Polycrystal microstructures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="chemomechanics.html">Coherent diffusion driver</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Coherent diffusion driver</a></li>
 </ul>
 </div>
 </nav></div>
@@ -347,7 +346,7 @@
     
     <li class="breadcrumb-item"><a href="crystallite.html" class="nav-link">crystallite namespace</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Steady conduction driver</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Coherent diffusion driver</span></li>
   </ul>
 </nav>
 </div>
@@ -364,35 +363,42 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="steady-conduction-driver">
-<h1>Steady conduction driver<a class="headerlink" href="#steady-conduction-driver" title="Link to this heading">#</a></h1>
-<p><a class="reference internal" href="crystallite.html#crystallite.conduction.SteadyConduction" title="crystallite.conduction.SteadyConduction"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.conduction.SteadyConduction</span></code></a> solves steady heat
-(Fourier) or charge (Ohm) conduction in a heterogeneous, possibly
-anisotropic, solid, with an optional heat source. The two laws are one
-problem: potential <span class="math notranslate nohighlight">\(T\)</span> or <span class="math notranslate nohighlight">\(\phi\)</span>, driving force
-<span class="math notranslate nohighlight">\(X=-\nabla T\)</span> or <span class="math notranslate nohighlight">\(E=-\nabla\phi\)</span>, flux <span class="math notranslate nohighlight">\(q=\kappa X\)</span> or
-<span class="math notranslate nohighlight">\(j=\sigma E\)</span>, and conservation <span class="math notranslate nohighlight">\(\nabla\cdot q=\varphi\)</span> with
-<span class="math notranslate nohighlight">\(\varphi=0\)</span> for charge.</p>
-<ol class="arabic simple">
-<li><p>Build the conductivity field and the solver, e.g. with
-<a class="reference internal" href="crystallite.verification.html#crystallite.verification.conduction.ConductionInclusionCase" title="crystallite.verification.conduction.ConductionInclusionCase"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.verification.conduction.ConductionInclusionCase</span></code></a>
-(hole, soft, hard or perfectly conducting inclusion).</p></li>
-<li><p>Convert a far-field flux to the mean driving force the solver takes as
-input with <code class="docutils literal notranslate"><span class="pre">solver.reference_green.apply_compliance</span></code>.</p></li>
-<li><p>Solve for the potential fluctuation by matrix-free preconditioned
-conjugate gradient, with the homogeneous reference medium’s Green’s
-operator as preconditioner.</p></li>
-</ol>
-<p>Antiplane (Mode III) elasticity is this same problem with
-<span class="math notranslate nohighlight">\(\kappa\leftrightarrow\mu\)</span>; <code class="docutils literal notranslate"><span class="pre">tests/test_conduction.py</span></code> checks the two
-solvers against each other.</p>
-<p>Heat and charge conduction are verified separately, so each figure carries
-its own quantities: <code class="docutils literal notranslate"><span class="pre">examples/heat_conduction/verification/</span></code> (heat flux
-<span class="math notranslate nohighlight">\(q\)</span>, thermal conductivity <span class="math notranslate nohighlight">\(\\kappa\)</span>, thermal driving force
-<span class="math notranslate nohighlight">\(X\)</span>, and a cylinder generating heat) and
-<code class="docutils literal notranslate"><span class="pre">examples/charge_conduction/verification/</span></code> (current density <span class="math notranslate nohighlight">\(j\)</span>,
-electrical conductivity <span class="math notranslate nohighlight">\(\\sigma\)</span>, electric field <span class="math notranslate nohighlight">\(E\)</span>). Both compare
-with the exact periodic lattice-sum and image-sum references.</p>
+  <section id="coherent-diffusion-driver">
+<h1>Coherent diffusion driver<a class="headerlink" href="#coherent-diffusion-driver" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion" title="crystallite.chemomechanics.CoherentDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.chemomechanics.CoherentDiffusion</span></code></a> couples
+<a class="reference internal" href="crystallite.html#crystallite.mass_diffusion.MassDiffusion" title="crystallite.mass_diffusion.MassDiffusion"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.mass_diffusion.MassDiffusion</span></code></a> to
+<a class="reference internal" href="crystallite.html#crystallite.elastic_deformation.ElasticDeformation" title="crystallite.elastic_deformation.ElasticDeformation"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.elastic_deformation.ElasticDeformation</span></code></a> through a
+composition-dependent misfit (Vegard) strain, the Cahn-Larche model of a coherent
+transformation. Each step solves mechanical equilibrium for the eigenstrain
+<span class="math notranslate nohighlight">\(\varepsilon^*=\eta\,(c-c_\mathrm{ref})\)</span>, forms the elastic chemical
+potential <span class="math notranslate nohighlight">\(\mu_\mathrm{el}=-\eta_{ij}\sigma_{ij}\)</span> (the functional
+derivative of the elastic energy), and advances the composition with it as
+<code class="docutils literal notranslate"><span class="pre">MassDiffusion.step(...,</span> <span class="pre">extra_chemical_potential=...)</span></code>.</p>
+<p>With a homogeneous cubic stiffness and a dilatational misfit, the misfit alone
+selects the morphology: modulations align with the elastically soft direction,
+<span class="math notranslate nohighlight">\(\langle100\rangle\)</span> for a Zener ratio above 1, <span class="math notranslate nohighlight">\(\langle111\rangle\)</span>
+below it, and none for an isotropic crystal. The coupling is verified against
+Khachaturyan’s elastic energy of a composition modulation (the potential of a
+mode equals <span class="math notranslate nohighlight">\(B(\hat n)c_k\)</span> to the float32 precision of the solver, and is
+the exact functional derivative of the elastic energy).</p>
+<p><strong>Polycrystals.</strong>
+<a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.polycrystal" title="crystallite.chemomechanics.CoherentDiffusion.polycrystal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">crystallite.chemomechanics.CoherentDiffusion.polycrystal()</span></code></a> takes a
+<a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure" title="crystallite.microstructure.Microstructure"><code class="xref py py-class docutils literal notranslate"><span class="pre">crystallite.microstructure.Microstructure</span></code></a> and a crystal-frame stiffness
+and misfit, rotates both grain by grain, and references the now heterogeneous
+elastic solve to the Voigt-average stiffness of the grains. The decomposition
+then follows each grain’s own soft direction, so the modulations are aligned with
+that grain’s crystal axes (Zener ratio above 1) or diagonals (below 1) and change
+direction across the grain boundaries. The stiffness varies between grains, so
+each step is a conjugate-gradient elastic solve (warm-started), about 10 iterations
+here, where the homogeneous crystal needs one. The grain structure is fixed.
+<a class="reference internal" href="crystallite.verification.html#crystallite.verification.chemomechanics.interface_orientation" title="crystallite.verification.chemomechanics.interface_orientation"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.verification.chemomechanics.interface_orientation()</span></code></a> measures
+the interface orientation of a grain’s interior, which the tests and
+<code class="docutils literal notranslate"><span class="pre">examples/chemomechanics/verification/polycrystal_alignment.py</span></code> compare with the
+prediction from the grain’s orientation alone.</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">examples/chemomechanics/</span></code> for the misfit-driven spinodal decomposition
+(<code class="docutils literal notranslate"><span class="pre">template.py</span></code>), the polycrystal (<code class="docutils literal notranslate"><span class="pre">polycrystal.py</span></code>), the elastic stiffness of a
+modulation against its direction (<code class="docutils literal notranslate"><span class="pre">verification/elastic_anisotropy.py</span></code>) and the
+per-grain alignment (<code class="docutils literal notranslate"><span class="pre">verification/polycrystal_alignment.py</span></code>).</p>
 </section>
 
 
@@ -406,22 +412,13 @@ with the exact periodic lattice-sum and image-sum references.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="elastic_deformation.html"
+       href="microstructure.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Elastic deformation driver</p>
+        <p class="prev-next-title">Polycrystal microstructures</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="electrostatics.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Electrostatics driver</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>

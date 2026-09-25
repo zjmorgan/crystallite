@@ -21,6 +21,8 @@ Subpackages
    conduction
    electrostatics
    magnetostatics
+   microstructure
+   chemomechanics
 
 crystallite.mass_diffusion module
 ----------------------------------
@@ -66,6 +68,22 @@ crystallite.magnetostatics module
 ---------------------------------
 
 .. automodule:: crystallite.magnetostatics
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.microstructure module
+---------------------------------
+
+.. automodule:: crystallite.microstructure
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+crystallite.chemomechanics module
+---------------------------------
+
+.. automodule:: crystallite.chemomechanics
    :members:
    :show-inheritance:
    :undoc-members:

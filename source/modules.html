@@ -352,6 +352,7 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.charge_conduction">Charge conduction cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.electrostatics">Electrostatics cases</a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.magnetostatics">Magnetostatics cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.verification.html#module-crystallite.verification.chemomechanics">Chemomechanics cases</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="mass_diffusion.html">Mass diffusion driver</a></li>
@@ -359,6 +360,8 @@
 <li class="toctree-l3"><a class="reference internal" href="elastic_deformation.html">Elastic deformation driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="conduction.html">Steady conduction driver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="electrostatics.html">Electrostatics driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="microstructure.html">Polycrystal microstructures</a></li>
+<li class="toctree-l3"><a class="reference internal" href="chemomechanics.html">Coherent diffusion driver</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.mass_diffusion">crystallite.mass_diffusion module</a><ul>
@@ -509,6 +512,54 @@
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.grid"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.grid</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.permeability"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.permeability</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.magnetostatics.Magnetostatics.solve"><code class="docutils literal notranslate"><span class="pre">Magnetostatics.solve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.microstructure">crystallite.microstructure module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure"><code class="docutils literal notranslate"><span class="pre">Microstructure</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.average_property"><code class="docutils literal notranslate"><span class="pre">Microstructure.average_property()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.grain_ids"><code class="docutils literal notranslate"><span class="pre">Microstructure.grain_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.grain_interior"><code class="docutils literal notranslate"><span class="pre">Microstructure.grain_interior()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.grid"><code class="docutils literal notranslate"><span class="pre">Microstructure.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.n_grains"><code class="docutils literal notranslate"><span class="pre">Microstructure.n_grains</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.n_slots"><code class="docutils literal notranslate"><span class="pre">Microstructure.n_slots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.order_parameters"><code class="docutils literal notranslate"><span class="pre">Microstructure.order_parameters()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.orientations"><code class="docutils literal notranslate"><span class="pre">Microstructure.orientations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.property_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.property_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.rotation_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.rotation_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.seeds"><code class="docutils literal notranslate"><span class="pre">Microstructure.seeds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.slot_field"><code class="docutils literal notranslate"><span class="pre">Microstructure.slot_field()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.slot_orientations"><code class="docutils literal notranslate"><span class="pre">Microstructure.slot_orientations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.slots"><code class="docutils literal notranslate"><span class="pre">Microstructure.slots</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.microstructure.Microstructure.voronoi"><code class="docutils literal notranslate"><span class="pre">Microstructure.voronoi()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.grain_neighbors"><code class="docutils literal notranslate"><span class="pre">grain_neighbors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.mixed_property_field"><code class="docutils literal notranslate"><span class="pre">mixed_property_field()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.orientation_weights"><code class="docutils literal notranslate"><span class="pre">orientation_weights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.periodic_voronoi"><code class="docutils literal notranslate"><span class="pre">periodic_voronoi()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.random_rotations"><code class="docutils literal notranslate"><span class="pre">random_rotations()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.rotate_tensor"><code class="docutils literal notranslate"><span class="pre">rotate_tensor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.rotation_from_bunge_euler"><code class="docutils literal notranslate"><span class="pre">rotation_from_bunge_euler()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.microstructure.rotation_from_quaternion"><code class="docutils literal notranslate"><span class="pre">rotation_from_quaternion()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="crystallite.html#module-crystallite.chemomechanics">crystallite.chemomechanics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.dealias"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.dealias</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.diffusion"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.diffusion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.eigenstrain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.eigenstrain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.elastic_energy"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elastic_energy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.elastic_potential"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elastic_potential()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.elasticity"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.elasticity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.grid"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.grid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.macro_strain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.macro_strain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.misfit_strain"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.misfit_strain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.polycrystal"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.polycrystal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.reference_composition"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.reference_composition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.solve_elastic"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.solve_elastic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="crystallite.html#crystallite.chemomechanics.CoherentDiffusion.step"><code class="docutils literal notranslate"><span class="pre">CoherentDiffusion.step()</span></code></a></li>
 </ul>
 </li>
 </ul>
