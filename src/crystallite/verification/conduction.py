@@ -29,7 +29,15 @@ whose average over the (ellipse-shaped) region is the depolarization tensor
   transform of the ellipse, the conduction counterpart of
   :mod:`crystallite.verification.anisotropic_inclusion`.
 
-Mathematically this is Mode III elasticity (:math:`\kappa\leftrightarrow\mu`).
+Mathematically this is the antiplane (out-of-plane) part of the elastic Eshelby
+solution, under :math:`\kappa_{il}=C_{i3l3}`, :math:`X^*_i=2\varepsilon^*_{i3}`,
+:math:`q_i=\sigma_{i3}`, :math:`S_{il}=2S_{i3l3}` (:math:`i,l` in-plane;
+:math:`\kappa=\mu` isotropic, :math:`\kappa_{11}=c_{55}` and
+:math:`\kappa_{22}=c_{44}` orthotropic). These functions are written
+independently of the elastic ones, and ``tests/test_conduction_eshelby_mapping.py``
+checks that they coincide: isolated and periodic depolarization tensors
+(isotropic, orthotropic and rotated matrices), circular and elliptical interiors
+(including the perfect-conductor limit) and the exterior fields.
 """
 
 from __future__ import annotations
@@ -351,12 +359,16 @@ class ConductionInclusionCase:
         )
 
     def periodic_interior_flux(self, macro_field, n_modes=512):
-        """Interior flux ``(3,)``, ``kappa_1 X_in`` (undefined, and raising, for
-        a perfect conductor, where it is infinite conductivity times zero
-        field)."""
+        """Interior flux ``(3,)``, ``kappa_1 X_in``. For a perfect conductor
+        this is the finite limit ``kappa_1 -> inf``, ``X_in -> 0`` with
+        ``kappa_1 X_in -> -kappa_0 X*``, uniform inside (for a circle,
+        ``2 kappa_0 X / (1 - f)``, exactly 2 for an isolated cylinder)."""
+        s = self.periodic_depolarization_tensor(n_modes)
+        macro = np.asarray(macro_field, dtype=float)
+        interior = interior_driving_force(self.contrast, s, macro)
         if self.contrast == float("inf"):
-            raise ValueError("the interior flux of a perfect conductor is undefined")
-        interior = self.periodic_interior_driving_force(macro_field, n_modes)
+            star = equivalent_driving_force(self.contrast, s, macro, interior)
+            return -_tensor(self.matrix_conductivity) @ star
         return self.contrast * _tensor(self.matrix_conductivity) @ interior
 
     def periodic_exterior_field(self, macro_field, n_images=8, n_modes=512):
@@ -415,15 +427,12 @@ class ConductionInclusionCase:
 
     def periodic_flux_field(self, macro_field, n_images=8, n_modes=512):
         """Flux ``(3,) + grid.shape`` of the periodic array in an isotropic
-        matrix: ``kappa_0 X`` outside and ``kappa_1 X_in`` inside the
-        inclusion, from :meth:`periodic_exterior_field`. Undefined (NaN)
-        inside a perfect conductor, infinite conductivity times zero field."""
+        matrix: ``kappa_0 X`` outside and the uniform interior flux
+        (:meth:`periodic_interior_flux`) inside the inclusion."""
         driving = self.periodic_exterior_field(macro_field, n_images, n_modes)
         inside = (np.asarray(self.elliptical_radius) < 1.0)[None]
-        matrix = float(self.matrix_conductivity)
-        if self.contrast == float("inf"):
-            return np.where(inside, np.nan, matrix * driving)
-        return np.where(inside, self.contrast, 1.0) * matrix * driving
+        interior = self.periodic_interior_flux(macro_field, n_modes)[:, None, None, None]
+        return np.where(inside, interior, float(self.matrix_conductivity) * driving)
 
 
 # ---------------------------------------------------------------------------

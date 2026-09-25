@@ -45,7 +45,7 @@ N_FINE = 50
 ROTATION_STEP_DEGREES = 15.0
 ROTATION_FINE_DEGREES = 3.0
 PRINCIPAL_CONDUCTIVITIES = (2.0, 0.5)  # geometric mean 1
-CONTRASTS = {"soft": 0.25, "hard": 4.0}
+CONTRASTS = {"soft": 0.125, "hard": 8.0}
 DIAGONAL_FIELD = np.array([1.0, 1.0, 0.0]) / np.sqrt(2.0)
 AXIAL_FIELD = np.array([1.0, 0.0, 0.0])
 
@@ -94,7 +94,7 @@ def plot_aspect_ratio(label):
         return np.array(rows)
 
     numeric = cached_numeric(
-        f"conduction_shape_{label}_N{GRID_SHAPE[0]}_s{CHARACTERISTIC_SIZE}_ir{INTERIOR_RADIUS}"
+        f"conduction_shape_{label}_c{contrast}_N{GRID_SHAPE[0]}_s{CHARACTERISTIC_SIZE}_ir{INTERIOR_RADIUS}"
         f"_r{'-'.join(str(r) for r in ASPECT_RATIOS)}", compute,
     )
     fine_ratios = np.linspace(ASPECT_RATIOS.min(), ASPECT_RATIOS.max(), N_FINE)
@@ -130,7 +130,7 @@ def plot_matrix_rotation(label):
         return np.array(rows)
 
     numeric = cached_numeric(
-        f"conduction_rotation_{label}_N{GRID_SHAPE[0]}_R{CIRCLE_RADIUS}_ir{INTERIOR_RADIUS}"
+        f"conduction_rotation_{label}_c{contrast}_N{GRID_SHAPE[0]}_R{CIRCLE_RADIUS}_ir{INTERIOR_RADIUS}"
         f"_k{PRINCIPAL_CONDUCTIVITIES}_step{ROTATION_STEP_DEGREES}", compute,
     )
     fine_angles = np.arange(0.0, 180.0 + 0.5 * ROTATION_FINE_DEGREES, ROTATION_FINE_DEGREES)

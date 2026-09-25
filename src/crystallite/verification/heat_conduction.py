@@ -40,7 +40,7 @@ class HeatInclusionCase(ConductionInclusionCase):
         return self.periodic_interior_driving_force(thermal_driving_force, n_modes)
 
     def periodic_interior_heat_flux(self, thermal_driving_force, n_modes=512):
-        """Interior heat flux ``(3,)``; undefined for a perfect conductor."""
+        """Interior heat flux ``(3,)``; the finite limit for a perfect conductor."""
         return self.periodic_interior_flux(thermal_driving_force, n_modes)
 
     def periodic_thermal_driving_force(self, thermal_driving_force, n_images=8, n_modes=512):
@@ -48,8 +48,7 @@ class HeatInclusionCase(ConductionInclusionCase):
         return self.periodic_exterior_field(thermal_driving_force, n_images, n_modes)
 
     def periodic_heat_flux(self, thermal_driving_force, n_images=8, n_modes=512):
-        """Heat flux ``(3,) + grid.shape`` of the periodic array (NaN inside a
-        perfect conductor)."""
+        """Heat flux ``(3,) + grid.shape`` of the periodic array."""
         return self.periodic_flux_field(thermal_driving_force, n_images, n_modes)
 
 

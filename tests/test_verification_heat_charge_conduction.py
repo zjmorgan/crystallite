@@ -51,14 +51,16 @@ def test_flux_field_is_conductivity_times_field_and_the_interior_is_uniform(grid
     )
 
 
-def test_a_perfect_conductor_has_undefined_interior_flux_but_zero_field(grid):
+def test_a_perfect_conductor_has_zero_field_and_a_finite_uniform_interior_current(grid):
     case = ChargeInclusionCase(grid, 1.0, 0.1, 0.1, contrast=float("inf"))
     inside = np.asarray(case.elliptical_radius) < 1.0
     current = case.periodic_current_density(FIELD)
-    assert np.isnan(current[0][inside]).all() and np.isfinite(current[0][~inside]).all()
+    interior = case.periodic_interior_current_density(FIELD)
+    assert np.isfinite(current).all()
+    for i in range(3):
+        np.testing.assert_allclose(current[i][inside], interior[i])
     np.testing.assert_array_equal(case.periodic_interior_electric_field(FIELD), 0.0)
-    with pytest.raises(ValueError, match="undefined"):
-        case.periodic_interior_current_density(FIELD)
+    assert interior[0] == pytest.approx(2.0 * FIELD[0] / (1.0 - np.pi * 0.1**2), rel=1e-4)
 
 
 def test_heat_generation_names_the_shared_source_reference(grid):

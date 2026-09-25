@@ -41,7 +41,8 @@ class ChargeInclusionCase(ConductionInclusionCase):
         return self.periodic_interior_driving_force(electric_field, n_modes)
 
     def periodic_interior_current_density(self, electric_field, n_modes=512):
-        """Interior current density ``(3,)``; undefined for a perfect conductor."""
+        """Interior current density ``(3,)``; the finite limit for a perfect
+        conductor."""
         return self.periodic_interior_flux(electric_field, n_modes)
 
     def periodic_electric_field(self, electric_field, n_images=8, n_modes=512):
@@ -49,6 +50,5 @@ class ChargeInclusionCase(ConductionInclusionCase):
         return self.periodic_exterior_field(electric_field, n_images, n_modes)
 
     def periodic_current_density(self, electric_field, n_images=8, n_modes=512):
-        """Current density ``(3,) + grid.shape`` of the periodic array (NaN
-        inside a perfect conductor)."""
+        """Current density ``(3,) + grid.shape`` of the periodic array."""
         return self.periodic_flux_field(electric_field, n_images, n_modes)

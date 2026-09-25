@@ -3,7 +3,8 @@ conducting -- under a uniform far-field thermal driving force: Fourier's law,
 :math:`q=\kappaX` with :math:`X=-\nablaT`
 (:class:`crystallite.conduction.SteadyConduction`).
 
-Two cuts through the center of the inclusion, with the field along :math:`x_1`:
+Two cuts through the center of the inclusion (coordinates measured from its
+center), with the field along :math:`x_1`:
 the transverse cut (:math:`x_1=c_1`, :math:`x_2` varying) and the parallel cut
 (:math:`x_2=c_2`, :math:`x_1` varying, through the stagnation points). On both,
 :math:`q_2=0` by symmetry, so :math:`q_1` is plotted, normalized by the
@@ -14,8 +15,12 @@ Analytic reference:
 -- the exact interior from the lattice-sum depolarization tensor and the
 exterior from images of the isolated dipole field, no FFT and no grid, so it
 includes the periodic-cell correction (area fraction ~3%). The interior
-heat flux is :math:`\kappa_1X_\mathrm{in}`; for the perfect conductor it is
-infinite conductivity times zero field, undefined, so the interior is left blank.
+heat flux is :math:`\kappa_1X_\mathrm{in}`, uniform. For the perfect conductor
+:math:`X_\mathrm{in}=0` while :math:`\kappa_1\to\infty`, and the product has the
+finite limit :math:`-\kappa_0X^*` (:math:`2q_\infty/(1-f)` for a circle, with
+:math:`f` the area fraction), which is what is drawn. The numeric solve uses
+:math:`\kappa_1/\kappa_0=10^3` (float32 noise grows beyond that), so its interior
+sits a few percent above the limit, from the finite interface width.
 
 Numerics use a narrow ``tanh`` interface (``SMOOTHING_WIDTH`` grid spacings):
 a hard or perfectly conducting inclusion needs it, because an arithmetic-mean
@@ -43,8 +48,8 @@ CENTER = (0.5, 0.5)
 # label -> (contrast, title)
 CASES = {
     "hole": (1.0e-3, "insulating hole"),
-    "soft": (0.25, r"soft inclusion, $\kappa_1/\kappa_0=1/4$"),
-    "hard": (4.0, r"hard inclusion, $\kappa_1/\kappa_0=4$"),
+    "soft": (0.5, r"soft inclusion, $\kappa_1/\kappa_0=1/2$"),
+    "hard": (1.5, r"hard inclusion, $\kappa_1/\kappa_0=3/2$"),
     "perfect": (float("inf"), "perfectly conducting inclusion"),
 }
 
@@ -59,7 +64,7 @@ def _case(contrast):
 
 def _cuts(field, case):
     """``(xi, q1 along x2, q1 along x1)`` of a ``(3,) + grid.shape`` heat flux, the
-    two cuts through the center, against ``(x - c) / r0``."""
+    two cuts through the center, against ``x / r0`` (from the center)."""
     x1 = np.asarray(case.grid.x[0])[:, 0, 0]
     x2 = np.asarray(case.grid.x[1])[0, :, 0]
     column = np.argmin(np.abs(x1 - CENTER[0]))
@@ -80,12 +85,10 @@ def plot_inhomogeneity(label):
     print(f"{label} (contrast={contrast}):")
     case = _case(contrast)
     numeric = cached_numeric(
-        f"conduction_inhomogeneity_{label}_N{GRID_SHAPE[0]}_w{SMOOTHING_WIDTH}_R{RADIUS}",
+        f"conduction_inhomogeneity_{label}_c{contrast}_N{GRID_SHAPE[0]}_w{SMOOTHING_WIDTH}_R{RADIUS}",
         lambda: _numeric_flux(contrast),
     )
     analytic = case.periodic_heat_flux(FIELD)
-    if contrast == float("inf"):
-        numeric = np.where((np.asarray(case.elliptical_radius) < 1.0)[None], np.nan, numeric)
 
     xi, a1, a2 = _cuts(analytic, case)
     _, n1, n2 = _cuts(numeric, case)
@@ -93,7 +96,7 @@ def plot_inhomogeneity(label):
     ax.set_xlim(-4, 4)
     analytic_numeric_curve(ax, xi, a1, n1, r"$q_1(x_2)$", "C0", downsample=8)
     analytic_numeric_curve(ax, xi, a2, n2, r"$q_1(x_1)$", "C1", downsample=8)
-    ax.set_xlabel(r"$(x - c) / r_0$")
+    ax.set_xlabel(r"$x / r_0$")
     ax.set_ylabel(r"$q_1 / q_\infty$")
     ax.set_title(title)
     component_legend(ax)

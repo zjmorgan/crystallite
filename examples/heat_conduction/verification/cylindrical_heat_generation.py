@@ -9,8 +9,8 @@ cylinder of radius :math:`r_0`; a periodic array has no steady state unless a
 uniform sink balances the generation, so the :math:`k=0` mode is dropped (the
 solver does this for a nonzero-mean source).
 
-The cut is the line through the center along :math:`x_1` (:math:`x_2=c_2`),
-where the heat flux is purely :math:`q_1`, radial and odd about the center,
+The cut is the line through the center along :math:`x_1` (:math:`x_2=c_2`, with
+:math:`x_1` measured from the center), where the heat flux is purely :math:`q_1`, radial and odd about the center,
 normalized by :math:`\varphi r_0/2`, the flux at the surface. By symmetry the
 :math:`x_2` cut is the same curve in :math:`q_2`.
 
@@ -77,7 +77,7 @@ def plot_heat_generation():
     fig, ax = plt.subplots(figsize=(5.0, 4.0), constrained_layout=True)
     ax.set_xlim(-4, 4)
     analytic_numeric_curve(ax, xi, analytic_q, numeric_q, r"$q_1$", "C0", downsample=8)
-    ax.set_xlabel(r"$(x_1 - c_1) / r_0$")
+    ax.set_xlabel(r"$x_1 / r_0$")
     ax.set_ylabel(r"$q_1 / (\varphi r_0 / 2)$")
     ax.set_title("cylinder generating heat uniformly")
     component_legend(ax)

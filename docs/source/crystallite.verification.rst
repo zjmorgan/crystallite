@@ -73,3 +73,11 @@ Magnetostatics cases
    :members:
    :show-inheritance:
    :undoc-members:
+
+Chemomechanics cases
+----------------------------
+
+.. automodule:: crystallite.verification.chemomechanics
+   :members:
+   :show-inheritance:
+   :undoc-members:

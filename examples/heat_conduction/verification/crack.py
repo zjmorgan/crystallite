@@ -6,7 +6,8 @@ The crack is a genuinely thin insulating ellipse, oriented like the elastic
 ``thin_crack.py``: long axis (half-length :math:`a=r_0`) along :math:`x_2`,
 faces normal to :math:`x_1`, half-width ``SLIT_HALF_WIDTH_PIXELS`` grid spacings
 (a 5-pixel slit), field along :math:`x_1`, across it. The scan is along the
-crack axis (:math:`x_1=c_1`) from :math:`1.1a` outward, :math:`q_1` normalized
+crack axis (:math:`x_1=c_1`, with :math:`x_2` measured from the crack center) from
+:math:`1.1a` outward, :math:`q_1` normalized
 by :math:`q_\infty`.
 
 Analytic reference:
@@ -76,7 +77,7 @@ def plot_crack():
         r"$q_1$", "C0", downsample=6,
     )
     ax.set_xlim(XI_MIN, XI_MAX)
-    ax.set_xlabel(r"$(x_2 - c_2) / a$")
+    ax.set_xlabel(r"$x_2 / a$")
     ax.set_ylabel(r"$q_1 / q_\infty$")
     ax.set_title("heat flux ahead of an insulating crack tip")
     component_legend(ax)

@@ -680,8 +680,22 @@ class MassDiffusion:
             return self.grid.fft(flux)
         return -_apply_property(mobility, self.grid.shape, grad_mu_hat, "mobility")
 
-    def step(self, field, time_step):
-        """Advance the field by one mass-diffusion step (see ``scheme``)."""
+    def step(self, field, time_step, extra_chemical_potential=None):
+        """Advance the field by one mass-diffusion step (see ``scheme``).
+
+        Parameters
+        ----------
+        field : array_like
+            Composition, shape ``grid.shape``.
+        time_step : float
+        extra_chemical_potential : array_like, optional
+            A real-space potential, shape ``grid.shape``, added to the
+            chemical potential ``mu`` before the flux is formed -- e.g. the
+            elastic contribution of a coherent-precipitation model (see
+            :class:`crystallite.chemomechanics.CoherentDiffusion`). Treated
+            explicitly, outside the ``semi_implicit`` stabilizer. A uniform
+            value has no effect (it drives no flux).
+        """
         field = xp.asarray(field)
         if field.shape != self.grid.shape:
             raise ValueError(
@@ -693,6 +707,14 @@ class MassDiffusion:
 
         field_hat = self.grid.fft(field)
         mu_hat = self._chemical_potential(field)
+        if extra_chemical_potential is not None:
+            extra = xp.asarray(extra_chemical_potential, dtype=self.grid.real_dtype)
+            if extra.shape != self.grid.shape:
+                raise ValueError(
+                    "extra_chemical_potential shape must match grid shape: "
+                    f"expected {self.grid.shape}, got {extra.shape}"
+                )
+            mu_hat = mu_hat + self.grid.fft(extra)
         flux_hat = self._flux(field, mu_hat)
         divergence_hat = self.operator.div(flux_hat)
         if self.scheme == "semi_implicit":

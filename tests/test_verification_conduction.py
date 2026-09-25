@@ -93,11 +93,29 @@ def test_a_perfect_conductor_has_no_interior_field_and_is_the_large_contrast_lim
     )
 
 
-def test_conductor_flux_is_undefined_and_the_case_requires_a_2d_grid():
+def test_a_perfect_conductors_interior_flux_is_the_finite_large_contrast_limit():
     grid = Grid(shape=(16, 16, 1))
-    case = ConductionInclusionCase(grid, 1.0, 0.1, 0.1, contrast=float("inf"))
-    with pytest.raises(ValueError, match="undefined"):
-        case.periodic_interior_flux([1.0, 0.0, 0.0])
+    a, field = 0.1, [1.0, 0.3, 0.0]
+    perfect = ConductionInclusionCase(grid, 1.5, a, a, contrast=float("inf"))
+    flux = perfect.periodic_interior_flux(field)
+    # circle in a square cell: S = (1 - f) I / 2, so kappa_1 X_in -> 2 kappa_0 X / (1 - f)
+    np.testing.assert_allclose(flux[:2], 2.0 * 1.5 * np.array(field[:2]) / (1.0 - np.pi * a * a), rtol=1e-4)
+    large = ConductionInclusionCase(grid, 1.5, a, a, contrast=1e7).periodic_interior_flux(field)
+    np.testing.assert_allclose(flux[:2], large[:2], rtol=1e-4)
+    np.testing.assert_array_equal(perfect.periodic_interior_driving_force(field), 0.0)
+
+
+def test_isolated_perfect_conductor_interior_flux_is_twice_the_far_field():
+    grid = Grid(shape=(16, 16, 1))
+    a = 0.005
+    flux = ConductionInclusionCase(grid, 1.0, a, a, contrast=float("inf")).periodic_interior_flux(
+        [1.0, 0.0, 0.0], n_modes=1024
+    )
+    assert flux[0] == pytest.approx(2.0, abs=2e-3)
+
+
+def test_the_case_requires_a_2d_grid_and_an_isotropic_matrix_for_the_image_sum():
+    grid = Grid(shape=(16, 16, 1))
     with pytest.raises(ValueError, match="2D"):
         ConductionInclusionCase(Grid(shape=(8, 8, 8)), 1.0, 0.1, 0.1)
     with pytest.raises(ValueError, match="isotropic"):

@@ -4,7 +4,7 @@
 The polarization is uniform along :math:`x_1` in a disk of radius :math:`r_0`.
 Its bound charge is a surface charge :math:`P\\cdot n`; isolated, the field
 inside is uniform, :math:`E_\\mathrm{in}=-P/2\\varepsilon_0`, and outside a
-dipole. Two cuts through the center are plotted, :math:`x_1` (along
+dipole. Two cuts through the center are plotted (coordinates measured from it), :math:`x_1` (along
 :math:`P`: the normal component of :math:`E` jumps by :math:`P/\\varepsilon_0` at
 the surface) and :math:`x_2` (across :math:`P`: the tangential component is
 continuous), for two quantities:
@@ -39,7 +39,7 @@ CENTER = (0.5, 0.5)
 
 def _cuts(field, grid):
     """``(xi, F_1 along x_2, F_1 along x_1)`` of a ``(3,) + grid.shape`` field
-    (through the center), for the two cuts against ``(x - c) / r_0``."""
+    (through the center), for the two cuts against ``x / r_0`` (from the center)."""
     x1 = np.asarray(grid.x[0])[:, 0, 0]
     x2 = np.asarray(grid.x[1])[0, :, 0]
     column = np.argmin(np.abs(x1 - CENTER[0]))
@@ -74,7 +74,7 @@ def plot_polarized_cylinder():
             ax, xi, a_parallel / normalization, n_parallel / normalization,
             rf"${quantity}_1(x_1)$", "C1", downsample=8,
         )
-        ax.set_xlabel(r"$(x - c) / r_0$")
+        ax.set_xlabel(r"$x / r_0$")
         ax.set_ylabel(rf"${quantity}_1 / ({scale})$" if " " in scale else rf"${quantity}_1 / {scale}$")
         ax.set_title("uniformly polarized cylinder")
         component_legend(ax)
