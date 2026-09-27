@@ -340,6 +340,153 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">#</a></h2>
 </section>
+<section id="module-crystallite.material.lattice">
+<span id="crystallite-material-lattice-module"></span><h2>crystallite.material.lattice module<a class="headerlink" href="#module-crystallite.material.lattice" title="Link to this heading">#</a></h2>
+<p>Crystal lattices: Miller indices of directions and planes as Cartesian
+vectors in the crystal frame.</p>
+<p><strong>Setting.</strong> The crystal axes are placed with <span class="math notranslate nohighlight">\(\mathbf{c}\)</span> along z and
+<span class="math notranslate nohighlight">\(\mathbf{a}\)</span> in the xz plane (positive x), <span class="math notranslate nohighlight">\(\mathbf{b}\)</span> completing
+a right-handed cell. For conventional cells this matches the standard setting
+of <a class="reference internal" href="#crystallite.material.symmetry.point_group_operations" title="crystallite.material.symmetry.point_group_operations"><code class="xref py py-func docutils literal notranslate"><span class="pre">crystallite.material.symmetry.point_group_operations()</span></code></a>: principal
+axis along z, hexagonal <span class="math notranslate nohighlight">\(\mathbf{a}_1\)</span> along x, monoclinic unique axis
+<span class="math notranslate nohighlight">\(\mathbf{b}\)</span> along y. Trigonal crystals take hexagonal axes;
+<a class="reference internal" href="#crystallite.material.lattice.Lattice.is_compatible" title="crystallite.material.lattice.Lattice.is_compatible"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Lattice.is_compatible()</span></code></a> checks a lattice against a point group.</p>
+<p>A direction <span class="math notranslate nohighlight">\([uvw]\)</span> is <span class="math notranslate nohighlight">\(A\,(u,v,w)\)</span> and the normal of a plane
+<span class="math notranslate nohighlight">\((hkl)\)</span> is the reciprocal-lattice vector <span class="math notranslate nohighlight">\(B\,(h,k,l)\)</span>, where the
+columns of <span class="math notranslate nohighlight">\(A\)</span> are the axes and those of <span class="math notranslate nohighlight">\(B = A^{-T}\)</span> the
+reciprocal axes (without the factor <span class="math notranslate nohighlight">\(2\pi\)</span>, so that
+<span class="math notranslate nohighlight">\(|B\,(h,k,l)| = 1/d_{hkl}\)</span>). For hexagonal axes, four-index
+Miller–Bravais indices <span class="math notranslate nohighlight">\([uvtw]\)</span> and <span class="math notranslate nohighlight">\((hkil)\)</span> are accepted too.</p>
+<p>These vectors are what the orientation colouring takes, e.g.
+<code class="docutils literal notranslate"><span class="pre">ipf_color(lattice.plane_normals(hkl),</span> <span class="pre">&quot;6/mmm&quot;)</span></code>
+(<a class="reference internal" href="crystallite.visualization.html#module-crystallite.visualization.orientation" title="crystallite.visualization.orientation"><code class="xref py py-mod docutils literal notranslate"><span class="pre">crystallite.visualization.orientation</span></code></a>).</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Lattice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90.0</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L31-L147"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Crystal lattice from its cell parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>a, b, c</strong><span class="classifier">float</span></dt><dd><p>Axis lengths.</p>
+</dd>
+<dt><strong>alpha, beta, gamma</strong><span class="classifier">float</span></dt><dd><p>Interaxial angles in degrees (<code class="docutils literal notranslate"><span class="pre">alpha</span></code> between b and c, <code class="docutils literal notranslate"><span class="pre">beta</span></code>
+between c and a, <code class="docutils literal notranslate"><span class="pre">gamma</span></code> between a and b).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>direct</strong><span class="classifier">ndarray of shape (3, 3)</span></dt><dd><p>Axes a, b, c as columns, in the crystal frame.</p>
+</dd>
+<dt><strong>reciprocal</strong><span class="classifier">ndarray of shape (3, 3)</span></dt><dd><p>Reciprocal axes a*, b*, c* as columns (<code class="docutils literal notranslate"><span class="pre">direct.T</span> <span class="pre">&#64;</span> <span class="pre">reciprocal</span></code> is
+the identity).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.d_spacing" title="crystallite.material.lattice.Lattice.d_spacing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">d_spacing</span></code></a>(indices)</p></td>
+<td><p>Interplanar spacing of planes <code class="docutils literal notranslate"><span class="pre">(hkl)</span></code> (or <code class="docutils literal notranslate"><span class="pre">(hkil)</span></code>).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.directions" title="crystallite.material.lattice.Lattice.directions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">directions</span></code></a>(indices)</p></td>
+<td><p>Cartesian vectors of lattice directions <code class="docutils literal notranslate"><span class="pre">[uvw]</span></code> (or <code class="docutils literal notranslate"><span class="pre">[uvtw]</span></code>), shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.hexagonal" title="crystallite.material.lattice.Lattice.hexagonal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hexagonal</span></code></a>(a, c)</p></td>
+<td><p>Hexagonal axes, for hexagonal and trigonal crystals.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.is_compatible" title="crystallite.material.lattice.Lattice.is_compatible"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_compatible</span></code></a>(point_group[, tol])</p></td>
+<td><p>Whether the point group's operations (standard setting) map the lattice onto itself, i.e. are integer matrices on the axes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.monoclinic" title="crystallite.material.lattice.Lattice.monoclinic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">monoclinic</span></code></a>(a, b, c, beta)</p></td>
+<td><p>Unique axis b.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#crystallite.material.lattice.Lattice.plane_normals" title="crystallite.material.lattice.Lattice.plane_normals"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plane_normals</span></code></a>(indices)</p></td>
+<td><p>Reciprocal-lattice vectors (plane normals, of length <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">d</span></code>) of planes <code class="docutils literal notranslate"><span class="pre">(hkl)</span></code> (or <code class="docutils literal notranslate"><span class="pre">(hkil)</span></code>), shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3)</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<tbody>
+<tr class="row-odd"><td><p><strong>cubic</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><strong>orthorhombic</strong></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><strong>tetragonal</strong></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.cubic">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cubic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L72-L74"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.cubic" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.d_spacing">
+<span class="sig-name descname"><span class="pre">d_spacing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L137-L139"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.d_spacing" title="Link to this definition">#</a></dt>
+<dd><p>Interplanar spacing of planes <code class="docutils literal notranslate"><span class="pre">(hkl)</span></code> (or <code class="docutils literal notranslate"><span class="pre">(hkil)</span></code>).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.directions">
+<span class="sig-name descname"><span class="pre">directions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L127-L130"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.directions" title="Link to this definition">#</a></dt>
+<dd><p>Cartesian vectors of lattice directions <code class="docutils literal notranslate"><span class="pre">[uvw]</span></code> (or <code class="docutils literal notranslate"><span class="pre">[uvtw]</span></code>),
+shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3)</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.hexagonal">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hexagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L84-L87"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.hexagonal" title="Link to this definition">#</a></dt>
+<dd><p>Hexagonal axes, for hexagonal and trigonal crystals.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.is_compatible">
+<span class="sig-name descname"><span class="pre">is_compatible</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L141-L147"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.is_compatible" title="Link to this definition">#</a></dt>
+<dd><p>Whether the point group’s operations (standard setting) map the
+lattice onto itself, i.e. are integer matrices on the axes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.is_hexagonal">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">is_hexagonal</span></span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.is_hexagonal" title="Link to this definition">#</a></dt>
+<dd><p>Whether the axes are hexagonal (a = b, gamma = 120 degrees, the
+other angles 90), which admits four-index indices.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.monoclinic">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">monoclinic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L89-L92"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.monoclinic" title="Link to this definition">#</a></dt>
+<dd><p>Unique axis b.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.orthorhombic">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">orthorhombic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L80-L82"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.orthorhombic" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.plane_normals">
+<span class="sig-name descname"><span class="pre">plane_normals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">indices</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L132-L135"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.plane_normals" title="Link to this definition">#</a></dt>
+<dd><p>Reciprocal-lattice vectors (plane normals, of length
+<code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">/</span> <span class="pre">d</span></code>) of planes <code class="docutils literal notranslate"><span class="pre">(hkl)</span></code> (or <code class="docutils literal notranslate"><span class="pre">(hkil)</span></code>), shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3)</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="crystallite.material.lattice.Lattice.tetragonal">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">tetragonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/lattice.py#L76-L78"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.lattice.Lattice.tetragonal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
 <section id="module-crystallite.material.phase">
 <span id="crystallite-material-phase-module"></span><h2>crystallite.material.phase module<a class="headerlink" href="#module-crystallite.material.phase" title="Link to this heading">#</a></h2>
 <dl class="py class">
@@ -519,7 +666,7 @@ full (possibly redundant) matrix, independent of
 
 <dl class="py class">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Solid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uni_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L531-L701"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">Solid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uni_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lattice</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L531-L708"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Anisotropic medium: a general storage/transformation framework
 for crystal property tensors (Nye, <em>Physical Properties of
@@ -547,6 +694,9 @@ need <cite>uni_number</cite> (spglib’s magnetic-space-group database number,
 or <cite>crystallite.material.symmetry.list_magnetic_point_groups</cite>),
 since the exact magnetic point group, not just the ordinary one,
 is what constrains them.</p>
+<p><cite>lattice</cite> (optional, a <cite>crystallite.material.lattice.Lattice</cite> in the
+same standard setting, checked against <cite>point_group</cite>) gives the cell
+for Miller indices of directions and planes; no property uses it.</p>
 <p>Registered properties: <cite>stiffness</cite>, <cite>magnetostriction</cite>,
 <cite>electrostriction</cite>, <cite>elasto_optic</cite>, <cite>piezo_optic</cite>,
 <cite>piezoelectricity</cite>, <cite>piezomagnetism</cite>, <cite>pyroelectricity</cite>,
@@ -590,7 +740,7 @@ c)(\partial_j c)\)</span> for a scalar concentration field <cite>c</cite>).</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get">
-<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L614-L626"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L621-L633"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get" title="Link to this definition">#</a></dt>
 <dd><p>Return property <cite>name</cite>’s conventional Voigt-like matrix.</p>
 <p>Shape <cite>(dim,)</cite> for a lone vector, <cite>(dim0, dim1)</cite> for two blocks
 (e.g. <cite>(6, 6)</cite> Voigt for stiffness, <cite>(6, 3)</cite> for piezomagnetism,
@@ -600,21 +750,21 @@ c)(\partial_j c)\)</span> for a scalar concentration field <cite>c</cite>).</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get_affine">
-<span class="sig-name descname"><span class="pre">get_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L695-L701"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_affine" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L702-L708"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_affine" title="Link to this definition">#</a></dt>
 <dd><p>Return affine property <cite>name</cite>’s Voigt-like matrix, i.e.
 <cite>get(primary) + offset * I</cite> – see <cite>_AFFINE_PROPERTIES</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.get_inverse">
-<span class="sig-name descname"><span class="pre">get_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L666-L671"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_inverse" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L673-L678"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.get_inverse" title="Link to this definition">#</a></dt>
 <dd><p>Return inverse property <cite>name</cite>’s Voigt-like matrix, i.e.
 <cite>inv(get(primary))</cite> – see <cite>_INVERSE_PROPERTIES</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.rotate">
-<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L628-L642"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.rotate" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rotation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L635-L649"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.rotate" title="Link to this definition">#</a></dt>
 <dd><p>Return property <cite>name</cite> transformed to a rotated frame.</p>
 <p><cite>rotation</cite> is any 3x3 proper or improper orthogonal matrix
 (crystal-frame axes expressed in the new frame), e.g. built
@@ -626,7 +776,7 @@ the conventional Voigt-like matrix, like <cite>get</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set">
-<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L596-L612"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L603-L619"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set" title="Link to this definition">#</a></dt>
 <dd><p>Set property <cite>name</cite> from its independent named constants.</p>
 <p>Constants required to vanish or repeat by symmetry may be left
 unset (<cite>None</cite>); given explicitly, they must be consistent with
@@ -637,7 +787,7 @@ magnetostriction) and each of its <cite>PropertyTensor.keys</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set_affine">
-<span class="sig-name descname"><span class="pre">set_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L673-L693"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_affine" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L680-L700"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_affine" title="Link to this definition">#</a></dt>
 <dd><p>Set the primary property behind affine property <cite>name</cite>
 (e.g. <cite>“electric_permittivity”</cite> sets <cite>electric_susceptibility</cite>)
 from <cite>name</cite>’s own independent named constants – see
@@ -649,7 +799,7 @@ symmetry), and re-added by <cite>get_affine</cite>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="crystallite.material.properties.Solid.set_inverse">
-<span class="sig-name descname"><span class="pre">set_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L644-L664"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_inverse" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">set_inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/properties.py#L651-L671"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.properties.Solid.set_inverse" title="Link to this definition">#</a></dt>
 <dd><p>Set the primary property behind inverse property <cite>name</cite>
 (e.g. <cite>“compliance”</cite> sets <cite>stiffness</cite>, <cite>“electrical_resistivity”</cite>
 sets <cite>electrical_conductivity</cite>) from <cite>name</cite>’s own independent
@@ -912,6 +1062,22 @@ flagged anti-time-reversal in <cite>time_reversals</cite> (spglib convention:
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#submodules">Submodules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.lattice">crystallite.material.lattice module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice"><code class="docutils literal notranslate"><span class="pre">Lattice</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.cubic"><code class="docutils literal notranslate"><span class="pre">Lattice.cubic()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.d_spacing"><code class="docutils literal notranslate"><span class="pre">Lattice.d_spacing()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.directions"><code class="docutils literal notranslate"><span class="pre">Lattice.directions()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.hexagonal"><code class="docutils literal notranslate"><span class="pre">Lattice.hexagonal()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.is_compatible"><code class="docutils literal notranslate"><span class="pre">Lattice.is_compatible()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.is_hexagonal"><code class="docutils literal notranslate"><span class="pre">Lattice.is_hexagonal</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.monoclinic"><code class="docutils literal notranslate"><span class="pre">Lattice.monoclinic()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.orthorhombic"><code class="docutils literal notranslate"><span class="pre">Lattice.orthorhombic()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.plane_normals"><code class="docutils literal notranslate"><span class="pre">Lattice.plane_normals()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.lattice.Lattice.tetragonal"><code class="docutils literal notranslate"><span class="pre">Lattice.tetragonal()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.phase">crystallite.material.phase module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Transformation"><code class="docutils literal notranslate"><span class="pre">Transformation</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.phase.Transformation.variants"><code class="docutils literal notranslate"><span class="pre">Transformation.variants()</span></code></a></li>
