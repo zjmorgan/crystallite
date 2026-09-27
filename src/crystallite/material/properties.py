@@ -557,6 +557,10 @@ class Solid:
     since the exact magnetic point group, not just the ordinary one,
     is what constrains them.
 
+    `lattice` (optional, a `crystallite.material.lattice.Lattice` in the
+    same standard setting, checked against `point_group`) gives the cell
+    for Miller indices of directions and planes; no property uses it.
+
     Registered properties: `stiffness`, `magnetostriction`,
     `electrostriction`, `elasto_optic`, `piezo_optic`,
     `piezoelectricity`, `piezomagnetism`, `pyroelectricity`,
@@ -573,12 +577,15 @@ class Solid:
     c)(\partial_j c)` for a scalar concentration field `c`).
     """
 
-    def __init__(self, point_group="1", uni_number=None):
+    def __init__(self, point_group="1", uni_number=None, lattice=None):
         point_group_operations(point_group)  # validates point_group
         if uni_number is not None:
             magnetic_point_group_operations(uni_number)  # validates uni_number
+        if lattice is not None and not lattice.is_compatible(point_group):
+            raise ValueError(f"{lattice!r} is not invariant under point group {point_group!r}")
         self.point_group = point_group
         self.uni_number = uni_number
+        self.lattice = lattice
         for name in _PROPERTIES:
             setattr(self, name, None)
 

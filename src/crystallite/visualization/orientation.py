@@ -11,6 +11,12 @@ as in :mod:`crystallite.microstructure`, so ``v_crystal = R^T v_sample``):
    cell of the group, which is a fundamental sector for any point group);
 3. colour, from the position of the reduced direction in the sector.
 
+Directions are Cartesian, in the crystal frame. To colour Miller indices,
+convert them with :class:`crystallite.material.lattice.Lattice` first: plane
+normals ``lattice.plane_normals(hkl)`` or lattice directions
+``lattice.directions(uvw)`` (raw indices are the right vectors only for cubic
+crystals).
+
 The symmetry is a point group (:func:`crystallite.material.symmetry.point_group_operations`,
 standard setting: principal axis along z, secondary axis along x), applied at
 one of three levels (``symmetry=``):
@@ -362,24 +368,45 @@ def _integer_indices(values, tol=1e-6):
         scaled = base * multiple
         if np.allclose(scaled, np.round(scaled), atol=1e-4):
             return np.round(scaled).astype(int)
-    return np.round(base, 2)
+    return np.round(values / np.abs(values).max(), 2)  # irrational: largest index 1
 
 
-def miller_label(direction, hexagonal=False):
-    r"""Direction indices of a Cartesian `direction` as a TeX string (bars
-    for negative indices): three-index ``[uvw]`` along the crystal axes, or
-    four-index Miller--Bravais ``[UVTW]`` with :math:`a_1` along x when
-    `hexagonal`. The axes are taken orthonormal (with :math:`c/a=1` for
-    `hexagonal`), which labels the sector vertices exactly: each lies along
-    a crystal axis, in a basal or prism plane, or along a cube diagonal."""
+def miller_label(direction, hexagonal=False, lattice=None, plane=False):
+    r"""Miller indices of a Cartesian `direction` as a TeX string (bars for
+    negative indices), without brackets.
+
+    Without a `lattice`, the indices are the direction's components along
+    orthonormal crystal axes: three-index ``[uvw]``, or four-index
+    Miller--Bravais ``[uvtw]`` with :math:`a_1` along x (and :math:`c/a=1`)
+    when `hexagonal`. That labels the sector vertices of every system but
+    monoclinic and triclinic exactly: each lies along a crystal axis, in a
+    basal or prism plane, or along a cube diagonal, where direction and
+    plane-normal indices coincide for any cell.
+
+    With a :class:`~crystallite.material.lattice.Lattice`, the indices are
+    those of the lattice direction along `direction` (``[uvw]``), or if
+    `plane` of the plane normal to it (``(hkl)``); four-index if the lattice
+    has hexagonal axes. Irrational indices are shown to two decimals.
+    """
     d = _normalize(direction)
-    if hexagonal:
+    if lattice is not None:
+        hexagonal = lattice.is_hexagonal
+        if plane:  # (hkl) = A^T n
+            h, k, l = d @ lattice.direct
+            values = [h, k, -(h + k), l] if hexagonal else [h, k, l]
+        else:  # [uvw] = A^-1 d
+            u, v, w = np.linalg.solve(lattice.direct, d)
+            values = [(2 * u - v) / 3, (2 * v - u) / 3, -(u + v) / 3, w] if hexagonal else [u, v, w]
+    elif hexagonal:
         basal = np.array([[1.0, 0.0], [-0.5, 3**0.5 / 2], [-0.5, -(3**0.5) / 2]])
-        indices = _integer_indices([*(2.0 / 3.0 * basal @ d[:2]), d[2]])
+        values = [*(2.0 / 3.0 * basal @ d[:2]), d[2]]
     else:
-        indices = _integer_indices(d)
-    parts = [rf"\bar{{{-i}}}" if i < 0 else str(i) for i in indices]
-    return "$" + "".join(parts) + "$"
+        values = d
+    indices = _integer_indices(values)
+    if np.issubdtype(indices.dtype, np.integer):
+        return "$" + "".join(rf"\bar{{{-i}}}" if i < 0 else str(i) for i in indices) + "$"
+    parts = [f"{abs(i):.2f}".rstrip("0").rstrip(".") for i in indices]
+    return "$" + r"\,".join(rf"\bar{{{p}}}" if i < 0 else p for i, p in zip(indices, parts)) + "$"
 
 
 def _hsv_to_rgb(hue, saturation, value):
@@ -426,6 +453,12 @@ class InversePoleFigure:
     symmetry : {"laue", "holohedry", "point_group"}
         Level at which the point group's symmetry is applied (see the module
         docstring).
+    lattice : Lattice, optional
+        The crystal's :class:`~crystallite.material.lattice.Lattice`, for
+        exact corner labels (see :func:`miller_label`). It changes no colour.
+    indices : {"directions", "planes"}
+        With a `lattice`, label the corners by lattice directions ``[uvw]``
+        or by the planes ``(hkl)`` normal to them.
 
     Attributes
     ----------
@@ -445,7 +478,7 @@ class InversePoleFigure:
         increasing azimuth: for a triangle bounded by mirrors, the red, green
         and blue vertices.
     labels : list of str
-        Direction indices of the vertices (:func:`miller_label`).
+        Miller indices of the vertices (:meth:`label`).
     white_point : ndarray of shape (3,)
         Centre of the white half (the area centroid for a triangle).
     black_point : ndarray of shape (3,) or None
@@ -455,12 +488,18 @@ class InversePoleFigure:
         into the lower hemisphere.
     """
 
-    def __init__(self, point_group, symmetry="laue"):
+    def __init__(self, point_group, symmetry="laue", lattice=None, indices="directions"):
         self.point_group = point_group
         self.symmetry = symmetry
         group = symmetry_group(point_group, symmetry)
         self.group = _PROPER_FALLBACK.get(group, group)
         self.operations = _host(point_group_operations(self.group))
+        if indices not in ("directions", "planes"):
+            raise ValueError(f"indices must be 'directions' or 'planes', got {indices!r}")
+        if lattice is not None and not lattice.is_compatible(self.group):
+            raise ValueError(f"{lattice!r} is not invariant under point group {self.group!r}")
+        self.lattice = lattice
+        self.indices = indices
 
         extended, self.mirror = _colouring_group(self.operations, _lattice_mirrors(self.group))
         if extended is None:
@@ -500,14 +539,26 @@ class InversePoleFigure:
 
         self.vertices = _order_vertices(_chamber_vertices(self.walls))
         self._hexagonal = crystal_system(self.group) in ("trigonal", "hexagonal")
-        self.labels = [miller_label(v, self._hexagonal) for v in self.vertices]
+        self.labels = [self.label(v) for v in self.vertices]
 
         probe = _fibonacci_sphere(4096)
         inside = np.all(probe @ self.walls.T > 1e-3, axis=-1) & (probe[:, 2] < -1e-3)
         self.hemispheres = ("upper", "lower") if inside.any() else ("upper",)
 
+    @classmethod
+    def from_solid(cls, solid, symmetry="laue", indices="directions"):
+        """Key of a :class:`~crystallite.material.properties.Solid`: its point
+        group, and its lattice (if set) for the labels."""
+        return cls(solid.point_group, symmetry, solid.lattice, indices)
+
     def __repr__(self):
-        return f"InversePoleFigure({self.point_group!r}, symmetry={self.symmetry!r})"
+        extra ="" if self.lattice is None else f", lattice={self.lattice!r}, indices={self.indices!r}"
+        return f"InversePoleFigure({self.point_group!r}, symmetry={self.symmetry!r}{extra})"
+
+    def label(self, direction):
+        """Miller indices of a direction as a TeX string (:func:`miller_label`,
+        with this key's lattice and indices)."""
+        return miller_label(direction, self._hexagonal, self.lattice, self.indices == "planes")
 
     def _chamber(self, directions):
         """Image of each unit direction in the white chamber, and whether it
@@ -734,7 +785,7 @@ def _sector_axes(ipf, ax, labels=True):
                 offset = point - center
                 norm = np.linalg.norm(offset)
                 offset = 0.07 * span * (offset / norm if norm > 1e-9 else np.array([0.0, 1.0]))
-                ax.text(*(point + offset), miller_label(corner, ipf._hexagonal), ha="center", va="center")
+                ax.text(*(point + offset), ipf.label(corner), ha="center", va="center")
         if len(panels) > 1:
             bottom = np.nanmin(outline[:, 1])
             ax.text(center[0], bottom - 0.15 * span, hemisphere, ha="center", va="top", style="italic")
