@@ -38,6 +38,15 @@ class CoherentDiffusion:
     anisotropy alone (the modulation lies along the elastically soft
     directions).
 
+    References
+    ----------
+    .. [1] J. W. Cahn and F. Larche, "A simple model for coherent equilibrium",
+       Acta Metall. 32, 1915 (1984).
+    .. [2] A. G. Khachaturyan, *Theory of Structural Transformations in
+       Solids*, Wiley (1983).
+    .. [3] J. W. Cahn and J. E. Hilliard, "Free energy of a nonuniform system.
+       I. Interfacial free energy", J. Chem. Phys. 28, 258 (1958).
+
     Parameters
     ----------
     diffusion : MassDiffusion

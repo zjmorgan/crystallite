@@ -14,8 +14,9 @@ neither for an isotropic crystal, :math:`A_\\mathrm{Z}=1`
 (:mod:`examples.chemomechanics.verification.elastic_anisotropy` checks the
 elastic energy against Khachaturyan's :math:`B(\\hat n)`).
 
-The bottom row shows the structure factor of each final field, and its title the
-weight of :math:`|c_k|^2` on the axes versus the diagonals,
+The bottom row shows the spectral power :math:`|c_k|^2` of each final field (one
+realization, not an ensemble-averaged structure factor), and its title the weight of :math:`|c_k|^2` on the axes versus
+the diagonals,
 :func:`crystallite.verification.chemomechanics.axis_diagonal_anisotropy`
 (+1 all on the axes, -1 all on the diagonals). One realization scatters by about
 :math:`\\pm0.15` around the statistical value, so the isotropic case, whose mean over

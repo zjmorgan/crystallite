@@ -336,8 +336,8 @@ def test_mixing_equal_weights_averages_the_rotated_tensors():
 
 
 def test_a_random_2d_polycrystal_conducts_as_the_geometric_mean():
-    # Dykhne's exact result: uniaxial grains in random in-plane orientations
-    # have effective conductivity sqrt(k_a k_b) (here 1, at geometric mean 1)
+    # Dykhne's exact result (A. M. Dykhne, Sov. Phys. JETP 32, 63 (1971)): uniaxial grains in
+    # random in-plane orientations have effective conductivity sqrt(k_a k_b) (here 1, at geometric mean 1)
     ratio, values = 4.0, []
     for seed in range(4):
         grid = Grid(shape=(128, 128, 1))

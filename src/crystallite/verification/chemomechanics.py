@@ -3,7 +3,8 @@ r"""Reference results for coherent (misfit-driven) diffusion,
 
 For a homogeneous stiffness :math:`C` and eigenstrain :math:`\varepsilon^*=
 \eta\,(c-c_\mathrm{ref})`, mechanical equilibrium in a clamped periodic cell
-gives Khachaturyan's elastic energy, a sum over composition modes
+gives Khachaturyan's elastic energy (A. G. Khachaturyan, *Theory of Structural
+Transformations in Solids*, Wiley, 1983), a sum over composition modes
 :math:`E_\mathrm{el}=\tfrac12\sum_{k\neq0}B(\hat n)\,|\hat c_k|^2`, with
 :math:`\hat n=k/|k|` and
 
@@ -42,7 +43,7 @@ def khachaturyan_b(stiffness, eigenstrain, direction):
 
 
 def axis_diagonal_anisotropy(composition, k_min=2.0, k_max=None):
-    """How much a 2D composition field's structure factor lies along the grid
+    """How much a 2D composition field's spectral power lies along the grid
     axes rather than the diagonals: ``(W_axes - W_diagonals) / (W_axes +
     W_diagonals)``, the weights of ``|c_k|^2`` in the sectors within 22.5
     degrees of an axis and of a diagonal, for ``k_min < |k| < k_max`` (in

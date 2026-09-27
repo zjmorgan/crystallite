@@ -10,7 +10,15 @@ grid.shape``, as :class:`crystallite.elastic_deformation.ElasticDeformation`,
 **Orientation convention.** A rotation matrix ``R`` has the crystal axes as its
 columns, expressed in the sample frame, so a crystal-frame tensor ``T`` becomes
 ``R T R^T`` (rank 2), ``R R R R : C`` (rank 4), and so on -- the same
-convention as :meth:`crystallite.material.properties.Solid.rotate`.
+convention as :meth:`crystallite.material.properties.Solid.rotate`. Euler angles
+are Bunge's (ZXZ) [1]_.
+
+References
+----------
+.. [1] H.-J. Bunge, *Texture Analysis in Materials Science*, Butterworths
+   (1982).
+.. [2] K. Shoemake, "Uniform random rotations", in *Graphics Gems III*,
+   Academic Press (1992), pp. 124-132.
 """
 
 from __future__ import annotations
@@ -52,7 +60,8 @@ def rotation_from_quaternion(quaternion):
 
 def random_rotations(n, seed=None):
     """`n` rotation matrices uniformly distributed on SO(3) (unit quaternions
-    from a 4D normal, which is uniform on the 3-sphere and so on SO(3)).
+    from a 4D normal, which is uniform on the 3-sphere and so on SO(3); see
+    Shoemake [2]_).
 
     Parameters
     ----------

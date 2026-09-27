@@ -134,6 +134,56 @@ def point_group_operations(point_group):
     return _operations_cache[point_group]
 
 
+_POINT_GROUPS_BY_SYSTEM = {
+    "triclinic": ("1", "-1"),
+    "monoclinic": ("2", "m", "2/m"),
+    "orthorhombic": ("222", "mm2", "mmm"),
+    "tetragonal": ("4", "-4", "4/m", "422", "4mm", "-42m", "-4m2", "4/mmm"),
+    "trigonal": ("3", "-3", "32", "3m", "-3m"),
+    "hexagonal": ("6", "-6", "6/m", "622", "6mm", "-6m2", "-62m", "6/mmm"),
+    "cubic": ("23", "m-3", "432", "-43m", "m-3m"),
+}
+
+_LAUE_CLASS = {
+    "1": "-1", "-1": "-1",
+    "2": "2/m", "m": "2/m", "2/m": "2/m",
+    "222": "mmm", "mm2": "mmm", "mmm": "mmm",
+    "4": "4/m", "-4": "4/m", "4/m": "4/m",
+    "422": "4/mmm", "4mm": "4/mmm", "-42m": "4/mmm", "-4m2": "4/mmm",
+    "4/mmm": "4/mmm",
+    "3": "-3", "-3": "-3",
+    "32": "-3m", "3m": "-3m", "-3m": "-3m",
+    "6": "6/m", "-6": "6/m", "6/m": "6/m",
+    "622": "6/mmm", "6mm": "6/mmm", "-6m2": "6/mmm", "-62m": "6/mmm",
+    "6/mmm": "6/mmm",
+    "23": "m-3", "m-3": "m-3",
+    "432": "m-3m", "-43m": "m-3m", "m-3m": "m-3m",
+}
+
+
+def crystal_system(point_group):
+    """Crystal system (``"cubic"``, ``"hexagonal"``, ...) of `point_group`."""
+    for system, groups in _POINT_GROUPS_BY_SYSTEM.items():
+        if point_group in groups:
+            return system
+    raise ValueError(f"unrecognized point group: {point_group!r}")
+
+
+def laue_class(point_group):
+    """Laue class of `point_group`: the centrosymmetric group it generates
+    together with the inversion (one of the 11 Laue classes)."""
+    if point_group not in _LAUE_CLASS:
+        raise ValueError(f"unrecognized point group: {point_group!r}")
+    return _LAUE_CLASS[point_group]
+
+
+def holohedry(point_group):
+    """Holohedry of `point_group`: the highest-symmetry point group of its
+    crystal system (``m-3m``, ``6/mmm``, ``-3m``, ``4/mmm``, ``mmm``, ``2/m``
+    or ``-1``), of which it is a subgroup in the standard setting."""
+    return _POINT_GROUPS_BY_SYSTEM[crystal_system(point_group)][-1]
+
+
 def symmetrize(
     tensor, operations, time_reversals=None, axial_axes=(), time_reversal_odd=False
 ):
