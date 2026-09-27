@@ -1,0 +1,144 @@
+%% Creator: Matplotlib, PGF backend
+%%
+%% To include the figure in your LaTeX document, write
+%%   \input{<filename>.pgf}
+%%
+%% Make sure the required packages are loaded in your preamble
+%%   \usepackage{pgf}
+%%
+%% Also ensure that all the required font packages are loaded; for instance,
+%% the lmodern package is sometimes necessary when using math font.
+%%   \usepackage{lmodern}
+%%
+%% Figures using additional raster images can only be included by \input if
+%% they are in the same directory as the main LaTeX file. For loading figures
+%% from other directories you can use the `import` package
+%%   \usepackage{import}
+%%
+%% and then include the figures with
+%%   \import{<path to file>}{<filename>.pgf}
+%%
+%% Matplotlib used the following preamble
+%%   \def\mathdefault#1{#1}
+%%   \everymath=\expandafter{\the\everymath\displaystyle}
+%%   \IfFileExists{scrextend.sty}{
+%%     \usepackage[fontsize=12.000000pt]{scrextend}
+%%   }{
+%%     \renewcommand{\normalsize}{\fontsize{12.000000}{14.400000}\selectfont}
+%%     \normalsize
+%%   }
+%%   \usepackage[T1]{fontenc} \usepackage{libertine} \usepackage[libertine]{newtxmath} \usepackage[scientific-notation=true]{siunitx} \usepackage{tensor} \usepackage{physics} \usepackage{mhchem}
+%%   \makeatletter\@ifpackageloaded{underscore}{}{\usepackage[strings]{underscore}}\makeatother
+%%
+\begingroup%
+\makeatletter%
+\begin{pgfpicture}%
+\pgfpathrectangle{\pgfpointorigin}{\pgfqpoint{2.175788in}{1.806090in}}%
+\pgfusepath{use as bounding box, clip}%
+\begin{pgfscope}%
+\pgfsetbuttcap%
+\pgfsetmiterjoin%
+\pgfsetlinewidth{0.000000pt}%
+\definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
+\pgfsetstrokecolor{currentstroke}%
+\pgfsetstrokeopacity{0.000000}%
+\pgfsetdash{}{0pt}%
+\pgfpathmoveto{\pgfqpoint{0.000000in}{0.000000in}}%
+\pgfpathlineto{\pgfqpoint{2.175788in}{0.000000in}}%
+\pgfpathlineto{\pgfqpoint{2.175788in}{1.806090in}}%
+\pgfpathlineto{\pgfqpoint{0.000000in}{1.806090in}}%
+\pgfpathlineto{\pgfqpoint{0.000000in}{0.000000in}}%
+\pgfpathclose%
+\pgfusepath{}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\pgfpathrectangle{\pgfqpoint{0.341381in}{0.056045in}}{\pgfqpoint{1.694000in}{1.694000in}}%
+\pgfusepath{clip}%
+\pgfsys@transformshift{0.506667in}{0.220000in}%
+\pgftext[left,bottom]{\includegraphics[interpolate=true,width=1.363333in,height=1.366667in]{bar3m_planes-img0.png}}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\pgfpathrectangle{\pgfqpoint{0.341381in}{0.056045in}}{\pgfqpoint{1.694000in}{1.694000in}}%
+\pgfusepath{clip}%
+\pgfsetrectcap%
+\pgfsetroundjoin%
+\pgfsetlinewidth{1.003750pt}%
+\definecolor{currentstroke}{rgb}{0.000000,0.000000,0.000000}%
+\pgfsetstrokecolor{currentstroke}%
+\pgfsetdash{}{0pt}%
+\pgfpathmoveto{\pgfqpoint{1.688419in}{1.586109in}}%
+\pgfpathlineto{\pgfqpoint{1.688419in}{1.586109in}}%
+\pgfpathlineto{\pgfqpoint{0.505317in}{0.903045in}}%
+\pgfpathlineto{\pgfqpoint{0.505317in}{0.903045in}}%
+\pgfpathmoveto{\pgfqpoint{1.688419in}{0.219980in}}%
+\pgfpathlineto{\pgfqpoint{1.688419in}{0.219980in}}%
+\pgfpathlineto{\pgfqpoint{1.704826in}{0.249221in}}%
+\pgfpathlineto{\pgfqpoint{1.720511in}{0.278855in}}%
+\pgfpathlineto{\pgfqpoint{1.735463in}{0.308866in}}%
+\pgfpathlineto{\pgfqpoint{1.749674in}{0.339234in}}%
+\pgfpathlineto{\pgfqpoint{1.763136in}{0.369942in}}%
+\pgfpathlineto{\pgfqpoint{1.775840in}{0.400971in}}%
+\pgfpathlineto{\pgfqpoint{1.787779in}{0.432302in}}%
+\pgfpathlineto{\pgfqpoint{1.798946in}{0.463917in}}%
+\pgfpathlineto{\pgfqpoint{1.809333in}{0.495797in}}%
+\pgfpathlineto{\pgfqpoint{1.818934in}{0.527921in}}%
+\pgfpathlineto{\pgfqpoint{1.827745in}{0.560272in}}%
+\pgfpathlineto{\pgfqpoint{1.835758in}{0.592829in}}%
+\pgfpathlineto{\pgfqpoint{1.842971in}{0.625573in}}%
+\pgfpathlineto{\pgfqpoint{1.849377in}{0.658485in}}%
+\pgfpathlineto{\pgfqpoint{1.854974in}{0.691543in}}%
+\pgfpathlineto{\pgfqpoint{1.859758in}{0.724729in}}%
+\pgfpathlineto{\pgfqpoint{1.863727in}{0.758023in}}%
+\pgfpathlineto{\pgfqpoint{1.866876in}{0.791403in}}%
+\pgfpathlineto{\pgfqpoint{1.869206in}{0.824851in}}%
+\pgfpathlineto{\pgfqpoint{1.870714in}{0.858346in}}%
+\pgfpathlineto{\pgfqpoint{1.871400in}{0.891868in}}%
+\pgfpathlineto{\pgfqpoint{1.871263in}{0.925397in}}%
+\pgfpathlineto{\pgfqpoint{1.870303in}{0.958912in}}%
+\pgfpathlineto{\pgfqpoint{1.868521in}{0.992394in}}%
+\pgfpathlineto{\pgfqpoint{1.865918in}{1.025822in}}%
+\pgfpathlineto{\pgfqpoint{1.862495in}{1.059176in}}%
+\pgfpathlineto{\pgfqpoint{1.858254in}{1.092435in}}%
+\pgfpathlineto{\pgfqpoint{1.853199in}{1.125581in}}%
+\pgfpathlineto{\pgfqpoint{1.847332in}{1.158593in}}%
+\pgfpathlineto{\pgfqpoint{1.840656in}{1.191450in}}%
+\pgfpathlineto{\pgfqpoint{1.833176in}{1.224134in}}%
+\pgfpathlineto{\pgfqpoint{1.824896in}{1.256625in}}%
+\pgfpathlineto{\pgfqpoint{1.815821in}{1.288903in}}%
+\pgfpathlineto{\pgfqpoint{1.805957in}{1.320948in}}%
+\pgfpathlineto{\pgfqpoint{1.795310in}{1.352741in}}%
+\pgfpathlineto{\pgfqpoint{1.783885in}{1.384264in}}%
+\pgfpathlineto{\pgfqpoint{1.771690in}{1.415497in}}%
+\pgfpathlineto{\pgfqpoint{1.758733in}{1.446421in}}%
+\pgfpathlineto{\pgfqpoint{1.745020in}{1.477017in}}%
+\pgfpathlineto{\pgfqpoint{1.730561in}{1.507268in}}%
+\pgfpathlineto{\pgfqpoint{1.715363in}{1.537155in}}%
+\pgfpathlineto{\pgfqpoint{1.699437in}{1.566660in}}%
+\pgfpathlineto{\pgfqpoint{1.688419in}{1.586109in}}%
+\pgfpathmoveto{\pgfqpoint{0.505317in}{0.903045in}}%
+\pgfpathlineto{\pgfqpoint{0.505317in}{0.903045in}}%
+\pgfpathlineto{\pgfqpoint{1.688419in}{0.219980in}}%
+\pgfpathlineto{\pgfqpoint{1.688419in}{0.219980in}}%
+\pgfusepath{stroke}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
+\pgfsetstrokecolor{textcolor}%
+\pgfsetfillcolor{textcolor}%
+\pgftext[x=0.464333in,y=0.903045in,right,]{\color{textcolor}{\sffamily\fontsize{12.000000}{14.400000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}$(0001)$}}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
+\pgfsetstrokecolor{textcolor}%
+\pgfsetfillcolor{textcolor}%
+\pgftext[x=1.711455in,y=0.186083in,left,top]{\color{textcolor}{\sffamily\fontsize{12.000000}{14.400000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}$(1\bar{1}00)$}}%
+\end{pgfscope}%
+\begin{pgfscope}%
+\definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
+\pgfsetstrokecolor{textcolor}%
+\pgfsetfillcolor{textcolor}%
+\pgftext[x=1.711455in,y=1.620007in,left,bottom]{\color{textcolor}{\sffamily\fontsize{12.000000}{14.400000}\selectfont\catcode`\^=\active\def^{\ifmmode\sp\else\^{}\fi}\catcode`\%=\active\def%{\%}$(10\bar{1}0)$}}%
+\end{pgfscope}%
+\end{pgfpicture}%
+\makeatother%
+\endgroup%

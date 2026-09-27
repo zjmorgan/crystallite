@@ -371,9 +371,10 @@ def _integer_indices(values, tol=1e-6):
     return np.round(values / np.abs(values).max(), 2)  # irrational: largest index 1
 
 
-def miller_label(direction, hexagonal=False, lattice=None, plane=False):
+def miller_label(direction, hexagonal=False, lattice=None, plane=False, brackets=False):
     r"""Miller indices of a Cartesian `direction` as a TeX string (bars for
-    negative indices), without brackets.
+    negative indices), in ``[uvw]`` or, if `plane`, ``(hkl)`` brackets if
+    `brackets`.
 
     Without a `lattice`, the indices are the direction's components along
     orthonormal crystal axes: three-index ``[uvw]``, or four-index
@@ -404,9 +405,13 @@ def miller_label(direction, hexagonal=False, lattice=None, plane=False):
         values = d
     indices = _integer_indices(values)
     if np.issubdtype(indices.dtype, np.integer):
-        return "$" + "".join(rf"\bar{{{-i}}}" if i < 0 else str(i) for i in indices) + "$"
-    parts = [f"{abs(i):.2f}".rstrip("0").rstrip(".") for i in indices]
-    return "$" + r"\,".join(rf"\bar{{{p}}}" if i < 0 else p for i, p in zip(indices, parts)) + "$"
+        text = "".join(rf"\bar{{{-i}}}" if i < 0 else str(i) for i in indices)
+    else:
+        parts = [f"{abs(i):.2f}".rstrip("0").rstrip(".") for i in indices]
+        text = r"\,".join(rf"\bar{{{p}}}" if i < 0 else p for i, p in zip(indices, parts))
+    if brackets:
+        text = f"({text})" if plane else f"[{text}]"
+    return f"${text}$"
 
 
 def _hsv_to_rgb(hue, saturation, value):
@@ -444,7 +449,7 @@ _HEMISPHERES = {"upper": np.array([0.0, 0.0, 1.0]), "lower": np.array([0.0, 0.0,
 
 
 class InversePoleFigure:
-    """Fundamental sector and IPF colour key of a point group.
+    r"""Fundamental sector and IPF colour key of a point group.
 
     Parameters
     ----------
@@ -456,9 +461,10 @@ class InversePoleFigure:
     lattice : Lattice, optional
         The crystal's :class:`~crystallite.material.lattice.Lattice`, for
         exact corner labels (see :func:`miller_label`). It changes no colour.
-    indices : {"directions", "planes"}
-        With a `lattice`, label the corners by lattice directions ``[uvw]``
-        or by the planes ``(hkl)`` normal to them.
+    indices : {None, "directions", "planes"}
+        Label the corners by lattice directions ``[uvw]`` or by the planes
+        ``(hkl)`` normal to them, in brackets; None gives bare direction
+        indices. The key labels :meth:`label_points`.
 
     Attributes
     ----------
@@ -478,7 +484,8 @@ class InversePoleFigure:
         increasing azimuth: for a triangle bounded by mirrors, the red, green
         and blue vertices.
     labels : list of str
-        Miller indices of the vertices (:meth:`label`).
+        Miller indices of the vertices (:meth:`label`); the key itself
+        labels :meth:`label_points`.
     white_point : ndarray of shape (3,)
         Centre of the white half (the area centroid for a triangle).
     black_point : ndarray of shape (3,) or None
@@ -488,14 +495,14 @@ class InversePoleFigure:
         into the lower hemisphere.
     """
 
-    def __init__(self, point_group, symmetry="laue", lattice=None, indices="directions"):
+    def __init__(self, point_group, symmetry="laue", lattice=None, indices=None):
         self.point_group = point_group
         self.symmetry = symmetry
         group = symmetry_group(point_group, symmetry)
         self.group = _PROPER_FALLBACK.get(group, group)
         self.operations = _host(point_group_operations(self.group))
-        if indices not in ("directions", "planes"):
-            raise ValueError(f"indices must be 'directions' or 'planes', got {indices!r}")
+        if indices not in (None, "directions", "planes"):
+            raise ValueError(f"indices must be None, 'directions' or 'planes', got {indices!r}")
         if lattice is not None and not lattice.is_compatible(self.group):
             raise ValueError(f"{lattice!r} is not invariant under point group {self.group!r}")
         self.lattice = lattice
@@ -546,7 +553,7 @@ class InversePoleFigure:
         self.hemispheres = ("upper", "lower") if inside.any() else ("upper",)
 
     @classmethod
-    def from_solid(cls, solid, symmetry="laue", indices="directions"):
+    def from_solid(cls, solid, symmetry="laue", indices=None):
         """Key of a :class:`~crystallite.material.properties.Solid`: its point
         group, and its lattice (if set) for the labels."""
         return cls(solid.point_group, symmetry, solid.lattice, indices)
@@ -558,7 +565,9 @@ class InversePoleFigure:
     def label(self, direction):
         """Miller indices of a direction as a TeX string (:func:`miller_label`,
         with this key's lattice and indices)."""
-        return miller_label(direction, self._hexagonal, self.lattice, self.indices == "planes")
+        return miller_label(
+            direction, self._hexagonal, self.lattice, self.indices == "planes", self.indices is not None
+        )
 
     def _chamber(self, directions):
         """Image of each unit direction in the white chamber, and whether it
@@ -612,6 +621,26 @@ class InversePoleFigure:
         its edges cross the equator."""
         walls = _unique_directions(np.concatenate([self.walls, _HEMISPHERES[hemisphere][None]]))
         return _order_vertices(_chamber_vertices(walls))
+
+    def label_points(self, hemisphere="upper"):
+        """Directions labelled on the key in `hemisphere`: the corners of the
+        sector there, or for a monoclinic crystal the crystal axes on its
+        edges whose indices hold for any monoclinic angle.
+
+        Monoclinic sector corners (along x) only mark where the sector was
+        cut, and x is the (100) normal but a lattice direction only when
+        beta is 90 degrees. With c along z and the unique axis b along y,
+        the exact labels are [001] and [010] as directions, or the normals
+        of (100) and (010) as planes.
+        """
+        if crystal_system(self.group) != "monoclinic":
+            return self.corners(hemisphere)
+        axes = np.eye(3)[[0, 1] if self.indices == "planes" else [2, 1]]
+        candidates = np.concatenate([axes, -axes])
+        walls = _unique_directions(np.concatenate([self.walls, _HEMISPHERES[hemisphere][None]]))
+        cosines = candidates @ walls.T
+        on_edge = np.all(cosines >= -_TOL, axis=-1) & np.any(np.abs(cosines) < _TOL, axis=-1)
+        return _order_vertices(candidates[on_edge])
 
     def outline(self, n=64, hemisphere="upper"):
         """Stereographic outline of the part of the sector in `hemisphere`
@@ -757,7 +786,7 @@ def _pyplot():
     return plt
 
 
-def _panels(ipf, gap=0.8):
+def _panels(ipf, gap=1.3):
     """``(hemisphere, x offset)`` of each stereographic panel: the lower
     hemisphere, if needed, to the right of the upper one."""
     panels = [("upper", 0.0)]
@@ -780,12 +809,15 @@ def _sector_axes(ipf, ax, labels=True):
         ax.plot(outline[:, 0], outline[:, 1], color="k", linewidth=1.0)
         center = np.nanmean(outline, axis=0)
         if labels:
-            for corner in ipf.corners(hemisphere):
+            for corner in ipf.label_points(hemisphere):
                 point = stereographic(corner) + (dx, 0.0)
                 offset = point - center
                 norm = np.linalg.norm(offset)
-                offset = 0.07 * span * (offset / norm if norm > 1e-9 else np.array([0.0, 1.0]))
-                ax.text(*(point + offset), ipf.label(corner), ha="center", va="center")
+                offset = offset / norm if norm > 1e-9 else np.array([0.0, 1.0])
+                # anchor the label on its side facing the corner, so it grows away
+                ha = "left" if offset[0] > 0.4 else "right" if offset[0] < -0.4 else "center"
+                va = "bottom" if offset[1] > 0.4 else "top" if offset[1] < -0.4 else "center"
+                ax.text(*(point + 0.03 * span * offset), ipf.label(corner), ha=ha, va=va)
         if len(panels) > 1:
             bottom = np.nanmin(outline[:, 1])
             ax.text(center[0], bottom - 0.15 * span, hemisphere, ha="center", va="top", style="italic")

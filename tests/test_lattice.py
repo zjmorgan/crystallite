@@ -143,7 +143,10 @@ def test_corner_labels_exact_for_any_cell(point_group, lattice):
     plane normals all share indices."""
     default = InversePoleFigure(point_group).labels
     assert InversePoleFigure(point_group, lattice=lattice).labels == default
-    assert InversePoleFigure(point_group, lattice=lattice, indices="planes").labels == default
+    for indices, (left, right) in (("directions", "[]"), ("planes", "()")):
+        bracketed = [f"${left}{label[1:-1]}{right}$" for label in default]
+        assert InversePoleFigure(point_group, indices=indices).labels == bracketed
+        assert InversePoleFigure(point_group, lattice=lattice, indices=indices).labels == bracketed
 
 
 def test_monoclinic_corners_are_plane_normals():
@@ -151,12 +154,31 @@ def test_monoclinic_corners_are_plane_normals():
     normal, not a rational lattice direction."""
     lattice = Lattice.monoclinic(3.0, 4.0, 5.0, 105.0)
     planes = InversePoleFigure("2/m", lattice=lattice, indices="planes")
-    assert planes.labels == ["$100$", r"$\bar{1}00$"]
-    directions = InversePoleFigure("2/m", lattice=lattice)
-    assert directions.labels[0] == r"$1\,0\,0.16$"
+    assert planes.labels == ["$(100)$", r"$(\bar{1}00)$"]
+    assert InversePoleFigure("2/m", lattice=lattice).labels[0] == r"$1\,0\,0.16$"
+    assert InversePoleFigure("2/m", lattice=lattice, indices="directions").labels[0] == r"$[1\,0\,0.16]$"
     np.testing.assert_allclose(
         _unit(lattice.plane_normals([1, 0, 0])), planes.vertices[0], atol=1e-12
     )
+
+
+@pytest.mark.parametrize(
+    "point_group, hemisphere, indices, expected",
+    [
+        ("2/m", "upper", "directions", ["$[001]$", "$[010]$"]),
+        ("2/m", "upper", "planes", ["$(100)$", "$(010)$", r"$(\bar{1}00)$"]),
+        ("2", "upper", "directions", [r"$[0\bar{1}0]$", "$[010]$"]),
+        ("m", "upper", "directions", ["$[001]$", "$[010]$"]),
+        ("m", "lower", "directions", ["$[010]$", r"$[00\bar{1}]$"]),
+    ],
+)
+def test_monoclinic_keys_label_exact_axes(point_group, hemisphere, indices, expected):
+    """Monoclinic keys label b and c (directions) or the (100) and (010)
+    normals (planes), whose indices hold for any beta."""
+    lattice = Lattice.monoclinic(3.0, 4.0, 5.0, 105.0)
+    for cell in (None, lattice):
+        ipf = InversePoleFigure(point_group, "point_group", lattice=cell, indices=indices)
+        assert sorted(ipf.label(p) for p in ipf.label_points(hemisphere)) == sorted(expected)
 
 
 def test_miller_label_with_lattice():
@@ -173,6 +195,8 @@ def test_key_rejects_incompatible_lattice_and_indices():
         InversePoleFigure("m-3m", lattice=Lattice.tetragonal(3.0, 5.0))
     with pytest.raises(ValueError, match="indices"):
         InversePoleFigure("m-3m", indices="hkl")
+    assert miller_label([1, 1, 0], brackets=True) == "$[110]$"
+    assert miller_label([1, 1, 0], plane=True, brackets=True) == "$(110)$"
 
 
 def test_lattice_does_not_change_colours():
