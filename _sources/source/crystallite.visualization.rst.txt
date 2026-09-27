@@ -4,6 +4,14 @@ crystallite.visualization package
 Submodules
 ----------
 
+crystallite.visualization.orientation module
+--------------------------------------------
+
+.. automodule:: crystallite.visualization.orientation
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 crystallite.visualization.style module
 --------------------------------------
 

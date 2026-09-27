@@ -808,8 +808,29 @@ piezomagnetic-type tensor <span class="math notranslate nohighlight">\(Q_{ijk}\)
 <section id="module-crystallite.material.symmetry">
 <span id="crystallite-material-symmetry-module"></span><h2>crystallite.material.symmetry module<a class="headerlink" href="#module-crystallite.material.symmetry" title="Link to this heading">#</a></h2>
 <dl class="py function">
+<dt class="sig sig-object py" id="crystallite.material.symmetry.crystal_system">
+<span class="sig-name descname"><span class="pre">crystal_system</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L164-L169"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.crystal_system" title="Link to this definition">#</a></dt>
+<dd><p>Crystal system (<code class="docutils literal notranslate"><span class="pre">&quot;cubic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;hexagonal&quot;</span></code>, …) of <cite>point_group</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.material.symmetry.holohedry">
+<span class="sig-name descname"><span class="pre">holohedry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L180-L184"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.holohedry" title="Link to this definition">#</a></dt>
+<dd><p>Holohedry of <cite>point_group</cite>: the highest-symmetry point group of its
+crystal system (<code class="docutils literal notranslate"><span class="pre">m-3m</span></code>, <code class="docutils literal notranslate"><span class="pre">6/mmm</span></code>, <code class="docutils literal notranslate"><span class="pre">-3m</span></code>, <code class="docutils literal notranslate"><span class="pre">4/mmm</span></code>, <code class="docutils literal notranslate"><span class="pre">mmm</span></code>, <code class="docutils literal notranslate"><span class="pre">2/m</span></code>
+or <code class="docutils literal notranslate"><span class="pre">-1</span></code>), of which it is a subgroup in the standard setting.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.material.symmetry.laue_class">
+<span class="sig-name descname"><span class="pre">laue_class</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L172-L177"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.laue_class" title="Link to this definition">#</a></dt>
+<dd><p>Laue class of <cite>point_group</cite>: the centrosymmetric group it generates
+together with the inversion (one of the 11 Laue classes).</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="crystallite.material.symmetry.list_magnetic_point_groups">
-<span class="sig-name descname"><span class="pre">list_magnetic_point_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L254-L285"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.list_magnetic_point_groups" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">list_magnetic_point_groups</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point_group</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L304-L335"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.list_magnetic_point_groups" title="Link to this definition">#</a></dt>
 <dd><p>Magnetic point groups whose unprimed operations are <cite>point_group</cite>.</p>
 <p>Scans all 1651 spglib magnetic-space-group database entries and
 returns, for each whose rotation set (ignoring time reversal)
@@ -821,7 +842,7 @@ matches <cite>point_group_operations(point_group)</cite>, a dict with
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.material.symmetry.magnetic_point_group_operations">
-<span class="sig-name descname"><span class="pre">magnetic_point_group_operations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uni_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L213-L251"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.magnetic_point_group_operations" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">magnetic_point_group_operations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uni_number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L263-L301"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.magnetic_point_group_operations" title="Link to this definition">#</a></dt>
 <dd><p>(n, 3, 3) Cartesian ops + (n,) time-reversal flags for the magnetic
 point group underlying spglib magnetic-space-group database entry
 <cite>uni_number</cite> (1..1651), reduced to distinct (rotation, time-reversal)
@@ -844,7 +865,7 @@ cubic tertiary axis along [111].</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.material.symmetry.symmetrize">
-<span class="sig-name descname"><span class="pre">symmetrize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axial_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversal_odd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L137-L170"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.symmetrize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">symmetrize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">operations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axial_axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_reversal_odd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/material/symmetry.py#L187-L220"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.material.symmetry.symmetrize" title="Link to this definition">#</a></dt>
 <dd><p>Group-average a Cartesian tensor of any rank (Neumann’s principle).</p>
 <p>Projects <cite>tensor</cite> onto the subspace invariant under every operation,
 i.e. the physically allowed form for a property tensor of a crystal
@@ -936,6 +957,9 @@ flagged anti-time-reversal in <cite>time_reversals</cite> (spglib convention:
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-crystallite.material.symmetry">crystallite.material.symmetry module</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.crystal_system"><code class="docutils literal notranslate"><span class="pre">crystal_system()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.holohedry"><code class="docutils literal notranslate"><span class="pre">holohedry()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.laue_class"><code class="docutils literal notranslate"><span class="pre">laue_class()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.list_magnetic_point_groups"><code class="docutils literal notranslate"><span class="pre">list_magnetic_point_groups()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.magnetic_point_group_operations"><code class="docutils literal notranslate"><span class="pre">magnetic_point_group_operations()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.material.symmetry.point_group_operations"><code class="docutils literal notranslate"><span class="pre">point_group_operations()</span></code></a></li>
