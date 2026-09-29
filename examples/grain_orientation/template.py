@@ -35,6 +35,14 @@ nucleate, while ``shape`` is fine enough for the resulting interfaces
 to still land on several grid points rather than being pinned to the
 lattice.
 
+The solver itself is isotropic: an order parameter is just a label. For the
+plots, each of the ``N_ORIENTATIONS`` order parameters is given a random
+crystal orientation (uniform on SO(3)) of a cubic crystal (point group
+``m-3m``), and every grain is coloured by the inverse-pole-figure colour of
+its orientation along the sample z axis (IPF-Z,
+:mod:`crystallite.visualization.orientation`), with grain boundaries in black.
+A second figure shows the final microstructure along x, y and z.
+
 Plots use the project's shared style,
 :func:`crystallite.visualization.configure_pgf`.
 """
@@ -45,6 +53,7 @@ import numpy as np
 
 from crystallite.grain_orientation import GrainOrientation
 from crystallite.grid import Grid
+from crystallite.microstructure import random_rotations
 
 N_ORIENTATIONS = 20
 BARRIER_COEFFICIENT = 1.0
@@ -52,6 +61,8 @@ QUARTIC_COEFFICIENT = 1.0
 CROSS_COEFFICIENT = 1.5
 GRADIENT_ENERGY = 1.0e-4
 MOBILITY = 1.0
+POINT_GROUP = "m-3m"
+ORIENTATION_SEED = 7
 
 
 def build_solver(grid):
@@ -71,6 +82,18 @@ def initial_field(grid, n_orientations=N_ORIENTATIONS, amplitude=0.1, seed=0):
     """Return small-amplitude noise about 0 for every orientation field."""
     rng = np.random.default_rng(seed)
     return amplitude * rng.standard_normal((n_orientations,) + grid.shape)
+
+
+def orientations(n_orientations=N_ORIENTATIONS, seed=ORIENTATION_SEED):
+    """Random crystal orientation of each order parameter (rotation
+    matrices, crystal axes as columns, shape ``(n_orientations, 3, 3)``)."""
+    return random_rotations(n_orientations, seed=seed)
+
+
+def grain_labels(eta):
+    """Index of the dominant order parameter (largest in magnitude) at every
+    point, of the 2D slice ``z = 0``."""
+    return np.argmax(np.abs(np.asarray(eta)), axis=0)[:, :, 0]
 
 
 def grain_count(eta):
@@ -146,27 +169,38 @@ def run_example(
             )
             return eta, snapshots, energy_history
 
+        from crystallite.visualization.orientation import (
+            inverse_pole_figure,
+            plot_ipf_key,
+            plot_orientation_map,
+            plot_orientation_maps,
+        )
+
+        rotations = orientations(len(eta))
+        ipf = inverse_pole_figure(POINT_GROUP)
         fig, axes = plt.subplots(
-            1, len(snapshots), figsize=(3.0 * len(snapshots), 3.2),
+            1, len(snapshots) + 1, figsize=(3.0 * (len(snapshots) + 1), 3.2),
             constrained_layout=True,
         )
         for ax, (step, snap) in zip(axes, snapshots):
-            grain_map = np.argmax(np.abs(snap), axis=0)[:, :, 0]
-            ax.imshow(
-                grain_map, origin="lower", cmap="viridis",
-                vmin=0, vmax=N_ORIENTATIONS - 1, interpolation="nearest",
-            )
+            # at step 0 every point differs from its neighbours: no boundaries
+            plot_orientation_map(grain_labels(snap), rotations, ipf, "z", ax=ax, boundaries=step > 0)
             ax.set_title(rf"step {step}, {grain_count(snap)} grains")
-            ax.set_xticks([])
-            ax.set_yticks([])
+        plot_ipf_key(ipf, ax=axes[-1])
+        axes[-1].set_title(r"IPF-Z, $m\bar{3}m$")
+        maps, _ = plot_orientation_maps(grain_labels(eta), rotations, ipf)
 
         if save_path is not None:
             fig.savefig(save_path, dpi=200, bbox_inches="tight")
             print(f"Saved plot to {save_path}")
+            xyz_path = str(save_path).replace(".png", "_xyz.png")
+            maps.savefig(xyz_path, dpi=200, bbox_inches="tight")
+            print(f"Saved plot to {xyz_path}")
 
         if show_plot:
             plt.show()
 
+        plt.close(maps)
         plt.close(fig)
 
     return eta, snapshots, energy_history

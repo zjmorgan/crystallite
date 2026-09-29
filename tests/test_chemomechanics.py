@@ -11,6 +11,9 @@ from crystallite.verification.chemomechanics import (
     axis_diagonal_anisotropy,
     interface_orientation,
     khachaturyan_b,
+    pore_critical_aspect_ratio,
+    pore_critical_stress,
+    pore_equilibrium_aspect_ratio,
 )
 
 EPS0 = 0.05
@@ -312,6 +315,52 @@ def test_an_off_critical_polycrystal_forms_aligned_precipitates_of_the_minority_
         angle, strength = interface_orientation(c, weight=mask)
         assert strength > 0.2
         assert abs(_angle_error(angle, crystal_angle)) < 10.0
+
+
+def test_pore_critical_aspect_ratio_matches_the_published_value():
+    # McCartney (1977) and Heald & Speight (1977): a coherent pore under remote tension
+    # is unstable past (b/a)* = 2.817 at nu = 0.3. Solved here as the inflection point of
+    # the pore's surface energy alone (see pore_critical_aspect_ratio's docstring for why
+    # that suffices), an independent re-derivation that cross-checks the published number.
+    assert pore_critical_aspect_ratio() == pytest.approx(2.817, abs=2e-3)
+
+
+@pytest.mark.parametrize("poisson_ratio", [0.0, 0.2, 0.3, 1.0 / 3.0, 0.45])
+def test_the_critical_aspect_ratio_does_not_depend_on_poissons_ratio(poisson_ratio):
+    # the elastic energy coefficient K(b/a) is exactly linear in b/a at fixed pore
+    # area, so nu only rescales K and never shifts where dT/d(b/a) peaks
+    ratio = pore_critical_aspect_ratio()
+    stress = pore_critical_stress(1.0, 1.0, 1.0, poisson_ratio)
+    assert pore_equilibrium_aspect_ratio(0.999 * stress, 1.0, 1.0, 1.0, poisson_ratio) == pytest.approx(
+        ratio, abs=0.2
+    )
+
+
+def test_the_critical_stress_scales_as_expected():
+    # sigma* ~ sqrt(mu * gamma / (radius * (1 - nu))): each factor enters through a
+    # single sqrt(dT/dK), so halving mu or gamma should scale sigma* by 1/sqrt(2),
+    # and doubling the radius should also scale it by 1/sqrt(2)
+    base = pore_critical_stress(shear_modulus=1.0, surface_energy=1.0, radius=1.0, poisson_ratio=0.3)
+    halved_modulus = pore_critical_stress(shear_modulus=0.5, surface_energy=1.0, radius=1.0, poisson_ratio=0.3)
+    halved_energy = pore_critical_stress(shear_modulus=1.0, surface_energy=0.5, radius=1.0, poisson_ratio=0.3)
+    doubled_radius = pore_critical_stress(shear_modulus=1.0, surface_energy=1.0, radius=2.0, poisson_ratio=0.3)
+    assert halved_modulus == pytest.approx(base / np.sqrt(2.0))
+    assert halved_energy == pytest.approx(base / np.sqrt(2.0))
+    assert doubled_radius == pytest.approx(base / np.sqrt(2.0))
+
+
+def test_the_equilibrium_aspect_ratio_grows_monotonically_with_stress_up_to_critical():
+    critical = pore_critical_stress(1.0, 1.0, 1.0, 0.3)
+    fractions = [0.1, 0.3, 0.5, 0.7, 0.9, 0.99]
+    ratios = [
+        pore_equilibrium_aspect_ratio(f * critical, 1.0, 1.0, 1.0, 0.3) for f in fractions
+    ]
+    assert all(1.0 < r < pore_critical_aspect_ratio() for r in ratios)
+    assert all(b > a for a, b in zip(ratios, ratios[1:]))
+    with pytest.raises(ValueError, match="critical stress"):
+        pore_equilibrium_aspect_ratio(critical, 1.0, 1.0, 1.0, 0.3)
+    with pytest.raises(ValueError, match="critical stress"):
+        pore_equilibrium_aspect_ratio(1.01 * critical, 1.0, 1.0, 1.0, 0.3)
 
 
 def test_polycrystal_constructor_validation():
