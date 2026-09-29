@@ -3589,7 +3589,7 @@ B(\hat n)\,c_k\)</span>, so <span class="math notranslate nohighlight">\(B\)</sp
 alone is the driver.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.verification.chemomechanics.axis_diagonal_anisotropy">
-<span class="sig-name descname"><span class="pre">axis_diagonal_anisotropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L45-L69"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.axis_diagonal_anisotropy" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">axis_diagonal_anisotropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L47-L71"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.axis_diagonal_anisotropy" title="Link to this definition">#</a></dt>
 <dd><p>How much a 2D composition field’s spectral power lies along the grid
 axes rather than the diagonals: <code class="docutils literal notranslate"><span class="pre">(W_axes</span> <span class="pre">-</span> <span class="pre">W_diagonals)</span> <span class="pre">/</span> <span class="pre">(W_axes</span> <span class="pre">+</span>
 <span class="pre">W_diagonals)</span></code>, the weights of <code class="docutils literal notranslate"><span class="pre">|c_k|^2</span></code> in the sectors within 22.5
@@ -3607,7 +3607,7 @@ pure axis modulation, -1 pure diagonal, 0 no preference.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.verification.chemomechanics.interface_orientation">
-<span class="sig-name descname"><span class="pre">interface_orientation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L72-L109"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.interface_orientation" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">interface_orientation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L74-L111"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.interface_orientation" title="Link to this definition">#</a></dt>
 <dd><p>Orientation of the interfaces of a 2D composition field, modulo the
 90-degree cubic symmetry: the phase of the four-fold order parameter
 <span class="math notranslate nohighlight">\(\langle|\nabla c|^2e^{4i\phi}\rangle/\langle|\nabla c|^2\rangle\)</span>,
@@ -3638,10 +3638,68 @@ all along one cubic orientation, near 0 for none preferred.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="crystallite.verification.chemomechanics.khachaturyan_b">
-<span class="sig-name descname"><span class="pre">khachaturyan_b</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stiffness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L31-L42"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.khachaturyan_b" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">khachaturyan_b</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stiffness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigenstrain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L33-L44"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.khachaturyan_b" title="Link to this definition">#</a></dt>
 <dd><p>Elastic energy per unit modulation amplitude squared, <code class="docutils literal notranslate"><span class="pre">B(n)</span></code>, of a
 composition wave along <cite>direction</cite> (any vector, normalized): stiffness
 <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>, eigenstrain per unit composition <code class="docutils literal notranslate"><span class="pre">(3,</span> <span class="pre">3)</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.verification.chemomechanics.pore_critical_aspect_ratio">
+<span class="sig-name descname"><span class="pre">pore_critical_aspect_ratio</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L133-L161"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.pore_critical_aspect_ratio" title="Link to this definition">#</a></dt>
+<dd><p>Aspect ratio <span class="math notranslate nohighlight">\((b/a)^*\)</span> at which a coherent (misfit-strain,
+homogeneous-stiffness) elliptical pore under remote uniaxial tension stops
+having a stable equilibrium shape and grows without bound into a crack
+(McCartney 1977; Heald and Speight 1977) – about 2.817.</p>
+<p>Because the elastic energy coefficient <span class="math notranslate nohighlight">\(K(b/a)\)</span> is exactly linear in
+<span class="math notranslate nohighlight">\(b/a\)</span> at fixed pore area (<code class="xref py py-func docutils literal notranslate"><span class="pre">_pore_elastic_slope()</span></code>), the
+saddle-node condition that sets the critical ratio,
+<span class="math notranslate nohighlight">\(d(dT/d\rho)/d\rho=d^2T/d\rho^2=0\)</span>, involves only the surface energy
+<span class="math notranslate nohighlight">\(T(b/a)\)</span>: <span class="math notranslate nohighlight">\((b/a)^*\)</span> is therefore an inflection point of
+<span class="math notranslate nohighlight">\(T\)</span> alone, independent of the shear modulus, surface energy,
+Poisson’s ratio, and pore size.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r1f1a301c87de-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>L. N. McCartney, “A model to describe the creep-deformation and
+fracture of Type 316 stainless steel”, Acta Metall. 25, 221 (1977).</p>
+</div>
+<div class="citation" id="r1f1a301c87de-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<p>P. T. Heald and M. V. Speight, “Steady state creep and cavitation of
+grain boundaries”, Mater. Sci. Eng. 29, 271 (1977).</p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.verification.chemomechanics.pore_critical_stress">
+<span class="sig-name descname"><span class="pre">pore_critical_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shear_modulus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poisson_ratio</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L164-L175"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.pore_critical_stress" title="Link to this definition">#</a></dt>
+<dd><p>Remote uniaxial stress <span class="math notranslate nohighlight">\(\sigma_\infty^*\)</span> above which a coherent
+elliptical pore (<a class="reference internal" href="#crystallite.verification.chemomechanics.pore_critical_aspect_ratio" title="crystallite.verification.chemomechanics.pore_critical_aspect_ratio"><code class="xref py py-func docutils literal notranslate"><span class="pre">pore_critical_aspect_ratio()</span></code></a>) has no stable
+equilibrium shape and grows unboundedly into a crack.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="crystallite.verification.chemomechanics.pore_equilibrium_aspect_ratio">
+<span class="sig-name descname"><span class="pre">pore_equilibrium_aspect_ratio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">remote_stress</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear_modulus</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surface_energy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poisson_ratio</span></span></em><span class="sig-paren">)</span><a class="reference external" href="https://github.com/zjmorgan/crystallite/blob/main/src/crystallite/verification/chemomechanics.py#L178-L209"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#crystallite.verification.chemomechanics.pore_equilibrium_aspect_ratio" title="Link to this definition">#</a></dt>
+<dd><p>Equilibrium aspect ratio <span class="math notranslate nohighlight">\(b/a\)</span> of a coherent elliptical pore
+(<a class="reference internal" href="#crystallite.verification.chemomechanics.pore_critical_aspect_ratio" title="crystallite.verification.chemomechanics.pore_critical_aspect_ratio"><code class="xref py py-func docutils literal notranslate"><span class="pre">pore_critical_aspect_ratio()</span></code></a>) under remote uniaxial stress
+<cite>remote_stress</cite>, on the stable branch <span class="math notranslate nohighlight">\(1&lt;b/a\le(b/a)^*\)</span>: the root of
+<span class="math notranslate nohighlight">\(dT/d\rho=(dK/d\rho)\,\sigma_\infty^2\)</span> there (the free-energy
+stationarity condition), found by bisection since <span class="math notranslate nohighlight">\(dG/d\rho&lt;0\)</span> at
+<span class="math notranslate nohighlight">\(\rho=1\)</span> and <span class="math notranslate nohighlight">\(\ge0\)</span> at <span class="math notranslate nohighlight">\(\rho=(b/a)^*\)</span> for any
+sub-critical stress.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">abs(remote_stress)</span></code> is at or above
+<a class="reference internal" href="#crystallite.verification.chemomechanics.pore_critical_stress" title="crystallite.verification.chemomechanics.pore_critical_stress"><code class="xref py py-func docutils literal notranslate"><span class="pre">pore_critical_stress()</span></code></a>: the pore then has no stable shape.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>
@@ -3925,6 +3983,9 @@ composition wave along <cite>direction</cite> (any vector, normalized): stiffnes
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.axis_diagonal_anisotropy"><code class="docutils literal notranslate"><span class="pre">axis_diagonal_anisotropy()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.interface_orientation"><code class="docutils literal notranslate"><span class="pre">interface_orientation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.khachaturyan_b"><code class="docutils literal notranslate"><span class="pre">khachaturyan_b()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.pore_critical_aspect_ratio"><code class="docutils literal notranslate"><span class="pre">pore_critical_aspect_ratio()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.pore_critical_stress"><code class="docutils literal notranslate"><span class="pre">pore_critical_stress()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#crystallite.verification.chemomechanics.pore_equilibrium_aspect_ratio"><code class="docutils literal notranslate"><span class="pre">pore_equilibrium_aspect_ratio()</span></code></a></li>
 </ul>
 </li>
 </ul>

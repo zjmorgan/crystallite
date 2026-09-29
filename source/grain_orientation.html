@@ -422,154 +422,188 @@ circular-grain equilibria.</p>
 <span class="linenos"> 35</span><span class="sd">to still land on several grid points rather than being pinned to the</span>
 <span class="linenos"> 36</span><span class="sd">lattice.</span>
 <span class="linenos"> 37</span>
-<span class="linenos"> 38</span><span class="sd">Plots use the project&#39;s shared style,</span>
-<span class="linenos"> 39</span><span class="sd">:func:`crystallite.visualization.configure_pgf`.</span>
-<span class="linenos"> 40</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="linenos"> 41</span>
-<span class="linenos"> 42</span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
-<span class="linenos"> 43</span>
-<span class="linenos"> 44</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos"> 38</span><span class="sd">The solver itself is isotropic: an order parameter is just a label. For the</span>
+<span class="linenos"> 39</span><span class="sd">plots, each of the ``N_ORIENTATIONS`` order parameters is given a random</span>
+<span class="linenos"> 40</span><span class="sd">crystal orientation (uniform on SO(3)) of a cubic crystal (point group</span>
+<span class="linenos"> 41</span><span class="sd">``m-3m``), and every grain is coloured by the inverse-pole-figure colour of</span>
+<span class="linenos"> 42</span><span class="sd">its orientation along the sample z axis (IPF-Z,</span>
+<span class="linenos"> 43</span><span class="sd">:mod:`crystallite.visualization.orientation`), with grain boundaries in black.</span>
+<span class="linenos"> 44</span><span class="sd">A second figure shows the final microstructure along x, y and z.</span>
 <span class="linenos"> 45</span>
-<span class="linenos"> 46</span><span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.grain_orientation</span><span class="w"> </span><span class="kn">import</span> <span class="n">GrainOrientation</span>
-<span class="linenos"> 47</span><span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
-<span class="linenos"> 48</span>
-<span class="linenos"> 49</span><span class="n">N_ORIENTATIONS</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="linenos"> 50</span><span class="n">BARRIER_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="linenos"> 51</span><span class="n">QUARTIC_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="linenos"> 52</span><span class="n">CROSS_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.5</span>
-<span class="linenos"> 53</span><span class="n">GRADIENT_ENERGY</span> <span class="o">=</span> <span class="mf">1.0e-4</span>
-<span class="linenos"> 54</span><span class="n">MOBILITY</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="linenos"> 55</span>
-<span class="linenos"> 56</span>
-<span class="linenos"> 57</span><span class="k">def</span><span class="w"> </span><span class="nf">build_solver</span><span class="p">(</span><span class="n">grid</span><span class="p">):</span>
-<span class="linenos"> 58</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the isotropic ``GrainOrientation`` solver used by this</span>
-<span class="linenos"> 59</span><span class="sd">    example.&quot;&quot;&quot;</span>
-<span class="linenos"> 60</span>    <span class="k">return</span> <span class="n">GrainOrientation</span><span class="p">(</span>
-<span class="linenos"> 61</span>        <span class="n">grid</span><span class="p">,</span>
-<span class="linenos"> 62</span>        <span class="n">mobility</span><span class="o">=</span><span class="n">MOBILITY</span><span class="p">,</span>
-<span class="linenos"> 63</span>        <span class="n">gradient_energy</span><span class="o">=</span><span class="n">GRADIENT_ENERGY</span><span class="p">,</span>
-<span class="linenos"> 64</span>        <span class="n">barrier_coefficient</span><span class="o">=</span><span class="n">BARRIER_COEFFICIENT</span><span class="p">,</span>
-<span class="linenos"> 65</span>        <span class="n">quartic_coefficient</span><span class="o">=</span><span class="n">QUARTIC_COEFFICIENT</span><span class="p">,</span>
-<span class="linenos"> 66</span>        <span class="n">cross_coefficient</span><span class="o">=</span><span class="n">CROSS_COEFFICIENT</span><span class="p">,</span>
-<span class="linenos"> 67</span>    <span class="p">)</span>
-<span class="linenos"> 68</span>
-<span class="linenos"> 69</span>
-<span class="linenos"> 70</span><span class="k">def</span><span class="w"> </span><span class="nf">initial_field</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">n_orientations</span><span class="o">=</span><span class="n">N_ORIENTATIONS</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-<span class="linenos"> 71</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return small-amplitude noise about 0 for every orientation field.&quot;&quot;&quot;</span>
-<span class="linenos"> 72</span>    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-<span class="linenos"> 73</span>    <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_orientations</span><span class="p">,)</span> <span class="o">+</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="linenos"> 74</span>
-<span class="linenos"> 75</span>
-<span class="linenos"> 76</span><span class="k">def</span><span class="w"> </span><span class="nf">grain_count</span><span class="p">(</span><span class="n">eta</span><span class="p">):</span>
-<span class="linenos"> 77</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the number of orientations that are dominant (largest in</span>
-<span class="linenos"> 78</span><span class="sd">    magnitude) at at least one grid point -- a simple proxy for the number</span>
-<span class="linenos"> 79</span><span class="sd">    of surviving grains.</span>
+<span class="linenos"> 46</span><span class="sd">Plots use the project&#39;s shared style,</span>
+<span class="linenos"> 47</span><span class="sd">:func:`crystallite.visualization.configure_pgf`.</span>
+<span class="linenos"> 48</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 49</span>
+<span class="linenos"> 50</span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+<span class="linenos"> 51</span>
+<span class="linenos"> 52</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos"> 53</span>
+<span class="linenos"> 54</span><span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.grain_orientation</span><span class="w"> </span><span class="kn">import</span> <span class="n">GrainOrientation</span>
+<span class="linenos"> 55</span><span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.grid</span><span class="w"> </span><span class="kn">import</span> <span class="n">Grid</span>
+<span class="linenos"> 56</span><span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.microstructure</span><span class="w"> </span><span class="kn">import</span> <span class="n">random_rotations</span>
+<span class="linenos"> 57</span>
+<span class="linenos"> 58</span><span class="n">N_ORIENTATIONS</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="linenos"> 59</span><span class="n">BARRIER_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="linenos"> 60</span><span class="n">QUARTIC_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="linenos"> 61</span><span class="n">CROSS_COEFFICIENT</span> <span class="o">=</span> <span class="mf">1.5</span>
+<span class="linenos"> 62</span><span class="n">GRADIENT_ENERGY</span> <span class="o">=</span> <span class="mf">1.0e-4</span>
+<span class="linenos"> 63</span><span class="n">MOBILITY</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="linenos"> 64</span><span class="n">POINT_GROUP</span> <span class="o">=</span> <span class="s2">&quot;m-3m&quot;</span>
+<span class="linenos"> 65</span><span class="n">ORIENTATION_SEED</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="linenos"> 66</span>
+<span class="linenos"> 67</span>
+<span class="linenos"> 68</span><span class="k">def</span><span class="w"> </span><span class="nf">build_solver</span><span class="p">(</span><span class="n">grid</span><span class="p">):</span>
+<span class="linenos"> 69</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct the isotropic ``GrainOrientation`` solver used by this</span>
+<span class="linenos"> 70</span><span class="sd">    example.&quot;&quot;&quot;</span>
+<span class="linenos"> 71</span>    <span class="k">return</span> <span class="n">GrainOrientation</span><span class="p">(</span>
+<span class="linenos"> 72</span>        <span class="n">grid</span><span class="p">,</span>
+<span class="linenos"> 73</span>        <span class="n">mobility</span><span class="o">=</span><span class="n">MOBILITY</span><span class="p">,</span>
+<span class="linenos"> 74</span>        <span class="n">gradient_energy</span><span class="o">=</span><span class="n">GRADIENT_ENERGY</span><span class="p">,</span>
+<span class="linenos"> 75</span>        <span class="n">barrier_coefficient</span><span class="o">=</span><span class="n">BARRIER_COEFFICIENT</span><span class="p">,</span>
+<span class="linenos"> 76</span>        <span class="n">quartic_coefficient</span><span class="o">=</span><span class="n">QUARTIC_COEFFICIENT</span><span class="p">,</span>
+<span class="linenos"> 77</span>        <span class="n">cross_coefficient</span><span class="o">=</span><span class="n">CROSS_COEFFICIENT</span><span class="p">,</span>
+<span class="linenos"> 78</span>    <span class="p">)</span>
+<span class="linenos"> 79</span>
 <span class="linenos"> 80</span>
-<span class="linenos"> 81</span><span class="sd">    Each order parameter&#39;s double well has minima at both ``+eta0`` and</span>
-<span class="linenos"> 82</span><span class="sd">    ``-eta0``, so a saturated grain is not always positive -- comparing</span>
-<span class="linenos"> 83</span><span class="sd">    magnitude (not signed value) is what correctly identifies which</span>
-<span class="linenos"> 84</span><span class="sd">    orientation has committed at a point.</span>
-<span class="linenos"> 85</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos"> 86</span>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
-<span class="linenos"> 87</span>
-<span class="linenos"> 88</span>
-<span class="linenos"> 89</span><span class="k">def</span><span class="w"> </span><span class="nf">run_example</span><span class="p">(</span>
-<span class="linenos"> 90</span>    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-<span class="linenos"> 91</span>    <span class="n">lengths</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="linenos"> 92</span>    <span class="n">time_step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-<span class="linenos"> 93</span>    <span class="n">steps</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
-<span class="linenos"> 94</span>    <span class="n">snapshot_every</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
-<span class="linenos"> 95</span>    <span class="n">save_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="linenos"> 96</span>    <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="linenos"> 97</span><span class="p">):</span>
-<span class="linenos"> 98</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Advance a 2D Ostwald ripening (grain growth) run.</span>
-<span class="linenos"> 99</span>
-<span class="linenos">100</span><span class="sd">    Parameters</span>
-<span class="linenos">101</span><span class="sd">    ----------</span>
-<span class="linenos">102</span><span class="sd">    shape : tuple of int, default=(192, 192, 1)</span>
-<span class="linenos">103</span><span class="sd">        Real-space grid shape.</span>
-<span class="linenos">104</span><span class="sd">    lengths : tuple of float, default=(1.0, 1.0, 1.0)</span>
-<span class="linenos">105</span><span class="sd">        Domain length in each coordinate direction.</span>
-<span class="linenos">106</span><span class="sd">    time_step : float, default=0.5</span>
-<span class="linenos">107</span><span class="sd">        Semi-implicit integration time step.</span>
-<span class="linenos">108</span><span class="sd">    steps : int, default=4000</span>
-<span class="linenos">109</span><span class="sd">        Number of time steps to take.</span>
-<span class="linenos">110</span><span class="sd">    snapshot_every : int, default=800</span>
-<span class="linenos">111</span><span class="sd">        Save a snapshot every so many steps.</span>
-<span class="linenos">112</span><span class="sd">    save_path : str or None, default=None</span>
-<span class="linenos">113</span><span class="sd">        Optional output file for a snapshot-grid PNG image.</span>
-<span class="linenos">114</span><span class="sd">    show_plot : bool, default=False</span>
-<span class="linenos">115</span><span class="sd">        If True, display the snapshots with Matplotlib.</span>
-<span class="linenos">116</span>
-<span class="linenos">117</span><span class="sd">    Returns</span>
-<span class="linenos">118</span><span class="sd">    -------</span>
-<span class="linenos">119</span><span class="sd">    eta : ndarray</span>
-<span class="linenos">120</span><span class="sd">        Final orientation fields, shape ``(N_ORIENTATIONS,) + shape``.</span>
-<span class="linenos">121</span><span class="sd">    snapshots : list of (int, ndarray)</span>
-<span class="linenos">122</span><span class="sd">        ``(step, eta)`` pairs recorded during the run.</span>
-<span class="linenos">123</span><span class="sd">    energy_history : list of (int, float)</span>
-<span class="linenos">124</span><span class="sd">        ``(step, free_energy)`` pairs recorded during the run.</span>
-<span class="linenos">125</span><span class="sd">    &quot;&quot;&quot;</span>
-<span class="linenos">126</span>    <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">)</span>
-<span class="linenos">127</span>    <span class="n">solver</span> <span class="o">=</span> <span class="n">build_solver</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
-<span class="linenos">128</span>    <span class="n">eta</span> <span class="o">=</span> <span class="n">initial_field</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
-<span class="linenos">129</span>
-<span class="linenos">130</span>    <span class="n">snapshots</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())]</span>
-<span class="linenos">131</span>    <span class="n">energy_history</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">free_energy</span><span class="p">(</span><span class="n">eta</span><span class="p">)))]</span>
-<span class="linenos">132</span>    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
-<span class="linenos">133</span>        <span class="n">eta</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
-<span class="linenos">134</span>        <span class="k">if</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">snapshot_every</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">==</span> <span class="n">steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-<span class="linenos">135</span>            <span class="n">snapshots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()))</span>
-<span class="linenos">136</span>            <span class="n">energy_history</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">free_energy</span><span class="p">(</span><span class="n">eta</span><span class="p">))))</span>
-<span class="linenos">137</span>
-<span class="linenos">138</span>    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">show_plot</span><span class="p">:</span>
-<span class="linenos">139</span>        <span class="k">try</span><span class="p">:</span>
-<span class="linenos">140</span>            <span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_pgf</span>
-<span class="linenos">141</span>
-<span class="linenos">142</span>            <span class="n">plt</span> <span class="o">=</span> <span class="n">configure_pgf</span><span class="p">()</span>
-<span class="linenos">143</span>        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-<span class="linenos">144</span>            <span class="nb">print</span><span class="p">(</span>
-<span class="linenos">145</span>                <span class="s2">&quot;Matplotlib is not installed; skipping plot output for this run.&quot;</span>
-<span class="linenos">146</span>            <span class="p">)</span>
-<span class="linenos">147</span>            <span class="k">return</span> <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span>
-<span class="linenos">148</span>
-<span class="linenos">149</span>        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
-<span class="linenos">150</span>            <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">),</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">),</span> <span class="mf">3.2</span><span class="p">),</span>
-<span class="linenos">151</span>            <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="linenos">152</span>        <span class="p">)</span>
-<span class="linenos">153</span>        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">snap</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">):</span>
-<span class="linenos">154</span>            <span class="n">grain_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">snap</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
-<span class="linenos">155</span>            <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span>
-<span class="linenos">156</span>                <span class="n">grain_map</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="s2">&quot;lower&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
-<span class="linenos">157</span>                <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">N_ORIENTATIONS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s2">&quot;nearest&quot;</span><span class="p">,</span>
-<span class="linenos">158</span>            <span class="p">)</span>
-<span class="linenos">159</span>            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;step </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">grain_count</span><span class="p">(</span><span class="n">snap</span><span class="p">)</span><span class="si">}</span><span class="s2"> grains&quot;</span><span class="p">)</span>
-<span class="linenos">160</span>            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
-<span class="linenos">161</span>            <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
-<span class="linenos">162</span>
-<span class="linenos">163</span>        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-<span class="linenos">164</span>            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
-<span class="linenos">165</span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved plot to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="linenos">166</span>
-<span class="linenos">167</span>        <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
-<span class="linenos">168</span>            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-<span class="linenos">169</span>
-<span class="linenos">170</span>        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+<span class="linenos"> 81</span><span class="k">def</span><span class="w"> </span><span class="nf">initial_field</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">n_orientations</span><span class="o">=</span><span class="n">N_ORIENTATIONS</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="linenos"> 82</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return small-amplitude noise about 0 for every orientation field.&quot;&quot;&quot;</span>
+<span class="linenos"> 83</span>    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+<span class="linenos"> 84</span>    <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">n_orientations</span><span class="p">,)</span> <span class="o">+</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="linenos"> 85</span>
+<span class="linenos"> 86</span>
+<span class="linenos"> 87</span><span class="k">def</span><span class="w"> </span><span class="nf">orientations</span><span class="p">(</span><span class="n">n_orientations</span><span class="o">=</span><span class="n">N_ORIENTATIONS</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">ORIENTATION_SEED</span><span class="p">):</span>
+<span class="linenos"> 88</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Random crystal orientation of each order parameter (rotation</span>
+<span class="linenos"> 89</span><span class="sd">    matrices, crystal axes as columns, shape ``(n_orientations, 3, 3)``).&quot;&quot;&quot;</span>
+<span class="linenos"> 90</span>    <span class="k">return</span> <span class="n">random_rotations</span><span class="p">(</span><span class="n">n_orientations</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+<span class="linenos"> 91</span>
+<span class="linenos"> 92</span>
+<span class="linenos"> 93</span><span class="k">def</span><span class="w"> </span><span class="nf">grain_labels</span><span class="p">(</span><span class="n">eta</span><span class="p">):</span>
+<span class="linenos"> 94</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Index of the dominant order parameter (largest in magnitude) at every</span>
+<span class="linenos"> 95</span><span class="sd">    point, of the 2D slice ``z = 0``.&quot;&quot;&quot;</span>
+<span class="linenos"> 96</span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="linenos"> 97</span>
+<span class="linenos"> 98</span>
+<span class="linenos"> 99</span><span class="k">def</span><span class="w"> </span><span class="nf">grain_count</span><span class="p">(</span><span class="n">eta</span><span class="p">):</span>
+<span class="linenos">100</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the number of orientations that are dominant (largest in</span>
+<span class="linenos">101</span><span class="sd">    magnitude) at at least one grid point -- a simple proxy for the number</span>
+<span class="linenos">102</span><span class="sd">    of surviving grains.</span>
+<span class="linenos">103</span>
+<span class="linenos">104</span><span class="sd">    Each order parameter&#39;s double well has minima at both ``+eta0`` and</span>
+<span class="linenos">105</span><span class="sd">    ``-eta0``, so a saturated grain is not always positive -- comparing</span>
+<span class="linenos">106</span><span class="sd">    magnitude (not signed value) is what correctly identifies which</span>
+<span class="linenos">107</span><span class="sd">    orientation has committed at a point.</span>
+<span class="linenos">108</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">109</span>    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+<span class="linenos">110</span>
+<span class="linenos">111</span>
+<span class="linenos">112</span><span class="k">def</span><span class="w"> </span><span class="nf">run_example</span><span class="p">(</span>
+<span class="linenos">113</span>    <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="linenos">114</span>    <span class="n">lengths</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="linenos">115</span>    <span class="n">time_step</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="linenos">116</span>    <span class="n">steps</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
+<span class="linenos">117</span>    <span class="n">snapshot_every</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+<span class="linenos">118</span>    <span class="n">save_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="linenos">119</span>    <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">120</span><span class="p">):</span>
+<span class="linenos">121</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Advance a 2D Ostwald ripening (grain growth) run.</span>
+<span class="linenos">122</span>
+<span class="linenos">123</span><span class="sd">    Parameters</span>
+<span class="linenos">124</span><span class="sd">    ----------</span>
+<span class="linenos">125</span><span class="sd">    shape : tuple of int, default=(192, 192, 1)</span>
+<span class="linenos">126</span><span class="sd">        Real-space grid shape.</span>
+<span class="linenos">127</span><span class="sd">    lengths : tuple of float, default=(1.0, 1.0, 1.0)</span>
+<span class="linenos">128</span><span class="sd">        Domain length in each coordinate direction.</span>
+<span class="linenos">129</span><span class="sd">    time_step : float, default=0.5</span>
+<span class="linenos">130</span><span class="sd">        Semi-implicit integration time step.</span>
+<span class="linenos">131</span><span class="sd">    steps : int, default=4000</span>
+<span class="linenos">132</span><span class="sd">        Number of time steps to take.</span>
+<span class="linenos">133</span><span class="sd">    snapshot_every : int, default=800</span>
+<span class="linenos">134</span><span class="sd">        Save a snapshot every so many steps.</span>
+<span class="linenos">135</span><span class="sd">    save_path : str or None, default=None</span>
+<span class="linenos">136</span><span class="sd">        Optional output file for a snapshot-grid PNG image.</span>
+<span class="linenos">137</span><span class="sd">    show_plot : bool, default=False</span>
+<span class="linenos">138</span><span class="sd">        If True, display the snapshots with Matplotlib.</span>
+<span class="linenos">139</span>
+<span class="linenos">140</span><span class="sd">    Returns</span>
+<span class="linenos">141</span><span class="sd">    -------</span>
+<span class="linenos">142</span><span class="sd">    eta : ndarray</span>
+<span class="linenos">143</span><span class="sd">        Final orientation fields, shape ``(N_ORIENTATIONS,) + shape``.</span>
+<span class="linenos">144</span><span class="sd">    snapshots : list of (int, ndarray)</span>
+<span class="linenos">145</span><span class="sd">        ``(step, eta)`` pairs recorded during the run.</span>
+<span class="linenos">146</span><span class="sd">    energy_history : list of (int, float)</span>
+<span class="linenos">147</span><span class="sd">        ``(step, free_energy)`` pairs recorded during the run.</span>
+<span class="linenos">148</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos">149</span>    <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">)</span>
+<span class="linenos">150</span>    <span class="n">solver</span> <span class="o">=</span> <span class="n">build_solver</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="linenos">151</span>    <span class="n">eta</span> <span class="o">=</span> <span class="n">initial_field</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+<span class="linenos">152</span>
+<span class="linenos">153</span>    <span class="n">snapshots</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">())]</span>
+<span class="linenos">154</span>    <span class="n">energy_history</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">free_energy</span><span class="p">(</span><span class="n">eta</span><span class="p">)))]</span>
+<span class="linenos">155</span>    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+<span class="linenos">156</span>        <span class="n">eta</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">eta</span><span class="p">,</span> <span class="n">time_step</span><span class="p">)</span>
+<span class="linenos">157</span>        <span class="k">if</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">snapshot_every</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">step</span> <span class="o">==</span> <span class="n">steps</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+<span class="linenos">158</span>            <span class="n">snapshots</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()))</span>
+<span class="linenos">159</span>            <span class="n">energy_history</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">solver</span><span class="o">.</span><span class="n">free_energy</span><span class="p">(</span><span class="n">eta</span><span class="p">))))</span>
+<span class="linenos">160</span>
+<span class="linenos">161</span>    <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">show_plot</span><span class="p">:</span>
+<span class="linenos">162</span>        <span class="k">try</span><span class="p">:</span>
+<span class="linenos">163</span>            <span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">configure_pgf</span>
+<span class="linenos">164</span>
+<span class="linenos">165</span>            <span class="n">plt</span> <span class="o">=</span> <span class="n">configure_pgf</span><span class="p">()</span>
+<span class="linenos">166</span>        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+<span class="linenos">167</span>            <span class="nb">print</span><span class="p">(</span>
+<span class="linenos">168</span>                <span class="s2">&quot;Matplotlib is not installed; skipping plot output for this run.&quot;</span>
+<span class="linenos">169</span>            <span class="p">)</span>
+<span class="linenos">170</span>            <span class="k">return</span> <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span>
 <span class="linenos">171</span>
-<span class="linenos">172</span>    <span class="k">return</span> <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span>
-<span class="linenos">173</span>
-<span class="linenos">174</span>
-<span class="linenos">175</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<span class="linenos">176</span>    <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span> <span class="o">=</span> <span class="n">run_example</span><span class="p">(</span>
-<span class="linenos">177</span>        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-<span class="linenos">178</span>        <span class="n">steps</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
-<span class="linenos">179</span>        <span class="n">snapshot_every</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
-<span class="linenos">180</span>        <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;ostwald_ripening.png&quot;</span><span class="p">,</span>
-<span class="linenos">181</span>        <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="linenos">182</span>    <span class="p">)</span>
-<span class="linenos">183</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final grain count = </span><span class="si">{</span><span class="n">grain_count</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="linenos">184</span>    <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">energy_history</span><span class="p">:</span>
-<span class="linenos">185</span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;step </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">: free_energy = </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">172</span>        <span class="kn">from</span><span class="w"> </span><span class="nn">crystallite.visualization.orientation</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+<span class="linenos">173</span>            <span class="n">inverse_pole_figure</span><span class="p">,</span>
+<span class="linenos">174</span>            <span class="n">plot_ipf_key</span><span class="p">,</span>
+<span class="linenos">175</span>            <span class="n">plot_orientation_map</span><span class="p">,</span>
+<span class="linenos">176</span>            <span class="n">plot_orientation_maps</span><span class="p">,</span>
+<span class="linenos">177</span>        <span class="p">)</span>
+<span class="linenos">178</span>
+<span class="linenos">179</span>        <span class="n">rotations</span> <span class="o">=</span> <span class="n">orientations</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eta</span><span class="p">))</span>
+<span class="linenos">180</span>        <span class="n">ipf</span> <span class="o">=</span> <span class="n">inverse_pole_figure</span><span class="p">(</span><span class="n">POINT_GROUP</span><span class="p">)</span>
+<span class="linenos">181</span>        <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+<span class="linenos">182</span>            <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">snapshots</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mf">3.2</span><span class="p">),</span>
+<span class="linenos">183</span>            <span class="n">constrained_layout</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="linenos">184</span>        <span class="p">)</span>
+<span class="linenos">185</span>        <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="n">snap</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">):</span>
+<span class="linenos">186</span>            <span class="c1"># at step 0 every point differs from its neighbours: no boundaries</span>
+<span class="linenos">187</span>            <span class="n">plot_orientation_map</span><span class="p">(</span><span class="n">grain_labels</span><span class="p">(</span><span class="n">snap</span><span class="p">),</span> <span class="n">rotations</span><span class="p">,</span> <span class="n">ipf</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">boundaries</span><span class="o">=</span><span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+<span class="linenos">188</span>            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;step </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">grain_count</span><span class="p">(</span><span class="n">snap</span><span class="p">)</span><span class="si">}</span><span class="s2"> grains&quot;</span><span class="p">)</span>
+<span class="linenos">189</span>        <span class="n">plot_ipf_key</span><span class="p">(</span><span class="n">ipf</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+<span class="linenos">190</span>        <span class="n">axes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;IPF-Z, $m\bar</span><span class="si">{3}</span><span class="s2">m$&quot;</span><span class="p">)</span>
+<span class="linenos">191</span>        <span class="n">maps</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plot_orientation_maps</span><span class="p">(</span><span class="n">grain_labels</span><span class="p">(</span><span class="n">eta</span><span class="p">),</span> <span class="n">rotations</span><span class="p">,</span> <span class="n">ipf</span><span class="p">)</span>
+<span class="linenos">192</span>
+<span class="linenos">193</span>        <span class="k">if</span> <span class="n">save_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">194</span>            <span class="n">fig</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+<span class="linenos">195</span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved plot to </span><span class="si">{</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">196</span>            <span class="n">xyz_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.png&quot;</span><span class="p">,</span> <span class="s2">&quot;_xyz.png&quot;</span><span class="p">)</span>
+<span class="linenos">197</span>            <span class="n">maps</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">xyz_path</span><span class="p">,</span> <span class="n">dpi</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s2">&quot;tight&quot;</span><span class="p">)</span>
+<span class="linenos">198</span>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved plot to </span><span class="si">{</span><span class="n">xyz_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">199</span>
+<span class="linenos">200</span>        <span class="k">if</span> <span class="n">show_plot</span><span class="p">:</span>
+<span class="linenos">201</span>            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="linenos">202</span>
+<span class="linenos">203</span>        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">maps</span><span class="p">)</span>
+<span class="linenos">204</span>        <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fig</span><span class="p">)</span>
+<span class="linenos">205</span>
+<span class="linenos">206</span>    <span class="k">return</span> <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span>
+<span class="linenos">207</span>
+<span class="linenos">208</span>
+<span class="linenos">209</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">210</span>    <span class="n">eta</span><span class="p">,</span> <span class="n">snapshots</span><span class="p">,</span> <span class="n">energy_history</span> <span class="o">=</span> <span class="n">run_example</span><span class="p">(</span>
+<span class="linenos">211</span>        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">192</span><span class="p">,</span> <span class="mi">192</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="linenos">212</span>        <span class="n">steps</span><span class="o">=</span><span class="mi">3000</span><span class="p">,</span>
+<span class="linenos">213</span>        <span class="n">snapshot_every</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span>
+<span class="linenos">214</span>        <span class="n">save_path</span><span class="o">=</span><span class="s2">&quot;ostwald_ripening.png&quot;</span><span class="p">,</span>
+<span class="linenos">215</span>        <span class="n">show_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">216</span>    <span class="p">)</span>
+<span class="linenos">217</span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;final grain count = </span><span class="si">{</span><span class="n">grain_count</span><span class="p">(</span><span class="n">eta</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="linenos">218</span>    <span class="k">for</span> <span class="n">step</span><span class="p">,</span> <span class="n">energy</span> <span class="ow">in</span> <span class="n">energy_history</span><span class="p">:</span>
+<span class="linenos">219</span>        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;step </span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">: free_energy = </span><span class="si">{</span><span class="n">energy</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
